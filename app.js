@@ -1,23 +1,31 @@
 // ============================================================================
-// NOTAS QUICKSS — HUB MULTI-MÓDULO (BRIGADAS, DAILY DAY, TAREAS, LLAMADOS)
+// NOTAS QUICKSS — HUB MULTI-MÓDULO (GLASSMORPHISM-MINIMALISM · ZERO EMOJIS)
 // ============================================================================
 
 const STORAGE_KEYS = {
-  USERS: 'quickss_users_v3',
-  CURRENT_USER: 'quickss_current_user_v3',
-  PRE_CHECKIN: 'quickss_pre_checkin_v3',
-  VISITS: 'quickss_visits_v3',
-  DAILIES: 'quickss_dailies_v3',
-  TASKS: 'quickss_tasks_v3',
-  WARNINGS: 'quickss_warnings_v3',
-  SUPABASE_CFG: 'quickss_supabase_cfg_v3'
+  USERS: 'quickss_users_v4',
+  CURRENT_USER: 'quickss_current_user_v4',
+  PRE_CHECKIN: 'quickss_pre_checkin_v4',
+  VISITS: 'quickss_visits_v4',
+  DAILIES: 'quickss_dailies_v4',
+  TASKS: 'quickss_tasks_v4',
+  WARNINGS: 'quickss_warnings_v4',
+  SUPABASE_CFG: 'quickss_supabase_cfg_v4'
+};
+
+const MODULE_LABELS = {
+  hub: 'Centro Operativo',
+  brigadas: 'Brigadas Comerciales',
+  daily: 'Daily Day',
+  tareas: 'Tareas Pendientes',
+  llamados: 'Llamados de Atención'
 };
 
 const OUTCOME_PRESETS = {
   interesado: {
-    label: '🔥 ¿Cómo estuvo interesado? (1 toque):',
-    condLabel: '✍️ Condiciones específicas del cliente o acuerdos clave:',
-    placeholder: 'Ej: "Oye muchachos, me interesa pero si tienen estas condiciones..." (Usa Dictar con voz 🎙️)',
+    label: '¿Cómo estuvo interesado? (Selecciona 1 toque):',
+    condLabel: 'Condiciones específicas del cliente o acuerdos clave:',
+    placeholder: 'Ej: “Me interesa si incluye control de inventario por bodega…” (Usa Dictar con voz)',
     chips: [
       'Interesado si cumple condiciones específicas',
       'Listo para cotización / propuesta formal',
@@ -26,9 +34,9 @@ const OUTCOME_PRESETS = {
     ]
   },
   solo_info: {
-    label: '🌤️ ¿Qué pasó en este negocio? (Queda registrado negocio y dirección):',
-    condLabel: '✍️ Nota rápida (Ej: qué sistema tiene actualmente o a quién se dejó la info):',
-    placeholder: 'Ej: Ya tiene sistema actual, no quiere cambiar ahora. Se dejó folleto y tarjeta en esta dirección...',
+    label: '¿Qué pasó en este negocio? (Queda registrado negocio y dirección):',
+    condLabel: 'Nota rápida (Ej: qué sistema tiene actualmente o a quién se dejó la info):',
+    placeholder: 'Ej: Ya tiene sistema actual, no quiere cambiar ahora. Se dejó folleto y tarjeta en esta dirección…',
     chips: [
       'Ya tiene sistema, no quiere cambiar ahora',
       'Solo se entregó información (Folleto / Tarjeta)',
@@ -37,9 +45,9 @@ const OUTCOME_PRESETS = {
     ]
   },
   no_interesado: {
-    label: '❄️ Motivo rápido:',
-    condLabel: '✍️ Observación breve (Opcional):',
-    placeholder: 'Ej: Franquicia nacional, decisiones en otra ciudad...',
+    label: 'Motivo rápido:',
+    condLabel: 'Observación breve (Opcional):',
+    placeholder: 'Ej: Franquicia nacional, decisiones en otra ciudad…',
     chips: [
       'Ya tiene sistema y está conforme',
       'No aplica para su tipo de negocio',
@@ -54,12 +62,23 @@ let state = {
   users: [],
   currentUser: null,
   preCheckin: null,
+  preForm: {
+    carnet: true,
+    tarjetas: true,
+    folletos: true
+  },
   visits: [],
   dailies: [],
   tasks: [],
   warnings: [],
   tasksFilter: 'all',
-  dailyMood: '🔥 A tope',
+  historyResultFilter: 'all',
+  historyBrigadistaFilter: 'all',
+  dailyMood: 'A tope',
+  taskAssignee: '',
+  taskPriority: 'Media',
+  warnMember: '',
+  warnSeverity: 'Llamado de Atención Verbal',
   warnCategory: 'No portar carnet / Kit incompleto',
   lastSavedVisit: null,
   form: {
@@ -82,8 +101,21 @@ let state = {
   }
 };
 
+function refreshLucideIcons() {
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
+}
+
+function getInitials(name) {
+  if (!name) return 'NQ';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 // ============================================================================
-// 1. INICIALIZACIÓN DIRECTA AL DASHBOARD PRINCIPAL (SIN PANTALLA BLOQUEANTE)
+// 1. INICIALIZACIÓN DIRECTA AL DASHBOARD PRINCIPAL
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
   loadLocalState();
@@ -109,7 +141,7 @@ function getCurrentTimeFormatted() {
 
 function updateClockPreview() {
   const el = document.getElementById('visitTimestampPreview');
-  if (el) el.textContent = `🕒 Hoy · ${getCurrentTimeFormatted()}`;
+  if (el) el.textContent = `Hoy · ${getCurrentTimeFormatted()}`;
 }
 
 function loadLocalState() {
@@ -131,6 +163,9 @@ function loadLocalState() {
 
     state.currentUser = savedCurrent || state.users[0];
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
+
+    state.taskAssignee = state.currentUser.nombre;
+    state.warnMember = state.users[1]?.nombre || state.currentUser.nombre;
 
     const today = getTodayISO();
     if (savedPre && savedPre.fecha === today && savedPre.brigadista_id === state.currentUser.id) {
@@ -171,10 +206,73 @@ function setupEventListeners() {
   document.getElementById('dailyForm')?.addEventListener('submit', handleDailySubmit);
   document.getElementById('taskForm')?.addEventListener('submit', handleTaskSubmit);
   document.getElementById('warningForm')?.addEventListener('submit', handleWarningSubmit);
+
+  // Cerrar custom dropdowns al hacer clic fuera
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('[aria-haspopup="true"]') && !e.target.closest('.custom-dropdown-menu')) {
+      closeAllCustomDropdowns();
+    }
+  });
+
+  // Cerrar Drawer, Modales y Dropdowns con tecla Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeAllCustomDropdowns();
+      closeAppDrawer();
+      closeCloudModal();
+    }
+  });
 }
 
 // ============================================================================
-// 2. NAVEGACIÓN ENTRE MÓDULOS PRINCIPALES DE NOTAS QUICKSS
+// 2. DRAWER LATERAL GLASSMORPHIC & CUSTOM TAILWIND DROPDOWNS
+// ============================================================================
+window.openAppDrawer = function() {
+  const drawer = document.getElementById('appDrawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  const btn = document.getElementById('btnOpenDrawer');
+  closeAllCustomDropdowns();
+  backdrop?.classList.remove('hidden');
+  drawer?.classList.remove('translate-x-full');
+  btn?.setAttribute('aria-expanded', 'true');
+};
+
+window.closeAppDrawer = function() {
+  const drawer = document.getElementById('appDrawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  const btn = document.getElementById('btnOpenDrawer');
+  drawer?.classList.add('translate-x-full');
+  backdrop?.classList.add('hidden');
+  btn?.setAttribute('aria-expanded', 'false');
+};
+
+window.openDrawerAndFocusNewUser = function() {
+  closeAllCustomDropdowns();
+  openAppDrawer();
+  setTimeout(() => {
+    document.getElementById('newMemberNameInput')?.focus();
+  }, 220);
+};
+
+window.toggleCustomDropdown = function(menuId, event) {
+  if (event) event.stopPropagation();
+  const targetMenu = document.getElementById(menuId);
+  if (!targetMenu) return;
+  const isCurrentlyHidden = targetMenu.classList.contains('hidden');
+  closeAllCustomDropdowns();
+  if (isCurrentlyHidden) {
+    targetMenu.classList.remove('hidden');
+  }
+};
+
+function closeAllCustomDropdowns() {
+  document.querySelectorAll('.custom-dropdown-menu').forEach(menu => {
+    menu.classList.add('hidden');
+  });
+}
+
+// ============================================================================
+// 3. NAVEGACIÓN ENTRE MÓDULOS PRINCIPALES (BOTTOM NAVBAR + HEADER)
 // ============================================================================
 window.switchModule = function(modName) {
   state.activeModule = modName;
@@ -182,53 +280,142 @@ window.switchModule = function(modName) {
 
   modules.forEach(m => {
     const el = document.getElementById(`module_${m}`);
-    const deskBtn = document.getElementById(`modBtn_${m}`);
-    const mobBtn = document.getElementById(`mobModBtn_${m}`);
+    const dockBtn = document.getElementById(`navDockBtn_${m}`);
 
     if (m === modName) {
       el?.classList.remove('hidden');
-      if (deskBtn) deskBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white transition shadow';
-      if (mobBtn) mobBtn.className = 'py-2 px-1 rounded-xl text-[10px] font-extrabold bg-violet-600 text-white flex flex-col items-center justify-center gap-0.5 shadow';
+      if (dockBtn) {
+        dockBtn.className = 'min-h-[52px] py-1.5 px-1 rounded-xl bg-violet-600 text-white font-extrabold flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors relative shadow-lg shadow-violet-600/30';
+      }
     } else {
       el?.classList.add('hidden');
-      if (deskBtn) deskBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition';
-      if (mobBtn) mobBtn.className = 'py-2 px-1 rounded-xl text-[10px] font-bold bg-[#161224] text-violet-200 border border-violet-500/20 flex flex-col items-center justify-center gap-0.5';
+      if (dockBtn) {
+        dockBtn.className = 'min-h-[52px] py-1.5 px-1 rounded-xl text-violet-200/80 hover:text-white font-bold flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors relative';
+      }
     }
   });
 
+  setText('topActiveModuleBadge', MODULE_LABELS[modName] || 'Centro Operativo');
+  closeAllCustomDropdowns();
   refreshAllUI();
 };
 
 // ============================================================================
-// 3. CAMBIO RÁPIDO DE RESPONSABLE / USUARIO EN BARRA SUPERIOR
+// 4. GESTIÓN DE EQUIPO Y CUSTOM SELECTORS TAILWIND (SIN <SELECT> NI PROMPT)
 // ============================================================================
-function renderUserSelects() {
-  const topSelect = document.getElementById('quickUserSelect');
-  const taskSelect = document.getElementById('taskAssigneeSelect');
-  const warnSelect = document.getElementById('warnMemberSelect');
+function renderCustomUserMenus() {
+  if (!state.currentUser) return;
 
-  if (topSelect) {
-    topSelect.innerHTML = state.users.map(u => `
-      <option value="${u.id}" ${state.currentUser?.id === u.id ? 'selected' : ''} class="bg-[#161224] text-white">
-        ${escapeHtml(u.nombre)}
-      </option>
-    `).join('');
+  // Cabecera superior
+  setText('topWelcomeName', state.currentUser.nombre.split(' ')[0]);
+  setText('headerUserName', state.currentUser.nombre);
+  setText('headerUserInitials', getInitials(state.currentUser.nombre));
+
+  // Datos en Drawer
+  setText('drawerUserName', state.currentUser.nombre);
+  setText('drawerUserRole', state.currentUser.rol || 'Brigadista');
+
+  // 1. Menú desplegable de cabecera
+  const headerItems = document.getElementById('headerUserMenuItems');
+  if (headerItems) {
+    headerItems.innerHTML = state.users.map(u => {
+      const isActive = state.currentUser?.id === u.id;
+      return `
+        <button
+          type="button"
+          onclick="handleQuickUserChange('${u.id}')"
+          class="w-full min-h-[42px] px-3 py-2 rounded-xl flex items-center justify-between text-xs font-bold ${isActive ? 'bg-violet-600 text-white' : 'text-violet-100 hover:bg-violet-500/20'} cursor-pointer transition-colors"
+        >
+          <span class="flex items-center gap-2.5 truncate">
+            <span class="w-6 h-6 rounded-lg ${isActive ? 'bg-white/20 text-white' : 'bg-violet-500/25 text-violet-200'} text-[10px] font-extrabold flex items-center justify-center shrink-0">
+              ${escapeHtml(getInitials(u.nombre))}
+            </span>
+            <span class="truncate">${escapeHtml(u.nombre)}</span>
+          </span>
+          ${isActive ? '<i data-lucide="check" class="w-4 h-4 shrink-0" aria-hidden="true"></i>' : ''}
+        </button>
+      `;
+    }).join('');
   }
 
-  const optionsByName = state.users.map(u => `
-    <option value="${escapeHtml(u.nombre)}" ${state.currentUser?.nombre === u.nombre ? 'selected' : ''} class="bg-[#161224] text-white">
-      ${escapeHtml(u.nombre)}
-    </option>
-  `).join('');
+  // 2. Lista de integrantes en el Drawer
+  const drawerList = document.getElementById('drawerUsersList');
+  if (drawerList) {
+    drawerList.innerHTML = state.users.map(u => {
+      const isActive = state.currentUser?.id === u.id;
+      return `
+        <button
+          type="button"
+          onclick="handleQuickUserChange('${u.id}')"
+          class="w-full min-h-[44px] px-3 py-2 rounded-xl flex items-center justify-between text-xs font-bold ${isActive ? 'bg-violet-600 text-white shadow' : 'glass-panel text-violet-100 hover:border-violet-400/40'} cursor-pointer transition-colors"
+        >
+          <span class="flex items-center gap-2.5 truncate">
+            <span class="w-7 h-7 rounded-lg ${isActive ? 'bg-white/20 text-white' : 'bg-violet-500/25 text-violet-200'} text-[11px] font-extrabold flex items-center justify-center shrink-0">
+              ${escapeHtml(getInitials(u.nombre))}
+            </span>
+            <span class="text-left truncate">
+              <span class="block leading-tight truncate">${escapeHtml(u.nombre)}</span>
+              <span class="block text-[10px] ${isActive ? 'text-violet-100' : 'text-violet-300/70'} font-medium">${escapeHtml(u.rol || 'Brigadista')}</span>
+            </span>
+          </span>
+          ${isActive ? '<i data-lucide="check-circle-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i>' : ''}
+        </button>
+      `;
+    }).join('');
+  }
 
-  if (taskSelect && !taskSelect.innerHTML) taskSelect.innerHTML = optionsByName;
-  if (warnSelect && !warnSelect.innerHTML) warnSelect.innerHTML = optionsByName;
+  // 3. Custom Dropdown para Responsable en Tareas
+  if (!state.taskAssignee) state.taskAssignee = state.currentUser.nombre;
+  setText('labelTaskAssignee', state.taskAssignee);
+  const taskMenu = document.getElementById('taskAssigneeMenu');
+  if (taskMenu) {
+    taskMenu.innerHTML = state.users.map(u => {
+      const isSelected = state.taskAssignee === u.nombre;
+      return `
+        <button
+          type="button"
+          onclick="selectTaskAssignee('${escapeHtml(u.nombre)}')"
+          class="w-full min-h-[40px] px-3 py-2 rounded-xl flex items-center justify-between text-xs font-bold ${isSelected ? 'bg-violet-600 text-white' : 'text-violet-100 hover:bg-violet-500/20'} cursor-pointer"
+        >
+          <span class="flex items-center gap-2 truncate">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-violet-300 shrink-0" aria-hidden="true"></i>
+            <span class="truncate">${escapeHtml(u.nombre)}</span>
+          </span>
+          ${isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>' : ''}
+        </button>
+      `;
+    }).join('');
+  }
+
+  // 4. Custom Dropdown para Colaborador en Llamados
+  if (!state.warnMember) state.warnMember = state.users[0]?.nombre || 'Colaborador';
+  setText('labelWarnMember', state.warnMember);
+  const warnMenu = document.getElementById('warnMemberMenu');
+  if (warnMenu) {
+    warnMenu.innerHTML = state.users.map(u => {
+      const isSelected = state.warnMember === u.nombre;
+      return `
+        <button
+          type="button"
+          onclick="selectWarnMember('${escapeHtml(u.nombre)}')"
+          class="w-full min-h-[40px] px-3 py-2 rounded-xl flex items-center justify-between text-xs font-bold ${isSelected ? 'bg-violet-600 text-white' : 'text-violet-100 hover:bg-violet-500/20'} cursor-pointer"
+        >
+          <span class="flex items-center gap-2 truncate">
+            <i data-lucide="user-check" class="w-3.5 h-3.5 text-violet-300 shrink-0" aria-hidden="true"></i>
+            <span class="truncate">${escapeHtml(u.nombre)}</span>
+          </span>
+          ${isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>' : ''}
+        </button>
+      `;
+    }).join('');
+  }
 }
 
 window.handleQuickUserChange = function(userId) {
   const user = state.users.find(u => u.id === userId);
   if (!user) return;
   state.currentUser = user;
+  state.taskAssignee = user.nombre;
   localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
 
   const savedPre = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRE_CHECKIN) || 'null');
@@ -238,83 +425,129 @@ window.handleQuickUserChange = function(userId) {
     state.preCheckin = null;
   }
 
+  closeAllCustomDropdowns();
   refreshAllUI();
-  showToast(`👤 Anotando ahora como: ${user.nombre}`);
+  showToast(`Sesión activa cambiada a ${user.nombre}`);
 };
 
-window.promptNewTeamMember = function() {
-  const nombre = prompt('Nombre y apellido de la persona a agregar al equipo:');
-  if (!nombre || !nombre.trim()) return;
-  const clean = nombre.trim();
-  let existing = state.users.find(u => u.nombre.toLowerCase() === clean.toLowerCase());
+window.handleCreateTeamMember = function(e) {
+  e.preventDefault();
+  const input = document.getElementById('newMemberNameInput');
+  const nombre = (input?.value || '').trim();
+  if (!nombre) return;
+
+  let existing = state.users.find(u => u.nombre.toLowerCase() === nombre.toLowerCase());
   if (!existing) {
-    existing = { id: 'usr_' + Date.now(), nombre: clean, rol: 'Brigadista', meta: 12 };
+    existing = { id: 'usr_' + Date.now(), nombre, rol: 'Brigadista', meta: 12 };
     state.users.push(existing);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
   }
+
   state.currentUser = existing;
+  state.taskAssignee = existing.nombre;
   localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(existing));
-  document.getElementById('taskAssigneeSelect').innerHTML = '';
-  document.getElementById('warnMemberSelect').innerHTML = '';
+
+  if (input) input.value = '';
   refreshAllUI();
-  showToast(`✅ Cuenta creada y activa: ${existing.nombre}`);
+  showToast(`Integrante agregado y activo: ${existing.nombre}`);
+};
+
+window.selectTaskAssignee = function(nombre) {
+  state.taskAssignee = nombre;
+  setText('labelTaskAssignee', nombre);
+  closeAllCustomDropdowns();
+  renderCustomUserMenus();
+  refreshLucideIcons();
+};
+
+window.selectTaskPriority = function(priority) {
+  state.taskPriority = priority;
+  document.querySelectorAll('#taskPriorityGroup button').forEach(btn => {
+    if (btn.getAttribute('data-prio') === priority) btn.classList.add('active-blue');
+    else btn.classList.remove('active-blue');
+  });
+};
+
+window.selectWarnMember = function(nombre) {
+  state.warnMember = nombre;
+  setText('labelWarnMember', nombre);
+  closeAllCustomDropdowns();
+  renderCustomUserMenus();
+  refreshLucideIcons();
+};
+
+window.selectWarnSeverity = function(severity) {
+  state.warnSeverity = severity;
+  document.querySelectorAll('#warnSeverityGroup button').forEach(btn => {
+    if (btn.getAttribute('data-sev') === severity) btn.classList.add('active-blue');
+    else btn.classList.remove('active-blue');
+  });
 };
 
 // ============================================================================
-// 4. RENDER DEL HUB PRINCIPAL DE NOTAS QUICKSS (TODOS LOS MÓDULOS)
+// 5. RENDER DEL HUB PRINCIPAL DE NOTAS QUICKSS
 // ============================================================================
 function renderHubDashboard() {
   const todayFormatted = new Date().toLocaleDateString('es-CO', {
     weekday: 'long', day: 'numeric', month: 'long'
   });
-  const dateEl = document.getElementById('hubTodayDate');
-  if (dateEl) dateEl.textContent = todayFormatted;
+  setText('hubTodayDate', todayFormatted);
 
   const welcomeEl = document.getElementById('hubWelcomeName');
-  if (welcomeEl && state.currentUser) welcomeEl.textContent = state.currentUser.nombre.split(' ')[0];
+  if (welcomeEl && state.currentUser) {
+    welcomeEl.textContent = state.currentUser.nombre.split(' ')[0];
+  }
 
   const hotVisits = state.visits.filter(v => v.resultado === 'interesado').length;
   const pendingTasks = state.tasks.filter(t => !t.completed).length;
 
-  // Contadores de Cabecera y Hub
+  // Contadores de Navbar Inferior, Drawer y Hub
   setText('badgeCountBrigadas', state.visits.length);
   setText('badgeCountDaily', state.dailies.length);
   setText('badgeCountTareas', pendingTasks);
   setText('badgeCountLlamados', state.warnings.length);
+
+  setText('drawerBadgeBrigadas', state.visits.length);
+  setText('drawerBadgeDaily', state.dailies.length);
+  setText('drawerBadgeTareas', pendingTasks);
+  setText('drawerBadgeLlamados', state.warnings.length);
 
   setText('hubStatBrigadas', state.visits.length);
   setText('hubStatDaily', state.dailies.length);
   setText('hubStatTareas', pendingTasks);
   setText('hubStatLlamados', state.warnings.length);
 
-  setText('hubCardBrigadasInfo', `${state.visits.length} visitas · 🔥 ${hotVisits} muy interesados`);
+  setText('hubCardBrigadasInfo', `${state.visits.length} visitas · ${hotVisits} muy interesados`);
   setText('hubCardDailyInfo', `${state.dailies.length} reportes en el muro del equipo`);
   setText('hubCardTareasInfo', `${pendingTasks} pendientes · ${state.tasks.length - pendingTasks} completadas`);
   setText('hubCardLlamadosInfo', `${state.warnings.length} registros en bitácora`);
 
-  // Feed Unificado Reciente
+  // Feed Unificado Reciente (100% Iconos SVG)
   const feedEl = document.getElementById('hubUnifiedFeed');
   if (!feedEl) return;
 
   const combined = [
     ...state.visits.slice(0, 3).map(v => ({
-      mod: '🚀 Brigada',
+      icon: 'compass',
+      mod: 'Brigada',
       title: `${v.negocio_nombre} (${v.direccion})`,
-      desc: `${v.motivo_estado || ''}${v.condiciones_notas ? ' — "' + v.condiciones_notas + '"' : ''}`,
+      desc: `${v.motivo_estado || ''}${v.condiciones_notas ? ' — “' + v.condiciones_notas + '”' : ''}`,
       author: v.brigadista_nombre,
       time: `${v.fecha} ${v.hora}`,
       clickMod: 'brigadas'
     })),
     ...state.dailies.slice(0, 2).map(d => ({
-      mod: '☀️ Daily Day',
+      icon: 'sun',
+      mod: 'Daily Day',
       title: `Foco hoy: ${d.focus}`,
-      desc: d.blocker ? `🚧 Bloqueo: ${d.blocker}` : `✅ Logro: ${d.done || 'En progreso'}`,
+      desc: d.blocker ? `Bloqueo: ${d.blocker}` : `Avance: ${d.done || 'En progreso'}`,
       author: d.author,
       time: `${d.fecha} ${d.hora}`,
       clickMod: 'daily'
     })),
     ...state.tasks.slice(0, 2).map(t => ({
-      mod: '✅ Tarea',
+      icon: 'check-square',
+      mod: 'Tarea',
       title: t.title,
       desc: `Prioridad ${t.priority} · Estado: ${t.completed ? 'Completada' : 'Pendiente'}`,
       author: t.assignee,
@@ -322,7 +555,8 @@ function renderHubDashboard() {
       clickMod: 'tareas'
     })),
     ...state.warnings.slice(0, 2).map(w => ({
-      mod: '⚠️ Llamado',
+      icon: 'shield-alert',
+      mod: 'Llamado',
       title: `${w.member} — ${w.category}`,
       desc: w.reason,
       author: `Reg: ${w.author}`,
@@ -332,18 +566,25 @@ function renderHubDashboard() {
   ].slice(0, 6);
 
   feedEl.innerHTML = combined.map(item => `
-    <div
+    <button
+      type="button"
       onclick="switchModule('${item.clickMod}')"
-      class="p-4 rounded-2xl bg-[#1b152c] border border-violet-500/20 hover:border-violet-400/50 cursor-pointer transition space-y-1"
+      class="p-4 rounded-2xl glass-panel hover:border-violet-400/50 text-left cursor-pointer space-y-1.5 transition-colors"
     >
       <div class="flex items-center justify-between text-[11px]">
-        <span class="font-extrabold text-violet-300 bg-violet-500/15 px-2.5 py-0.5 rounded-full">${escapeHtml(item.mod)}</span>
-        <span class="text-violet-300/60">${escapeHtml(item.time)}</span>
+        <span class="inline-flex items-center gap-1.5 font-extrabold text-violet-200 bg-violet-500/20 border border-violet-400/25 px-2.5 py-0.5 rounded-full">
+          <i data-lucide="${item.icon}" class="w-3 h-3 text-violet-300" aria-hidden="true"></i>
+          <span>${escapeHtml(item.mod)}</span>
+        </span>
+        <span class="text-violet-300/60 tabular-nums">${escapeHtml(item.time)}</span>
       </div>
       <p class="font-extrabold text-sm text-white truncate">${escapeHtml(item.title)}</p>
       <p class="text-xs text-violet-200/75 truncate">${escapeHtml(item.desc)}</p>
-      <p class="text-[11px] text-violet-300/70 pt-0.5">👤 ${escapeHtml(item.author)}</p>
-    </div>
+      <p class="text-[11px] text-violet-300/70 pt-0.5 flex items-center gap-1.5">
+        <i data-lucide="user" class="w-3 h-3 text-violet-300" aria-hidden="true"></i>
+        <span>${escapeHtml(item.author)}</span>
+      </p>
+    </button>
   `).join('');
 }
 
@@ -353,13 +594,12 @@ function setText(id, val) {
 }
 
 // ============================================================================
-// 5. MÓDULO DAILY DAY (SEGUIMIENTO DIARIO DEL EQUIPO)
+// 6. MÓDULO DAILY DAY (SEGUIMIENTO DIARIO DEL EQUIPO)
 // ============================================================================
 window.selectDailyMood = function(mood) {
   state.dailyMood = mood;
-  const buttons = document.querySelectorAll('#dailyMoodChips button');
-  buttons.forEach(btn => {
-    if (btn.textContent.trim() === mood) btn.classList.add('active-blue');
+  document.querySelectorAll('#dailyMoodChips button').forEach(btn => {
+    if (btn.getAttribute('data-mood') === mood) btn.classList.add('active-blue');
     else btn.classList.remove('active-blue');
   });
 };
@@ -391,7 +631,7 @@ function handleDailySubmit(e) {
 
   refreshAllUI();
   fireCelebrationConfetti(false);
-  showToast('☀️ Daily Day publicado en el tablero del equipo');
+  showToast('Daily Day publicado en el tablero del equipo');
 }
 
 function renderDailiesList() {
@@ -399,30 +639,59 @@ function renderDailiesList() {
   if (!container) return;
 
   if (state.dailies.length === 0) {
-    container.innerHTML = `<p class="text-xs text-violet-300/60 py-6 text-center">Aún no hay reportes de Daily Day hoy.</p>`;
+    container.innerHTML = `<p class="text-xs text-violet-300/60 py-6 text-center">Aún no hay reportes de Daily Day hoy. Comparte tu foco del día para iniciar.</p>`;
     return;
   }
 
-  container.innerHTML = state.dailies.map(d => `
-    <div class="p-4 rounded-2xl bg-[#1b152c] border border-violet-500/25 space-y-2">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span class="font-extrabold text-sm text-white">👤 ${escapeHtml(d.author)}</span>
-          <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">${escapeHtml(d.mood)}</span>
-        </div>
-        <div class="flex items-center gap-2 text-[11px] text-violet-300/60">
-          <span>${escapeHtml(d.fecha)} · ${escapeHtml(d.hora)}</span>
-          <button onclick="deleteDaily('${d.id}')" class="hover:text-rose-400 font-bold">✕</button>
-        </div>
-      </div>
+  container.innerHTML = state.dailies.map(d => {
+    const cleanMood = String(d.mood || 'Enfocado').replace(/[^\w\sáéíóúÁÉÍÓÚñÑ@]/g, '').trim() || 'A tope';
+    const moodIcon = cleanMood.toLowerCase().includes('bloqueo') ? 'life-buoy' : (cleanMood.toLowerCase().includes('tope') ? 'flame' : 'zap');
 
-      <p class="text-xs text-violet-100">
-        🎯 <b class="text-violet-300">Foco hoy:</b> ${escapeHtml(d.focus)}
-      </p>
-      ${d.done ? `<p class="text-xs text-violet-200/80">✅ <b>Avance reciente:</b> ${escapeHtml(d.done)}</p>` : ''}
-      ${d.blocker ? `<p class="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/25 px-3 py-1.5 rounded-xl">🚧 <b>Bloqueo / Apoyo:</b> ${escapeHtml(d.blocker)}</p>` : ''}
-    </div>
-  `).join('');
+    return `
+      <div class="p-4 rounded-2xl glass-panel space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-violet-600/30 border border-violet-400/30 text-violet-200 text-xs font-extrabold flex items-center justify-center">
+              ${escapeHtml(getInitials(d.author))}
+            </span>
+            <span class="font-extrabold text-sm text-white">${escapeHtml(d.author)}</span>
+            <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">
+              <i data-lucide="${moodIcon}" class="w-3 h-3" aria-hidden="true"></i>
+              <span>${escapeHtml(cleanMood)}</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-2 text-[11px] text-violet-300/60 tabular-nums">
+            <span>${escapeHtml(d.fecha)} · ${escapeHtml(d.hora)}</span>
+            <button
+              type="button"
+              onclick="deleteDaily('${d.id}')"
+              aria-label="Eliminar reporte Daily"
+              class="min-h-[32px] min-w-[32px] rounded-lg hover:bg-rose-500/20 hover:text-rose-300 flex items-center justify-center cursor-pointer"
+            >
+              <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <p class="text-xs text-violet-100 flex items-start gap-2">
+          <i data-lucide="target" class="w-4 h-4 text-violet-300 shrink-0 mt-0.5" aria-hidden="true"></i>
+          <span><b class="text-violet-300">Foco hoy:</b> ${escapeHtml(d.focus)}</span>
+        </p>
+        ${d.done ? `
+          <p class="text-xs text-violet-200/80 flex items-start gap-2">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" aria-hidden="true"></i>
+            <span><b>Avance reciente:</b> ${escapeHtml(d.done)}</span>
+          </p>
+        ` : ''}
+        ${d.blocker ? `
+          <div class="text-xs text-amber-200 bg-amber-500/15 border border-amber-500/30 px-3 py-2 rounded-xl flex items-start gap-2">
+            <i data-lucide="triangle-alert" class="w-4 h-4 text-amber-300 shrink-0 mt-0.5" aria-hidden="true"></i>
+            <span><b>Bloqueo / Apoyo:</b> ${escapeHtml(d.blocker)}</span>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
 }
 
 window.deleteDaily = function(id) {
@@ -432,13 +701,13 @@ window.deleteDaily = function(id) {
 };
 
 // ============================================================================
-// 6. MÓDULO DE TAREAS PENDIENTES (TO-DO & SEGUIMIENTOS)
+// 7. MÓDULO DE TAREAS PENDIENTES (CON CUSTOM CHECKBOX TAILWIND)
 // ============================================================================
 function handleTaskSubmit(e) {
   e.preventDefault();
   const title = document.getElementById('taskTitleInput').value.trim();
-  const assignee = document.getElementById('taskAssigneeSelect').value || state.currentUser?.nombre || 'Equipo';
-  const priority = document.getElementById('taskPriorityInput').value;
+  const assignee = state.taskAssignee || state.currentUser?.nombre || 'Equipo';
+  const priority = state.taskPriority || 'Media';
   const notes = document.getElementById('taskNotesInput').value.trim();
   if (!title) return;
 
@@ -460,7 +729,7 @@ function handleTaskSubmit(e) {
   document.getElementById('taskNotesInput').value = '';
 
   refreshAllUI();
-  showToast('✅ Tarea agregada al tablero');
+  showToast('Tarea agregada al tablero');
 }
 
 window.toggleTaskDone = function(id) {
@@ -480,7 +749,15 @@ window.deleteTask = function(id) {
 
 window.filterTasksView = function(filter) {
   state.tasksFilter = filter;
+  document.querySelectorAll('#taskFilterPills button').forEach(btn => {
+    if (btn.getAttribute('data-filter') === filter) {
+      btn.className = 'min-h-[36px] px-3 py-1.5 rounded-xl bg-violet-600 text-xs font-bold text-white cursor-pointer';
+    } else {
+      btn.className = 'min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-bold text-violet-200 hover:text-white cursor-pointer';
+    }
+  });
   renderTasksList();
+  refreshLucideIcons();
 };
 
 function renderTasksList() {
@@ -504,36 +781,56 @@ function renderTasksList() {
       : (t.priority === 'Media' ? 'bg-violet-500/20 text-violet-200 border-violet-400/30' : 'bg-slate-800 text-slate-300 border-slate-700');
 
     return `
-      <div class="p-4 rounded-2xl bg-[#1b152c] border border-violet-500/20 flex items-start justify-between gap-3 ${t.completed ? 'opacity-60' : ''}">
-        <div class="flex items-start gap-3">
-          <input
-            type="checkbox"
-            ${t.completed ? 'checked' : ''}
-            onchange="toggleTaskDone('${t.id}')"
-            class="mt-1 w-5 h-5 accent-violet-600 cursor-pointer"
-          />
-          <div class="space-y-1">
+      <div class="p-4 rounded-2xl glass-panel flex items-start justify-between gap-3 ${t.completed ? 'opacity-65' : ''}">
+        <div class="flex items-start gap-3.5 min-w-0">
+          <!-- Custom Tailwind Checkbox Button (Sin <input type="checkbox"> nativo) -->
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked="${t.completed ? 'true' : 'false'}"
+            aria-label="Marcar tarea ${escapeHtml(t.title)} como ${t.completed ? 'pendiente' : 'completada'}"
+            onclick="toggleTaskDone('${t.id}')"
+            class="mt-0.5 w-6 h-6 rounded-lg border flex items-center justify-center shrink-0 cursor-pointer transition-colors ${
+              t.completed
+                ? 'bg-violet-600 border-violet-400 text-white'
+                : 'bg-[#120d20] border-violet-400/40 text-transparent hover:border-violet-300'
+            }"
+          >
+            <i data-lucide="check" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          </button>
+
+          <div class="space-y-1 min-w-0">
             <div class="flex flex-wrap items-center gap-2">
               <p class="font-extrabold text-sm text-white ${t.completed ? 'line-through text-violet-300/60' : ''}">${escapeHtml(t.title)}</p>
               <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${prioBadge}">${escapeHtml(t.priority)}</span>
             </div>
             ${t.notes ? `<p class="text-xs text-violet-200/80">${escapeHtml(t.notes)}</p>` : ''}
-            <p class="text-[11px] text-violet-300/60">👤 Responsable: <b class="text-violet-200">${escapeHtml(t.assignee)}</b> · ${escapeHtml(t.fecha)}</p>
+            <p class="text-[11px] text-violet-300/65 flex items-center gap-1.5">
+              <i data-lucide="user" class="w-3 h-3 text-violet-300" aria-hidden="true"></i>
+              <span>Responsable: <b class="text-violet-200">${escapeHtml(t.assignee)}</b> · ${escapeHtml(t.fecha)}</span>
+            </p>
           </div>
         </div>
-        <button onclick="deleteTask('${t.id}')" class="text-xs text-violet-300/50 hover:text-rose-400 font-bold px-2">✕</button>
+
+        <button
+          type="button"
+          onclick="deleteTask('${t.id}')"
+          aria-label="Eliminar tarea"
+          class="min-h-[36px] min-w-[36px] rounded-xl text-violet-300/60 hover:text-rose-300 hover:bg-rose-500/15 flex items-center justify-center shrink-0 cursor-pointer"
+        >
+          <i data-lucide="trash-2" class="w-4 h-4" aria-hidden="true"></i>
+        </button>
       </div>
     `;
   }).join('');
 }
 
 // ============================================================================
-// 7. MÓDULO DE LLAMADOS DE ATENCIÓN & BITÁCORA
+// 8. MÓDULO DE LLAMADOS DE ATENCIÓN & BITÁCORA
 // ============================================================================
 window.selectWarnCategory = function(cat) {
   state.warnCategory = cat;
-  const buttons = document.querySelectorAll('#warnCategoryChips button');
-  buttons.forEach(btn => {
+  document.querySelectorAll('#warnCategoryChips button').forEach(btn => {
     if (btn.getAttribute('onclick').includes(cat)) btn.classList.add('active-blue');
     else btn.classList.remove('active-blue');
   });
@@ -541,8 +838,8 @@ window.selectWarnCategory = function(cat) {
 
 function handleWarningSubmit(e) {
   e.preventDefault();
-  const member = document.getElementById('warnMemberSelect').value || 'Colaborador';
-  const severity = document.getElementById('warnSeverityInput').value;
+  const member = state.warnMember || state.users[0]?.nombre || 'Colaborador';
+  const severity = state.warnSeverity || 'Llamado de Atención Verbal';
   const reason = document.getElementById('warnReasonInput').value.trim();
   const commitment = document.getElementById('warnCommitmentInput').value.trim();
   if (!reason) return;
@@ -566,7 +863,7 @@ function handleWarningSubmit(e) {
   document.getElementById('warnCommitmentInput').value = '';
 
   refreshAllUI();
-  showToast(`⚠️ Llamado de atención registrado para ${member}`);
+  showToast(`Llamado de atención registrado para ${member}`);
 }
 
 function renderWarningsList() {
@@ -584,26 +881,38 @@ function renderWarningsList() {
       : (w.severity.includes('Verbal') ? 'bg-amber-500/20 text-amber-200 border-amber-400/40' : 'bg-violet-500/20 text-violet-200 border-violet-400/30');
 
     return `
-      <div class="p-4 rounded-2xl bg-[#1b152c] border border-violet-500/25 space-y-2">
+      <div class="p-4 rounded-2xl glass-panel space-y-2.5">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="font-extrabold text-sm text-white">👤 ${escapeHtml(w.member)}</span>
+            <span class="inline-flex items-center gap-1.5 font-extrabold text-sm text-white">
+              <i data-lucide="user" class="w-4 h-4 text-rose-300" aria-hidden="true"></i>
+              <span>${escapeHtml(w.member)}</span>
+            </span>
             <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${sevBadge}">${escapeHtml(w.severity)}</span>
-            <span class="text-[11px] font-semibold text-violet-300 bg-[#251c3d] px-2.5 py-0.5 rounded-lg">${escapeHtml(w.category)}</span>
+            <span class="text-[11px] font-semibold text-violet-200 bg-violet-500/15 border border-violet-400/20 px-2.5 py-0.5 rounded-lg">${escapeHtml(w.category)}</span>
           </div>
-          <div class="flex items-center gap-2 text-[11px] text-violet-300/60">
+          <div class="flex items-center gap-2 text-[11px] text-violet-300/60 tabular-nums">
             <span>${escapeHtml(w.fecha)} · ${escapeHtml(w.hora)}</span>
-            <button onclick="deleteWarning('${w.id}')" class="hover:text-rose-400 font-bold">✕</button>
+            <button
+              type="button"
+              onclick="deleteWarning('${w.id}')"
+              aria-label="Eliminar registro"
+              class="min-h-[32px] min-w-[32px] rounded-lg hover:bg-rose-500/20 hover:text-rose-300 flex items-center justify-center cursor-pointer"
+            >
+              <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+            </button>
           </div>
         </div>
 
-        <p class="text-xs text-violet-100 leading-relaxed">
-          📝 <b>Detalle:</b> ${escapeHtml(w.reason)}
+        <p class="text-xs text-violet-100 leading-relaxed flex items-start gap-2">
+          <i data-lucide="file-warning" class="w-4 h-4 text-rose-300 shrink-0 mt-0.5" aria-hidden="true"></i>
+          <span><b>Detalle:</b> ${escapeHtml(w.reason)}</span>
         </p>
         ${w.commitment ? `
-          <p class="text-xs text-violet-200 bg-violet-500/10 border border-violet-500/25 px-3 py-1.5 rounded-xl">
-            🤝 <b>Compromiso acordado:</b> ${escapeHtml(w.commitment)}
-          </p>
+          <div class="text-xs text-violet-200 bg-violet-500/10 border border-violet-500/25 px-3 py-2 rounded-xl flex items-start gap-2">
+            <i data-lucide="handshake" class="w-4 h-4 text-violet-300 shrink-0 mt-0.5" aria-hidden="true"></i>
+            <span><b>Compromiso acordado:</b> ${escapeHtml(w.commitment)}</span>
+          </div>
         ` : ''}
         <p class="text-[10px] text-violet-300/60">Registrado por: <b>${escapeHtml(w.author)}</b></p>
       </div>
@@ -618,7 +927,7 @@ window.deleteWarning = function(id) {
 };
 
 // ============================================================================
-// 8. MÓDULO BRIGADAS COMERCIALES (GAMIFICACIÓN, CHECK-IN, CAPTURA Y ANALÍTICA)
+// 9. MÓDULO BRIGADAS COMERCIALES (SIN CHECKBOXES NI SPINNERS NATIVOS)
 // ============================================================================
 function calculateUserXP(userName) {
   const userVisits = state.visits.filter(v => v.brigadista_nombre === userName);
@@ -634,10 +943,10 @@ function calculateUserXP(userName) {
 }
 
 function getRankFromXP(xp) {
-  if (xp >= 450) return { title: '👑 Leyenda de Brigada' };
-  if (xp >= 250) return { title: '🔥 Closer de Calle' };
-  if (xp >= 100) return { title: '🎯 Cazador Comercial' };
-  return { title: '⚡ Explorador' };
+  if (xp >= 450) return { title: 'Leyenda de Brigada', icon: 'crown' };
+  if (xp >= 250) return { title: 'Closer de Calle', icon: 'flame' };
+  if (xp >= 100) return { title: 'Cazador Comercial', icon: 'target' };
+  return { title: 'Explorador', icon: 'compass' };
 }
 
 function fireCelebrationConfetti(isBigGoal = false) {
@@ -649,48 +958,90 @@ function fireCelebrationConfetti(isBigGoal = false) {
   }
 }
 
+window.adjustDailyGoal = function(delta) {
+  const input = document.getElementById('inputMetaDiaria');
+  if (!input) return;
+  const current = parseInt(input.value, 10) || 12;
+  const next = Math.max(1, Math.min(100, current + delta));
+  input.value = next;
+};
+
 window.togglePreCheck = function(item) {
   const map = {
-    carnet: { chk: 'chkCarnet', card: 'checkCardCarnet', label: 'labelCarnetState', yes: '✅ Sí, visible y puesto', no: '⚠️ No llevo carnet hoy' },
-    tarjetas: { chk: 'chkTarjetas', card: 'checkCardTarjetas', label: 'labelTarjetasState', yes: '✅ Sí, llevo tarjetas', no: '⚠️ Sin tarjetas hoy' },
-    folletos: { chk: 'chkFolletos', card: 'checkCardFolletos', label: 'labelFolletosState', yes: '✅ Sí, llevo folletos', no: '⚠️ Sin folletos hoy' }
+    carnet: {
+      card: 'checkCardCarnet',
+      pill: 'switchPillCarnet',
+      label: 'labelCarnetState',
+      yes: 'Sí, visible y puesto',
+      no: 'No llevo carnet hoy'
+    },
+    tarjetas: {
+      card: 'checkCardTarjetas',
+      pill: 'switchPillTarjetas',
+      label: 'labelTarjetasState',
+      yes: 'Sí, llevo tarjetas',
+      no: 'Sin tarjetas hoy'
+    },
+    folletos: {
+      card: 'checkCardFolletos',
+      pill: 'switchPillFolletos',
+      label: 'labelFolletosState',
+      yes: 'Sí, llevo folletos',
+      no: 'Sin folletos hoy'
+    }
   };
   const cfg = map[item];
   if (!cfg) return;
 
-  const checkbox = document.getElementById(cfg.chk);
-  checkbox.checked = !checkbox.checked;
+  state.preForm[item] = !state.preForm[item];
+  const isEquipped = state.preForm[item];
+
   const card = document.getElementById(cfg.card);
+  const pill = document.getElementById(cfg.pill);
   const label = document.getElementById(cfg.label);
 
-  if (checkbox.checked) {
-    card.classList.add('equipped');
-    card.classList.remove('not-equipped');
-    label.textContent = cfg.yes;
-    label.className = 'text-xs font-bold text-violet-300 mt-0.5';
+  card?.setAttribute('aria-checked', isEquipped ? 'true' : 'false');
+
+  if (isEquipped) {
+    card?.classList.add('equipped');
+    card?.classList.remove('not-equipped');
+    if (label) {
+      label.textContent = cfg.yes;
+      label.className = 'text-xs font-bold text-violet-300 mt-0.5';
+    }
+    if (pill) {
+      pill.className = 'w-7 h-7 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow shrink-0';
+      pill.innerHTML = '<i data-lucide="check" class="w-4 h-4" aria-hidden="true"></i>';
+    }
   } else {
-    card.classList.remove('equipped');
-    card.classList.add('not-equipped');
-    label.textContent = cfg.no;
-    label.className = 'text-xs font-bold text-rose-400 mt-0.5';
+    card?.classList.remove('equipped');
+    card?.classList.add('not-equipped');
+    if (label) {
+      label.textContent = cfg.no;
+      label.className = 'text-xs font-bold text-rose-300 mt-0.5';
+    }
+    if (pill) {
+      pill.className = 'w-7 h-7 rounded-xl bg-rose-500/25 border border-rose-400/40 text-rose-200 flex items-center justify-center shrink-0';
+      pill.innerHTML = '<i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>';
+    }
   }
 
-  const c = document.getElementById('chkCarnet').checked ? 1 : 0;
-  const t = document.getElementById('chkTarjetas').checked ? 1 : 0;
-  const f = document.getElementById('chkFolletos').checked ? 1 : 0;
+  const c = state.preForm.carnet ? 1 : 0;
+  const t = state.preForm.tarjetas ? 1 : 0;
+  const f = state.preForm.folletos ? 1 : 0;
   const pct = Math.round(((c + t + f) / 3) * 100);
-  const el = document.getElementById('readinessScoreText');
-  if (el) el.textContent = `${pct}% Equipado`;
+  setText('readinessScoreText', `${pct}% Equipado`);
+  refreshLucideIcons();
 };
 
 window.confirmPreBrigada = async function() {
   if (!state.currentUser) return;
 
-  const tiene_carnet = document.getElementById('chkCarnet').checked;
-  const tiene_tarjetas = document.getElementById('chkTarjetas').checked;
-  const tiene_folletos = document.getElementById('chkFolletos').checked;
-  const zona = document.getElementById('inputZonaBrigada').value.trim() || 'Sector Comercial';
-  const meta_diaria = parseInt(document.getElementById('inputMetaDiaria').value, 10) || 12;
+  const tiene_carnet = state.preForm.carnet;
+  const tiene_tarjetas = state.preForm.tarjetas;
+  const tiene_folletos = state.preForm.folletos;
+  const zona = document.getElementById('inputZonaBrigada')?.value.trim() || 'Sector Comercial';
+  const meta_diaria = parseInt(document.getElementById('inputMetaDiaria')?.value, 10) || 12;
 
   state.preCheckin = {
     id: 'ses_' + Date.now(),
@@ -716,28 +1067,26 @@ window.confirmPreBrigada = async function() {
   syncMaterialChipsUI();
 
   refreshAllUI();
-  showToast('🚀 ¡Equipamiento confirmado! Ya puedes anotar negocios rápido.');
+  showToast('Equipamiento confirmado. Ya puedes anotar negocios rápido.');
   setTimeout(() => document.getElementById('negocioNombre')?.focus(), 150);
 };
 
 window.reopenPreBrigada = function() {
-  document.getElementById('preBrigadaCard').classList.remove('hidden');
-  document.getElementById('brigadaWorkspaceGrid').classList.add('hidden');
+  document.getElementById('preBrigadaCard')?.classList.remove('hidden');
+  document.getElementById('brigadaWorkspaceGrid')?.classList.add('hidden');
 };
 
 window.selectRubro = function(rubro) {
   state.form.rubro = rubro;
-  const buttons = document.querySelectorAll('#rubroChips button');
-  buttons.forEach(btn => {
-    if (btn.textContent.includes(rubro.split(' ')[0])) btn.classList.add('active-blue');
+  document.querySelectorAll('#rubroChips button').forEach(btn => {
+    if (btn.getAttribute('data-rubro') === rubro) btn.classList.add('active-blue');
     else btn.classList.remove('active-blue');
   });
 };
 
 window.selectInterlocutor = function(persona) {
   state.form.interlocutor = persona;
-  const buttons = document.querySelectorAll('#interlocutorChips button');
-  buttons.forEach(btn => {
+  document.querySelectorAll('#interlocutorChips button').forEach(btn => {
     if (btn.getAttribute('onclick').includes(persona)) btn.classList.add('active-indigo');
     else btn.classList.remove('active-indigo');
   });
@@ -751,8 +1100,7 @@ window.toggleMaterial = function(mat) {
 };
 
 function syncMaterialChipsUI() {
-  const buttons = document.querySelectorAll('#materialChips button');
-  buttons.forEach(btn => {
+  document.querySelectorAll('#materialChips button').forEach(btn => {
     const mat = btn.getAttribute('data-mat');
     if (state.form.material.includes(mat)) btn.classList.add('active-indigo');
     else btn.classList.remove('active-indigo');
@@ -785,7 +1133,7 @@ function renderOutcomeSubChips(chips) {
       <button
         type="button"
         onclick="selectOutcomeChip('${escapeHtml(chipText)}')"
-        class="chip-btn ${isSelected ? 'active-blue' : ''} px-3.5 py-2 rounded-xl text-xs font-bold text-left"
+        class="chip-btn ${isSelected ? 'active-blue' : ''} min-h-[38px] px-3.5 py-2 rounded-xl text-xs font-bold text-left"
       >
         ${escapeHtml(chipText)}
       </button>
@@ -801,7 +1149,7 @@ window.selectOutcomeChip = function(chipText) {
 window.toggleVoiceDictation = function() {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRec) {
-    showToast('⚠️ Usa Chrome, Edge o Safari para dictar por voz.');
+    showToast('Usa Chrome, Edge o Safari para dictar por voz.');
     return;
   }
 
@@ -822,29 +1170,30 @@ window.toggleVoiceDictation = function() {
 
   recognition.onstart = () => {
     state.isRecordingVoice = true;
-    btn.classList.add('mic-recording');
-    btnText.textContent = 'Escuchando...';
+    btn?.classList.add('mic-recording');
+    if (btnText) btnText.textContent = 'Escuchando…';
   };
 
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
     textarea.value = textarea.value ? `${textarea.value.trim()} ${transcript}` : transcript;
-    showToast('🎙️ Condición anotada por voz');
+    showToast('Condición anotada por voz');
   };
 
   recognition.onend = () => {
     state.isRecordingVoice = false;
-    btn.classList.remove('mic-recording');
-    btnText.textContent = 'Dictar con voz';
+    btn?.classList.remove('mic-recording');
+    if (btnText) btnText.textContent = 'Dictar con voz';
   };
 
   recognition.start();
 };
 
 function checkDuplicateBusiness() {
-  const nombre = document.getElementById('negocioNombre').value.trim().toLowerCase();
-  const dir = document.getElementById('negocioDireccion').value.trim().toLowerCase();
+  const nombre = document.getElementById('negocioNombre')?.value.trim().toLowerCase() || '';
+  const dir = document.getElementById('negocioDireccion')?.value.trim().toLowerCase() || '';
   const warnBox = document.getElementById('duplicateWarning');
+  if (!warnBox) return;
 
   if (nombre.length < 3 && dir.length < 5) {
     warnBox.classList.add('hidden');
@@ -859,10 +1208,16 @@ function checkDuplicateBusiness() {
 
   if (match) {
     const statusText = match.resultado === 'interesado'
-      ? '🔥 Muy Interesado'
-      : (match.resultado === 'solo_info' ? '🌤️ Ya recibió info / Ya tiene sistema' : '❄️ No interesado');
-    warnBox.innerHTML = `⚠️ <b>Radar Anti-Duplicados:</b> Ya se registró <b>${escapeHtml(match.negocio_nombre)}</b> en <b>${escapeHtml(match.direccion)}</b> por ${escapeHtml(match.brigadista_nombre)} → <span class="underline">${statusText}</span> (${escapeHtml(match.motivo_estado || '')}).`;
+      ? 'Muy Interesado'
+      : (match.resultado === 'solo_info' ? 'Ya recibió info / Ya tiene sistema' : 'No interesado');
+    warnBox.innerHTML = `
+      <div class="flex items-start gap-2">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-amber-300 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <span><b>Radar Anti-Duplicados:</b> Ya se registró <b>${escapeHtml(match.negocio_nombre)}</b> en <b>${escapeHtml(match.direccion)}</b> por ${escapeHtml(match.brigadista_nombre)} — <span class="underline">${statusText}</span> (${escapeHtml(match.motivo_estado || '')}).</span>
+      </div>
+    `;
     warnBox.classList.remove('hidden');
+    refreshLucideIcons();
   } else {
     warnBox.classList.add('hidden');
   }
@@ -870,12 +1225,12 @@ function checkDuplicateBusiness() {
 
 window.detectAddressByGps = function() {
   if (!navigator.geolocation) {
-    showToast('⚠️ Tu navegador no soporta geolocalización.');
+    showToast('Tu navegador no soporta geolocalización.');
     return;
   }
 
   const label = document.getElementById('gpsBtnLabel');
-  label.textContent = 'Buscando...';
+  if (label) label.textContent = 'Buscando…';
 
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
@@ -896,12 +1251,12 @@ window.detectAddressByGps = function() {
         document.getElementById('negocioDireccion').value = `GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
       }
 
-      label.textContent = '📍 Listo';
+      if (label) label.textContent = 'Listo';
       checkDuplicateBusiness();
     },
     () => {
-      label.textContent = 'GPS';
-      showToast('⚠️ Activa el permiso de ubicación o escribe la dirección.');
+      if (label) label.textContent = 'GPS';
+      showToast('Activa el permiso de ubicación o escribe la dirección.');
     },
     { enableHighAccuracy: true, timeout: 8000 }
   );
@@ -965,10 +1320,10 @@ async function handleVisitSubmit(e) {
   document.getElementById('condicionesNotas').value = '';
   document.getElementById('contactoNombre').value = '';
   document.getElementById('contactoTelefono').value = '';
-  document.getElementById('duplicateWarning').classList.add('hidden');
+  document.getElementById('duplicateWarning')?.classList.add('hidden');
   state.form.gps_lat = null;
   state.form.gps_lng = null;
-  document.getElementById('gpsBtnLabel').textContent = 'GPS';
+  setText('gpsBtnLabel', 'GPS');
 
   refreshAllUI();
 
@@ -979,24 +1334,24 @@ async function handleVisitSubmit(e) {
 
   if (myTodayVisits.length === goal) {
     fireCelebrationConfetti(true);
-    showToast(`🏆 ¡META CUMPLIDA! Llegaste a tus ${goal} acercamientos de hoy.`);
+    showToast(`Meta cumplida: llegaste a tus ${goal} acercamientos de hoy.`);
   } else if (newVisit.resultado === 'interesado') {
     fireCelebrationConfetti(false);
-    showToast(`🔥 ¡ +50 XP ! Cliente interesado guardado (${myTodayVisits.length}/${goal})`);
+    showToast(`+50 XP · Cliente interesado guardado (${myTodayVisits.length}/${goal})`);
   } else {
-    showToast(`✅ Guardado: ${negocio_nombre} (${myTodayVisits.length}/${goal} hoy)`);
+    showToast(`Guardado: ${negocio_nombre} (${myTodayVisits.length}/${goal} hoy)`);
   }
 
-  document.getElementById('negocioNombre').focus();
+  document.getElementById('negocioNombre')?.focus();
 }
 
 // ============================================================================
-// 9. ACTUALIZACIÓN INTEGRAL DE TODA LA INTERFAZ
+// 10. ACTUALIZACIÓN INTEGRAL DE TODA LA INTERFAZ
 // ============================================================================
 function refreshAllUI() {
   if (!state.currentUser) return;
 
-  renderUserSelects();
+  renderCustomUserMenus();
   renderHubDashboard();
   renderDailiesList();
   renderTasksList();
@@ -1011,6 +1366,7 @@ function refreshAllUI() {
   const pct = Math.min(100, Math.round((myToday.length / goal) * 100));
 
   setText('goalProgressCounter', `${myToday.length} / ${goal}`);
+  setText('drawerGoalSummary', `Meta de brigada hoy: ${myToday.length} / ${goal} acercamientos`);
   setText('hotProgressCounter', myHotToday);
   setText('infoProgressCounter', myInfoToday);
   const bar = document.getElementById('goalProgressBar');
@@ -1027,11 +1383,11 @@ function refreshAllUI() {
   if (missionPill && missionHelper) {
     const remaining = Math.max(0, goal - myToday.length);
     if (remaining === 0) {
-      missionPill.textContent = '🏆 Objetivo de Brigada Logrado';
-      missionHelper.innerHTML = `¡Completaste la meta de <b>${goal} visitas</b> hoy con <b>${myHotToday} clientes muy interesados</b>!`;
+      missionPill.textContent = 'Objetivo de Brigada Logrado';
+      missionHelper.innerHTML = `Completaste la meta de <b>${goal} visitas</b> hoy con <b>${myHotToday} clientes muy interesados</b>.`;
     } else {
       missionPill.textContent = `Faltan ${remaining} visitas para tu meta`;
-      missionHelper.innerHTML = `Llevas <b>${myToday.length} de ${goal}</b> acercamientos hoy y <b>🔥 ${myHotToday} muy interesados</b>.`;
+      missionHelper.innerHTML = `Llevas <b>${myToday.length} de ${goal}</b> acercamientos hoy y <b>${myHotToday} muy interesados</b>.`;
     }
   }
 
@@ -1041,10 +1397,10 @@ function refreshAllUI() {
     document.getElementById('preBrigadaCard')?.classList.add('hidden');
     document.getElementById('brigadaWorkspaceGrid')?.classList.remove('hidden');
 
-    setBadgeStatus('badgeCarnet', '🪪 Carnet', state.preCheckin.tiene_carnet);
-    setBadgeStatus('badgeTarjetas', '📇 Tarjetas', state.preCheckin.tiene_tarjetas);
-    setBadgeStatus('badgeFolletos', '📄 Folletos', state.preCheckin.tiene_folletos);
-    setText('badgeZona', `📍 ${state.preCheckin.zona}`);
+    setBadgeStatus('badgeCarnet', 'Carnet', state.preCheckin.tiene_carnet);
+    setBadgeStatus('badgeTarjetas', 'Tarjetas', state.preCheckin.tiene_tarjetas);
+    setBadgeStatus('badgeFolletos', 'Folletos', state.preCheckin.tiene_folletos);
+    setText('badgeZona', state.preCheckin.zona);
   } else {
     document.getElementById('preBrigadaCard')?.classList.remove('hidden');
     document.getElementById('brigadaWorkspaceGrid')?.classList.add('hidden');
@@ -1060,6 +1416,7 @@ function refreshAllUI() {
   renderHistoryList();
   renderLeaderboardAndBadges();
   renderAnalytics();
+  refreshLucideIcons();
 }
 
 function setBadgeStatus(id, label, active) {
@@ -1081,16 +1438,19 @@ function renderLastSavedWhatsAppBox() {
   }
 
   const cleanPhone = v.contacto_telefono.replace(/\D/g, '');
-  const condMsg = v.condiciones_notas ? ` Tuvimos muy en cuenta lo que nos comentaste sobre: "${v.condiciones_notas}".` : '';
-  const message = `Hola ${v.contacto_nombre || ''}, ¡qué gusto saludarte hoy en ${v.negocio_nombre}! Soy ${v.brigadista_nombre} del equipo de la brigada.${condMsg} Te comparto por aquí nuestro contacto directo.`;
+  const condMsg = v.condiciones_notas ? ` Tuvimos muy en cuenta lo que nos comentaste sobre: “${v.condiciones_notas}”.` : '';
+  const message = `Hola ${v.contacto_nombre || ''}, qué gusto saludarte hoy en ${v.negocio_nombre}. Soy ${v.brigadista_nombre} del equipo de la brigada.${condMsg} Te comparto por aquí nuestro contacto directo.`;
   const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 
   box.innerHTML = `
     <div class="flex items-center justify-between">
-      <span class="text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/25 text-violet-200 px-2.5 py-0.5 rounded-full">
-        💬 Seguimiento Instantáneo Listo
+      <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold bg-violet-500/25 text-violet-200 px-2.5 py-0.5 rounded-full">
+        <i data-lucide="message-circle" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        <span>Seguimiento Instantáneo Listo</span>
       </span>
-      <button onclick="document.getElementById('lastSavedHighlightBox').classList.add('hidden')" class="text-xs text-violet-300 hover:text-white">✕</button>
+      <button type="button" onclick="document.getElementById('lastSavedHighlightBox').classList.add('hidden')" aria-label="Cerrar seguimiento" class="text-xs text-violet-300 hover:text-white cursor-pointer">
+        <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
     </div>
     <p class="text-xs font-bold text-white">
       Envíale un WhatsApp ahora mismo a <span class="text-violet-300">${escapeHtml(v.negocio_nombre)}</span> con sus condiciones pre-cargadas:
@@ -1098,9 +1458,11 @@ function renderLastSavedWhatsAppBox() {
     <a
       href="${waUrl}"
       target="_blank"
-      class="btn-purple-primary w-full py-2.5 px-4 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2"
+      rel="noopener noreferrer"
+      class="btn-purple-primary w-full min-h-[44px] py-2.5 px-4 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2"
     >
-      <span>📲 Abrir Chat de WhatsApp con ${escapeHtml(v.contacto_nombre || v.negocio_nombre)}</span>
+      <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
+      <span>Abrir Chat de WhatsApp con ${escapeHtml(v.contacto_nombre || v.negocio_nombre)}</span>
     </a>
   `;
   box.classList.remove('hidden');
@@ -1114,17 +1476,18 @@ function renderRecentMiniList() {
   container.innerHTML = recent.map(v => {
     const badge = getOutcomeBadgeHTML(v.resultado);
     return `
-      <div class="p-3.5 rounded-2xl bg-[#1b152c] border border-violet-500/20 space-y-1">
+      <div class="p-3.5 rounded-2xl glass-panel space-y-1.5">
         <div class="flex items-center justify-between gap-2">
           <p class="font-extrabold text-xs text-white truncate">${escapeHtml(v.negocio_nombre)}</p>
           ${badge}
         </div>
-        <p class="text-[11px] text-violet-300/70 truncate">
-          📍 ${escapeHtml(v.direccion)} · <span class="text-violet-200">${escapeHtml(v.motivo_estado || '')}</span>
+        <p class="text-[11px] text-violet-300/70 truncate flex items-center gap-1.5">
+          <i data-lucide="map-pin" class="w-3 h-3 text-violet-300 shrink-0" aria-hidden="true"></i>
+          <span class="truncate">${escapeHtml(v.direccion)} · <span class="text-violet-200">${escapeHtml(v.motivo_estado || '')}</span></span>
         </p>
         ${v.condiciones_notas ? `
           <p class="text-[11px] text-violet-200 bg-violet-500/15 border border-violet-500/30 px-2.5 py-1 rounded-lg truncate">
-            💬 "${escapeHtml(v.condiciones_notas)}"
+            “${escapeHtml(v.condiciones_notas)}”
           </p>
         ` : ''}
       </div>
@@ -1132,14 +1495,48 @@ function renderRecentMiniList() {
   }).join('');
 }
 
+window.selectHistoryResultFilter = function(value, label) {
+  state.historyResultFilter = value;
+  setText('labelFilterHistoryResult', label);
+  closeAllCustomDropdowns();
+  renderHistoryList();
+  refreshLucideIcons();
+};
+
+window.selectHistoryBrigadistaFilter = function(value, label) {
+  state.historyBrigadistaFilter = value;
+  setText('labelFilterHistoryBrigadista', label);
+  closeAllCustomDropdowns();
+  renderHistoryList();
+  refreshLucideIcons();
+};
+
 function populateBrigadistaFilter() {
-  const select = document.getElementById('filterHistoryBrigadista');
-  if (!select) return;
-  const currentVal = select.value;
+  const menu = document.getElementById('historyBrigadistaMenu');
+  if (!menu) return;
+
   const uniqueNames = [...new Set(state.visits.map(v => v.brigadista_nombre))];
-  select.innerHTML = `<option value="all">👥 Todos los brigadistas</option>` +
-    uniqueNames.map(n => `<option value="${escapeHtml(n)}">👤 ${escapeHtml(n)}</option>`).join('');
-  if (uniqueNames.includes(currentVal)) select.value = currentVal;
+  const allItems = [
+    { val: 'all', label: 'Todos los brigadistas', icon: 'users' },
+    ...uniqueNames.map(n => ({ val: n, label: n, icon: 'user' }))
+  ];
+
+  menu.innerHTML = allItems.map(item => {
+    const isSelected = state.historyBrigadistaFilter === item.val;
+    return `
+      <button
+        type="button"
+        onclick="selectHistoryBrigadistaFilter('${escapeHtml(item.val)}', '${escapeHtml(item.label)}')"
+        class="w-full min-h-[40px] px-3 py-2 rounded-xl flex items-center justify-between text-xs font-bold ${isSelected ? 'bg-violet-600 text-white' : 'text-violet-100 hover:bg-violet-600/30'} cursor-pointer"
+      >
+        <span class="flex items-center gap-2 truncate">
+          <i data-lucide="${item.icon}" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+          <span class="truncate">${escapeHtml(item.label)}</span>
+        </span>
+        ${isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>' : ''}
+      </button>
+    `;
+  }).join('');
 }
 
 function renderBrigadaMap(filteredVisits) {
@@ -1175,9 +1572,9 @@ function renderBrigadaMap(filteredVisits) {
     marker.bindPopup(`
       <div style="font-family: sans-serif; min-width: 190px; color: #0f172a;">
         <b style="font-size: 13px;">${escapeHtml(v.negocio_nombre)}</b><br/>
-        <span style="font-size: 11px; color: #475569;">📍 ${escapeHtml(v.direccion)}</span><br/>
-        <span style="font-size: 11px; font-weight: bold; color: ${color};">● ${escapeHtml(v.motivo_estado || v.resultado)}</span>
-        ${v.condiciones_notas ? `<p style="font-size: 11px; background:#f1f5f9; padding:4px 6px; border-radius:6px; margin-top:4px;">"${escapeHtml(v.condiciones_notas)}"</p>` : ''}
+        <span style="font-size: 11px; color: #475569;">Dirección: ${escapeHtml(v.direccion)}</span><br/>
+        <span style="font-size: 11px; font-weight: bold; color: ${color};">Estado: ${escapeHtml(v.motivo_estado || v.resultado)}</span>
+        ${v.condiciones_notas ? `<p style="font-size: 11px; background:#f1f5f9; padding:4px 6px; border-radius:6px; margin-top:4px;">“${escapeHtml(v.condiciones_notas)}”</p>` : ''}
       </div>
     `);
     state.mapMarkersLayer.addLayer(marker);
@@ -1194,8 +1591,8 @@ window.renderHistoryList = function() {
   if (!container) return;
 
   const query = (document.getElementById('searchHistoryInput')?.value || '').trim().toLowerCase();
-  const filterResult = document.getElementById('filterHistoryResult')?.value || 'all';
-  const filterBrigadista = document.getElementById('filterHistoryBrigadista')?.value || 'all';
+  const filterResult = state.historyResultFilter || 'all';
+  const filterBrigadista = state.historyBrigadistaFilter || 'all';
 
   const filtered = state.visits.filter(v => {
     const matchesResult = filterResult === 'all' || v.resultado === filterResult;
@@ -1223,47 +1620,65 @@ window.renderHistoryList = function() {
       : null;
 
     return `
-      <div class="glass-card rounded-3xl p-5 flex flex-col justify-between gap-3 border border-violet-500/20">
-        <div class="space-y-2">
+      <div class="glass-card rounded-3xl p-5 flex flex-col justify-between gap-3">
+        <div class="space-y-2.5">
           <div class="flex items-start justify-between gap-2">
             <div>
               <h4 class="font-extrabold text-base text-white">${escapeHtml(v.negocio_nombre)}</h4>
-              <p class="text-xs text-violet-300 font-semibold">📍 ${escapeHtml(v.direccion)}</p>
+              <p class="text-xs text-violet-300 font-semibold flex items-center gap-1 mt-0.5">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+                <span>${escapeHtml(v.direccion)}</span>
+              </p>
             </div>
             ${badge}
           </div>
 
           <div class="flex flex-wrap gap-1.5 text-[11px]">
-            <span class="px-2.5 py-0.5 rounded-lg bg-[#221a38] text-violet-200 font-semibold">${escapeHtml(v.negocio_rubro)}</span>
-            <span class="px-2.5 py-0.5 rounded-lg bg-[#221a38] text-violet-200 font-semibold">🗣️ ${escapeHtml(v.interlocutor)}</span>
-            <span class="px-2.5 py-0.5 rounded-lg bg-[#221a38] text-violet-200 font-semibold">📦 ${escapeHtml(materials)}</span>
+            <span class="px-2.5 py-0.5 rounded-lg glass-panel text-violet-200 font-semibold">${escapeHtml(v.negocio_rubro)}</span>
+            <span class="px-2.5 py-0.5 rounded-lg glass-panel text-violet-200 font-semibold">${escapeHtml(v.interlocutor)}</span>
+            <span class="px-2.5 py-0.5 rounded-lg glass-panel text-violet-200 font-semibold">${escapeHtml(materials)}</span>
           </div>
 
           <p class="text-xs text-violet-200 font-semibold">
-            📌 Caso: <span class="text-white">${escapeHtml(v.motivo_estado || 'Registrado')}</span>
+            Caso: <span class="text-white">${escapeHtml(v.motivo_estado || 'Registrado')}</span>
           </p>
 
           ${v.condiciones_notas ? `
             <div class="bg-violet-500/15 border border-violet-500/30 rounded-2xl p-3 text-xs text-violet-100 font-medium">
-              📝 <b>Condición / Nota:</b> "${escapeHtml(v.condiciones_notas)}"
+              <b>Condición / Nota:</b> “${escapeHtml(v.condiciones_notas)}”
             </div>
           ` : ''}
         </div>
 
-        <div class="flex items-center justify-between pt-3 border-t border-violet-500/15 text-[11px] text-violet-300/70">
-          <div>
-            <span>👤 <b class="text-white">${escapeHtml(v.brigadista_nombre)}</b></span>
-            <span class="mx-1">·</span>
-            <span>${escapeHtml(v.fecha)} ${escapeHtml(v.hora)}</span>
+        <div class="flex items-center justify-between pt-3 border-t border-violet-400/15 text-[11px] text-violet-300/70">
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+            <span><b class="text-white">${escapeHtml(v.brigadista_nombre)}</b></span>
+            <span>·</span>
+            <span class="tabular-nums">${escapeHtml(v.fecha)} ${escapeHtml(v.hora)}</span>
           </div>
           <div class="flex items-center gap-2">
-            ${waLink ? `<a href="${waLink}" target="_blank" class="btn-purple-primary px-3 py-1.5 rounded-xl font-extrabold text-xs">💬 WhatsApp</a>` : ''}
-            <button onclick="deleteVisit('${v.id}')" class="text-violet-300/50 hover:text-rose-400 font-bold px-2 py-1">✕</button>
+            ${waLink ? `
+              <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn-purple-primary px-3 py-1.5 rounded-xl font-extrabold text-xs inline-flex items-center gap-1.5">
+                <i data-lucide="message-circle" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>WhatsApp</span>
+              </a>
+            ` : ''}
+            <button
+              type="button"
+              onclick="deleteVisit('${v.id}')"
+              aria-label="Eliminar visita"
+              class="min-h-[34px] min-w-[34px] rounded-lg text-violet-300/60 hover:text-rose-300 hover:bg-rose-500/15 flex items-center justify-center cursor-pointer"
+            >
+              <i data-lucide="trash-2" class="w-4 h-4" aria-hidden="true"></i>
+            </button>
           </div>
         </div>
       </div>
     `;
   }).join('');
+
+  refreshLucideIcons();
 };
 
 window.deleteVisit = function(id) {
@@ -1274,12 +1689,27 @@ window.deleteVisit = function(id) {
 
 function getOutcomeBadgeHTML(resultado) {
   if (resultado === 'interesado') {
-    return `<span class="text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-violet-500/25 text-violet-200 border border-violet-400/40 shrink-0">🔥 Muy Interesado</span>`;
+    return `
+      <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-violet-500/25 text-violet-200 border border-violet-400/40 shrink-0">
+        <i data-lucide="flame" class="w-3 h-3 text-violet-300" aria-hidden="true"></i>
+        <span>Muy Interesado</span>
+      </span>
+    `;
   }
   if (resultado === 'solo_info') {
-    return `<span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">🌤️ Info / Ya tiene</span>`;
+    return `
+      <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
+        <i data-lucide="cloud-sun" class="w-3 h-3 text-amber-300" aria-hidden="true"></i>
+        <span>Info / Ya tiene</span>
+      </span>
+    `;
   }
-  return `<span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 shrink-0">❄️ No interesado</span>`;
+  return `
+    <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
+      <i data-lucide="snowflake" class="w-3 h-3 text-slate-400" aria-hidden="true"></i>
+      <span>No interesado</span>
+    </span>
+  `;
 }
 
 function renderLeaderboardAndBadges() {
@@ -1307,31 +1737,41 @@ function renderLeaderboardAndBadges() {
     const pct = Math.min(100, Math.round((stats.total / goal) * 100));
     const xp = calculateUserXP(nombre);
     const rank = getRankFromXP(xp);
-    const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : '👟'));
 
     return `
-      <div class="p-4 rounded-2xl bg-[#1b152c] border border-violet-500/20 space-y-2.5">
+      <div class="p-4 rounded-2xl glass-panel space-y-2.5">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-3">
-            <span class="text-2xl">${medal}</span>
+            <div class="w-10 h-10 rounded-xl ${idx === 0 ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30' : 'bg-violet-500/20 text-violet-200 border border-violet-400/30'} flex items-center justify-center font-extrabold text-sm tabular-nums">
+              #${idx + 1}
+            </div>
             <div>
               <div class="flex items-center gap-2">
                 <span class="font-extrabold text-base text-white">${escapeHtml(nombre)}</span>
-                <span class="text-xs font-extrabold text-violet-300">${rank.title}</span>
+                <span class="inline-flex items-center gap-1 text-xs font-extrabold text-violet-300">
+                  <i data-lucide="${rank.icon}" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                  <span>${rank.title}</span>
+                </span>
               </div>
-              <p class="text-[11px] text-violet-300/70">⚡ ${xp} XP acumulados · 👑 ${stats.ownerCount} dueños contactados</p>
+              <p class="text-[11px] text-violet-300/70 tabular-nums">${xp} XP acumulados · ${stats.ownerCount} dueños contactados</p>
             </div>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2 text-xs">
-            <span class="font-extrabold text-white bg-[#271e40] px-3 py-1 rounded-full">${stats.total} / ${goal} visitas</span>
-            <span class="px-3 py-1 rounded-full bg-violet-500/25 text-violet-200 border border-violet-400/30 font-extrabold">🔥 ${stats.hot} interesados</span>
-            <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">🌤️ ${stats.info} solo info</span>
+          <div class="flex flex-wrap items-center gap-2 text-xs tabular-nums">
+            <span class="font-extrabold text-white glass-panel px-3 py-1 rounded-full">${stats.total} / ${goal} visitas</span>
+            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-violet-500/25 text-violet-200 border border-violet-400/30 font-extrabold">
+              <i data-lucide="flame" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span>${stats.hot} interesados</span>
+            </span>
+            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">
+              <i data-lucide="cloud-sun" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span>${stats.info} solo info</span>
+            </span>
           </div>
         </div>
 
-        <div class="w-full h-3 bg-[#0e0b16] rounded-full overflow-hidden p-0.5">
-          <div class="h-full bg-violet-500 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+        <div class="w-full h-2.5 bg-[#09070f] rounded-full overflow-hidden p-0.5">
+          <div class="h-full bg-violet-500 rounded-full transition-[width] duration-500" style="width: ${pct}%"></div>
         </div>
       </div>
     `;
@@ -1343,17 +1783,19 @@ function renderLeaderboardAndBadges() {
   const any12 = rows.some(([, s]) => s.total >= 12);
 
   const badges = [
-    { icon: '🪪', title: 'Embajador con Kit Completo', desc: `${totalKit} acercamientos con Carnet + Tarjeta + Folleto.`, unlocked: totalKit > 0 },
-    { icon: '👑', title: 'Francotirador de Decisores', desc: `${totalOwners} conversaciones directas con el Dueño.`, unlocked: totalOwners >= 2 },
-    { icon: '🔥', title: 'Imán de Prospectos Calientes', desc: `${totalHot} clientes muy interesados registrados.`, unlocked: totalHot >= 2 },
-    { icon: '🏆', title: 'Meta 12/12 Completada', desc: 'Alcanzar los 12 acercamientos diarios de la brigada.', unlocked: any12 }
+    { icon: 'id-card', title: 'Embajador con Kit Completo', desc: `${totalKit} acercamientos con Carnet + Tarjeta + Folleto.`, unlocked: totalKit > 0 },
+    { icon: 'crown', title: 'Francotirador de Decisores', desc: `${totalOwners} conversaciones directas con el Dueño.`, unlocked: totalOwners >= 2 },
+    { icon: 'flame', title: 'Imán de Prospectos Calientes', desc: `${totalHot} clientes muy interesados registrados.`, unlocked: totalHot >= 2 },
+    { icon: 'trophy', title: 'Meta 12/12 Completada', desc: 'Alcanzar los 12 acercamientos diarios de la brigada.', unlocked: any12 }
   ];
 
   badgesContainer.innerHTML = badges.map(b => `
-    <div class="p-4 rounded-2xl border ${b.unlocked ? 'bg-[#211838] border-violet-500/40' : 'bg-[#141022] border-white/5 opacity-50'} space-y-1.5">
+    <div class="p-4 rounded-2xl border ${b.unlocked ? 'glass-panel border-violet-400/40' : 'bg-[#120d20]/50 border-white/5 opacity-55'} space-y-2">
       <div class="flex items-center justify-between">
-        <span class="text-3xl">${b.icon}</span>
-        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${b.unlocked ? 'bg-violet-500/25 text-violet-200' : 'bg-slate-800 text-slate-400'}">
+        <div class="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-violet-200">
+          <i data-lucide="${b.icon}" class="w-5 h-5" aria-hidden="true"></i>
+        </div>
+        <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${b.unlocked ? 'bg-violet-500/25 text-violet-200' : 'bg-slate-800 text-slate-400'}">
           ${b.unlocked ? 'Desbloqueada' : 'En curso'}
         </span>
       </div>
@@ -1361,6 +1803,8 @@ function renderLeaderboardAndBadges() {
       <p class="text-xs text-violet-200/70 leading-relaxed">${b.desc}</p>
     </div>
   `).join('');
+
+  refreshLucideIcons();
 }
 
 function renderAnalytics() {
@@ -1385,7 +1829,7 @@ function renderAnalytics() {
   setText('kpiHotLeads', hot.length);
   setText('kpiConversionRate', `${convRate}% tasa de interés positivo`);
   setText('kpiWarmInfo', warm.length);
-  setText('kpiAlreadyHasSystem', `${alreadyHasSystemCount} dijeron "Ya tengo sistema"`);
+  setText('kpiAlreadyHasSystem', `${alreadyHasSystemCount} dijeron “Ya tengo sistema”`);
   setText('kpiCarnetRate', `${carnetRate}%`);
   setText('kpiDecisionMakerRate', `${ownerRate}% hablaron con el dueño`);
 
@@ -1416,24 +1860,33 @@ function renderSmartInsights(visits, hot, alreadyHasSystemCount) {
   const withConditions = hot.filter(v => v.condiciones_notas && v.condiciones_notas.trim().length > 3);
 
   box.innerHTML = `
-    <div class="p-4 rounded-2xl bg-[#1d1632] border border-violet-500/30 space-y-1">
-      <p class="text-violet-300 font-extrabold uppercase text-[10px] tracking-wider">1. Multiplicador por Hablar con el Dueño</p>
+    <div class="p-4 rounded-2xl glass-panel space-y-1.5">
+      <p class="text-violet-300 font-extrabold text-xs flex items-center gap-1.5">
+        <i data-lucide="crown" class="w-4 h-4" aria-hidden="true"></i>
+        <span>Multiplicador por Hablar con el Dueño</span>
+      </p>
       <p class="text-violet-100 leading-relaxed">
-        Abordar directamente al <b>Dueño/Decisor</b> convierte al <b class="text-violet-300">${ownerConv}%</b>, mientras que dejar recado con empleados convierte al <b>${nonOwnerConv}%</b>.
+        Abordar directamente al <b>Dueño/Decisor</b> convierte al <b class="text-violet-300 tabular-nums">${ownerConv}%</b>, mientras que dejar recado con empleados convierte al <b class="tabular-nums">${nonOwnerConv}%</b>.
       </p>
     </div>
 
-    <div class="p-4 rounded-2xl bg-[#1d1632] border border-violet-500/30 space-y-1">
-      <p class="text-violet-300 font-extrabold uppercase text-[10px] tracking-wider">2. Impacto del Check-in (Carnet + Kit)</p>
+    <div class="p-4 rounded-2xl glass-panel space-y-1.5">
+      <p class="text-violet-300 font-extrabold text-xs flex items-center gap-1.5">
+        <i data-lucide="id-card" class="w-4 h-4" aria-hidden="true"></i>
+        <span>Impacto del Check-in (Carnet + Kit)</span>
+      </p>
       <p class="text-violet-100 leading-relaxed">
-        Salir con <b>Carnet + Tarjetas + Folletos</b> logró un <b class="text-violet-300">${fullKitConv}%</b> de clientes interesados en ${fullKitVisits.length} locales.
+        Salir con <b>Carnet + Tarjetas + Folletos</b> logró un <b class="text-violet-300 tabular-nums">${fullKitConv}%</b> de clientes interesados en ${fullKitVisits.length} locales.
       </p>
     </div>
 
-    <div class="p-4 rounded-2xl bg-[#1d1632] border border-violet-500/30 space-y-1">
-      <p class="text-violet-300 font-extrabold uppercase text-[10px] tracking-wider">3. Condiciones Específicas vs Competencia</p>
+    <div class="p-4 rounded-2xl glass-panel space-y-1.5">
+      <p class="text-violet-300 font-extrabold text-xs flex items-center gap-1.5">
+        <i data-lucide="check-circle-2" class="w-4 h-4" aria-hidden="true"></i>
+        <span>Condiciones Específicas vs Competencia</span>
+      </p>
       <p class="text-violet-100 leading-relaxed">
-        Tenemos <b class="text-violet-300">${withConditions.length} negocios</b> listos si cumplimos sus condiciones, y <b>${alreadyHasSystemCount}</b> que ya tienen sistema pero quedaron mapeados con dirección e info.
+        Tenemos <b class="text-violet-300 tabular-nums">${withConditions.length} negocios</b> listos si cumplimos sus condiciones, y <b class="tabular-nums">${alreadyHasSystemCount}</b> que ya tienen sistema pero quedaron mapeados.
       </p>
     </div>
   `;
@@ -1446,39 +1899,47 @@ function renderHotLeadsTable(hotLeads) {
   container.innerHTML = `
     <table class="w-full text-left border-collapse text-xs">
       <thead>
-        <tr class="border-b border-violet-500/15 text-violet-300/70 uppercase text-[10px]">
+        <tr class="border-b border-violet-400/15 text-violet-300/80 text-[11px]">
           <th class="py-3 pr-3">Negocio y Dirección</th>
           <th class="py-3 px-3">Condiciones Específicas Solicitadas</th>
           <th class="py-3 px-3">Contacto Directo</th>
           <th class="py-3 pl-3">Brigadista</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-violet-500/10">
+      <tbody class="divide-y divide-violet-400/10">
         ${hotLeads.map(v => {
           const wa = v.contacto_telefono
             ? `https://wa.me/${v.contacto_telefono.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${v.contacto_nombre || ''}, te saludo respecto a nuestra visita hoy a ${v.negocio_nombre}.`)}`
             : null;
           return `
-            <tr class="hover:bg-violet-500/5 transition">
+            <tr class="hover:bg-violet-500/5 transition-colors">
               <td class="py-3.5 pr-3">
                 <p class="font-extrabold text-white text-sm">${escapeHtml(v.negocio_nombre)}</p>
-                <p class="text-[11px] text-violet-300">📍 ${escapeHtml(v.direccion)}</p>
+                <p class="text-[11px] text-violet-300 flex items-center gap-1 mt-0.5">
+                  <i data-lucide="map-pin" class="w-3 h-3 shrink-0" aria-hidden="true"></i>
+                  <span>${escapeHtml(v.direccion)}</span>
+                </p>
               </td>
               <td class="py-3.5 px-3">
-                <span class="inline-block font-bold text-violet-200 bg-violet-500/25 border border-violet-400/30 px-2.5 py-0.5 rounded-lg mb-1">
+                <span class="inline-block font-bold text-violet-200 bg-violet-500/20 border border-violet-400/30 px-2.5 py-0.5 rounded-lg mb-1">
                   ${escapeHtml(v.motivo_estado || 'Interesado')}
                 </span>
                 <p class="text-violet-100 font-medium">
-                  ${v.condiciones_notas ? `"${escapeHtml(v.condiciones_notas)}"` : '<span class="text-violet-300/50">Sin condición adicional</span>'}
+                  ${v.condiciones_notas ? `“${escapeHtml(v.condiciones_notas)}”` : '<span class="text-violet-300/50">Sin condición adicional</span>'}
                 </p>
               </td>
               <td class="py-3.5 px-3">
                 <p class="font-bold text-white">${escapeHtml(v.contacto_nombre || v.interlocutor)}</p>
-                ${wa ? `<a href="${wa}" target="_blank" class="inline-block mt-1 px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-extrabold">💬 ${escapeHtml(v.contacto_telefono)}</a>` : '<span class="text-violet-300/50">Sin teléfono</span>'}
+                ${wa ? `
+                  <a href="${wa}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-extrabold tabular-nums">
+                    <i data-lucide="phone" class="w-3 h-3" aria-hidden="true"></i>
+                    <span>${escapeHtml(v.contacto_telefono)}</span>
+                  </a>
+                ` : '<span class="text-violet-300/50">Sin teléfono</span>'}
               </td>
               <td class="py-3.5 pl-3 text-violet-300/70">
                 <p class="font-bold text-violet-100">${escapeHtml(v.brigadista_nombre)}</p>
-                <p class="text-[10px]">${escapeHtml(v.fecha)} · ${escapeHtml(v.hora)}</p>
+                <p class="text-[10px] tabular-nums">${escapeHtml(v.fecha)} · ${escapeHtml(v.hora)}</p>
               </td>
             </tr>
           `;
@@ -1501,11 +1962,11 @@ function renderCharts(hotCount, warmCount, coldCount, visits) {
   state.charts.outcomes = new Chart(ctxOutcomes, {
     type: 'doughnut',
     data: {
-      labels: ['🔥 Muy Interesados', '🌤️ Solo Info / Ya tiene sistema', '❄️ No interesados'],
+      labels: ['Muy Interesados', 'Solo Info / Ya tiene sistema', 'No interesados'],
       datasets: [{
         data: [hotCount, warmCount, coldCount],
         backgroundColor: ['#8b5cf6', '#f59e0b', '#475569'],
-        borderColor: '#161224',
+        borderColor: '#130e21',
         borderWidth: 3
       }]
     },
@@ -1566,20 +2027,25 @@ window.switchTab = function(tab) {
   Object.keys(sections).forEach(k => {
     if (k === tab) {
       sections[k]?.classList.remove('hidden');
-      if (deskBtns[k]) deskBtns[k].className = 'px-3 py-2.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow text-center';
+      if (deskBtns[k]) {
+        deskBtns[k].className = 'min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow flex items-center justify-center gap-2 cursor-pointer';
+      }
     } else {
       sections[k]?.classList.add('hidden');
-      if (deskBtns[k]) deskBtns[k].className = 'px-3 py-2.5 rounded-xl text-xs font-bold bg-[#1d1630] text-violet-200 hover:text-white text-center';
+      if (deskBtns[k]) {
+        deskBtns[k].className = 'min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-bold glass-panel text-violet-200 hover:text-white flex items-center justify-center gap-2 cursor-pointer';
+      }
     }
   });
 
   if (tab === 'history') renderHistoryList();
   if (tab === 'leaderboard') renderLeaderboardAndBadges();
   if (tab === 'analytics') renderAnalytics();
+  refreshLucideIcons();
 };
 
 // ============================================================================
-// 10. EXPORTACIÓN EXCEL Y DATOS INICIALES DE LOS 4 MÓDULOS
+// 11. EXPORTACIÓN EXCEL Y DATOS INICIALES DE LOS 4 MÓDULOS (CERO EMOJIS)
 // ============================================================================
 window.exportToExcelCSV = function() {
   const headers = [
@@ -1609,7 +2075,7 @@ window.exportToExcelCSV = function() {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  showToast('📥 Excel (.CSV) descargado');
+  showToast('Archivo Excel (.CSV) descargado correctamente');
 };
 
 function generateInitialDailies() {
@@ -1623,7 +2089,7 @@ function generateInitialDailies() {
       focus: 'Coordinar salida de brigada en Zona Centro y cerrar seguimiento de los 3 negocios interesados.',
       done: 'Dejé listos los folletos, tarjetas y metas de 12 acercamientos por persona.',
       blocker: '',
-      mood: '🔥 A tope'
+      mood: 'A tope'
     },
     {
       id: 'dly_2',
@@ -1633,7 +2099,7 @@ function generateInitialDailies() {
       focus: 'Completar mis 12 acercamientos en Calle 80 enfocándome en hablar directamente con los dueños.',
       done: 'Agendé demostración con Restaurante Brasas & Sazón.',
       blocker: 'Necesito más tarjetas impresas para la tarde.',
-      mood: '⚡ Enfocad@'
+      mood: 'Enfocado'
     }
   ];
 }
@@ -1844,7 +2310,7 @@ window.loadSampleBrigadaData = function() {
   localStorage.setItem(STORAGE_KEYS.VISITS, JSON.stringify(state.visits));
   refreshAllUI();
   fireCelebrationConfetti(false);
-  showToast('✨ Visitas simuladas agregadas.');
+  showToast('Visitas simuladas agregadas al tablero.');
 };
 
 function initSupabaseIfConfigured() {
@@ -1852,7 +2318,8 @@ function initSupabaseIfConfigured() {
     const cfg = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUPABASE_CFG) || 'null');
     if (cfg && cfg.url && cfg.key && window.supabase) {
       state.supabase = window.supabase.createClient(cfg.url, cfg.key);
-      document.getElementById('cloudStatusDot').className = 'w-2 h-2 rounded-full bg-violet-400';
+      const dot = document.getElementById('cloudStatusDot');
+      if (dot) dot.className = 'w-2 h-2 rounded-full bg-violet-400';
       setText('cloudStatusText', 'Nube Activa');
     }
   } catch (e) {
@@ -1864,11 +2331,11 @@ function openCloudModal() {
   const cfg = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUPABASE_CFG) || 'null');
   document.getElementById('supaUrlInput').value = cfg?.url || '';
   document.getElementById('supaKeyInput').value = cfg?.key || '';
-  document.getElementById('cloudModal').classList.remove('hidden');
+  document.getElementById('cloudModal')?.classList.remove('hidden');
 }
 
 window.closeCloudModal = function() {
-  document.getElementById('cloudModal').classList.add('hidden');
+  document.getElementById('cloudModal')?.classList.add('hidden');
 };
 
 window.saveSupabaseConfig = function() {
@@ -1878,13 +2345,14 @@ window.saveSupabaseConfig = function() {
   localStorage.setItem(STORAGE_KEYS.SUPABASE_CFG, JSON.stringify({ url, key }));
   initSupabaseIfConfigured();
   closeCloudModal();
-  showToast('☁️ Conectado a Supabase.');
+  showToast('Conectado a Supabase en tiempo real.');
 };
 
 window.disconnectSupabase = function() {
   localStorage.removeItem(STORAGE_KEYS.SUPABASE_CFG);
   state.supabase = null;
-  document.getElementById('cloudStatusDot').className = 'w-2 h-2 rounded-full bg-amber-400';
+  const dot = document.getElementById('cloudStatusDot');
+  if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-400';
   setText('cloudStatusText', 'Local');
   closeCloudModal();
 };
@@ -1895,6 +2363,7 @@ function showToast(msg) {
   if (!toast || !msgEl) return;
   msgEl.textContent = msg;
   toast.classList.remove('hidden');
+  refreshLucideIcons();
   clearTimeout(window._toastTimer);
   window._toastTimer = setTimeout(() => toast.classList.add('hidden'), 3200);
 }

@@ -2,10 +2,14 @@
 <html lang="es" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Notas Quickss — Hub de Módulos (Brigadas, Daily Day, Tareas y Llamados)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notas Quickss — Hub Operativo (Brigadas, Daily Day, Tareas y Llamados)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons (Zero Emojis) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Canvas Confetti -->
@@ -17,310 +21,542 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="min-h-screen pb-24 lg:pb-12 text-violet-50 selection:bg-violet-600 selection:text-white">
+<body class="min-h-screen pb-28 text-violet-50 selection:bg-violet-600 selection:text-white">
+
+  <a href="#mainContent" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:rounded-xl focus:bg-violet-600 focus:text-white">
+    Saltar al contenido principal
+  </a>
 
   <!-- ===================================================================== -->
-  <!-- TOP HEADER: NOTAS QUICKSS + SELECTOR DE USUARIO SIN PANTALLA BLOQUEO  -->
+  <!-- TOP HEADER: BIENVENIDA PERSONALIZADA + SELECTOR TAILWIND + BURGER     -->
   <!-- ===================================================================== -->
-  <header class="sticky top-0 z-30 bg-[#0e0b16]/95 backdrop-blur-xl border-b border-violet-500/20">
-    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 space-y-2.5">
+  <header class="sticky top-0 z-30 bg-[#09070f]/80 backdrop-blur-2xl border-b border-violet-400/15">
+    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 py-3 flex items-center justify-between gap-3">
 
-      <!-- Fila 1: Marca + Selector Rápido de Usuario en 1 sola línea limpia en móvil -->
-      <div class="flex items-center justify-between gap-2">
+      <!-- Izquierda: Marca + Mensaje de Bienvenida en Parte Superior -->
+      <div class="flex items-center gap-3 min-w-0">
         <button
+          type="button"
           onclick="switchModule('hub')"
-          class="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-3 py-2 rounded-2xl shadow-md shadow-violet-600/25 transition shrink-0"
+          aria-label="Ir al inicio de Notas Quickss"
+          class="w-11 h-11 rounded-2xl bg-violet-600/90 hover:bg-violet-500 text-white flex items-center justify-center shadow-lg shadow-violet-600/30 border border-violet-300/30 shrink-0 cursor-pointer transition-colors"
         >
-          <span class="text-base">📝</span>
-          <div class="text-left">
-            <span class="font-extrabold text-xs sm:text-sm tracking-tight block leading-none">Notas Quickss</span>
-            <span class="text-[9px] sm:text-[10px] text-violet-200 font-semibold block mt-0.5">Workspace</span>
-          </div>
+          <i data-lucide="layers" class="w-5 h-5" aria-hidden="true"></i>
         </button>
 
-        <!-- Navegación Desktop -->
-        <div class="hidden md:flex items-center gap-1.5 bg-[#151024] p-1.5 rounded-2xl border border-violet-500/20">
-          <button id="modBtn_hub" onclick="switchModule('hub')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white transition">
-            🏠 Módulos
-          </button>
-          <button id="modBtn_brigadas" onclick="switchModule('brigadas')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
-            🚀 Brigadas (<span id="badgeCountBrigadas">0</span>)
-          </button>
-          <button id="modBtn_daily" onclick="switchModule('daily')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
-            ☀️ Daily Day (<span id="badgeCountDaily">0</span>)
-          </button>
-          <button id="modBtn_tareas" onclick="switchModule('tareas')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
-            ✅ Tareas (<span id="badgeCountTareas">0</span>)
-          </button>
-          <button id="modBtn_llamados" onclick="switchModule('llamados')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
-            ⚠️ Llamados (<span id="badgeCountLlamados">0</span>)
-          </button>
-        </div>
-
-        <!-- Selector Rápido de Responsable Compacto -->
-        <div class="flex items-center gap-1.5 min-w-0">
-          <div class="flex items-center gap-1.5 bg-[#161224] border border-violet-500/30 rounded-2xl px-2.5 py-1.5 min-w-0">
-            <span class="text-xs">👤</span>
-            <select
-              id="quickUserSelect"
-              onchange="handleQuickUserChange(this.value)"
-              class="bg-transparent text-xs font-extrabold text-white outline-none cursor-pointer border-0 truncate max-w-[115px] sm:max-w-[160px]"
-            ></select>
-            <button
-              type="button"
-              onclick="promptNewTeamMember()"
-              title="Agregar nueva persona al equipo"
-              class="text-[11px] font-extrabold bg-violet-600/35 hover:bg-violet-600 text-violet-100 px-2 py-0.5 rounded-lg transition shrink-0"
-            >
-              +
-            </button>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <p class="text-sm sm:text-base font-extrabold text-white truncate">
+              Hola, <span id="topWelcomeName" class="text-violet-300">Andrés</span>
+            </p>
+            <span id="topActiveModuleBadge" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-violet-500/15 text-violet-200 border border-violet-400/25">
+              Centro Operativo
+            </span>
           </div>
+          <p class="text-[11px] sm:text-xs text-violet-300/75 truncate flex items-center gap-1.5">
+            <span class="font-semibold text-violet-200">Notas Quickss</span>
+            <span aria-hidden="true">·</span>
+            <span id="hubTodayDate">Hoy</span>
+          </p>
+        </div>
+      </div>
 
+      <!-- Derecha: Selector Custom de Usuario + Estado Nube + Burger Menu -->
+      <div class="flex items-center gap-2 shrink-0">
+
+        <!-- Custom Tailwind User Switcher Dropdown -->
+        <div class="relative" id="headerUserDropdownWrapper">
           <button
-            id="btnOpenCloudModal"
-            title="Sincronización en la Nube"
-            class="p-2 sm:px-3 sm:py-2 rounded-2xl bg-[#161224] hover:bg-[#221b38] text-xs font-bold flex items-center gap-1.5 border border-violet-500/25 transition shrink-0"
+            type="button"
+            onclick="toggleCustomDropdown('headerUserMenu', event)"
+            aria-label="Cambiar responsable activo"
+            aria-haspopup="true"
+            class="min-h-[44px] px-3 py-2 rounded-2xl glass-panel hover:border-violet-400/40 flex items-center gap-2 text-xs font-bold text-white cursor-pointer"
           >
-            <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
-            <span id="cloudStatusText" class="hidden sm:inline text-violet-100">Local</span>
+            <span id="headerUserInitials" class="w-6 h-6 rounded-lg bg-violet-600 text-white text-[11px] font-extrabold flex items-center justify-center shrink-0">
+              AG
+            </span>
+            <span id="headerUserName" class="hidden sm:inline max-w-[130px] truncate">Andrés Gómez</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
           </button>
+
+          <!-- Menú Desplegable Tailwind Glass -->
+          <div
+            id="headerUserMenu"
+            class="custom-dropdown-menu hidden absolute right-0 mt-2 w-64 rounded-2xl glass-popover p-2 z-50 space-y-1.5"
+            role="menu"
+          >
+            <div class="px-2.5 py-1.5 border-b border-violet-400/15 flex items-center justify-between">
+              <span class="text-[11px] font-bold text-violet-300">Responsable activo</span>
+              <button
+                type="button"
+                onclick="openDrawerAndFocusNewUser()"
+                class="text-[11px] font-extrabold text-violet-300 hover:text-white flex items-center gap-1 cursor-pointer"
+              >
+                <i data-lucide="user-plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Nuevo</span>
+              </button>
+            </div>
+            <div id="headerUserMenuItems" class="space-y-1 max-h-60 overflow-y-auto"></div>
+          </div>
         </div>
-      </div>
 
-      <!-- Fila 2 Móvil: Grid de 5 Módulos 100% visibles sin barras de scroll ni cortes -->
-      <div class="grid grid-cols-5 gap-1.5 md:hidden">
-        <button id="mobModBtn_hub" onclick="switchModule('hub')" class="py-2 px-1 rounded-xl text-[10px] font-extrabold bg-violet-600 text-white flex flex-col items-center justify-center gap-0.5">
-          <span class="text-sm leading-none">🏠</span>
-          <span class="truncate">Módulos</span>
+        <!-- Botón Estado de Sincronización Nube -->
+        <button
+          type="button"
+          id="btnOpenCloudModal"
+          aria-label="Configurar sincronización en la nube"
+          class="min-h-[44px] px-3 py-2 rounded-2xl glass-panel hover:border-violet-400/40 text-xs font-bold flex items-center gap-2 cursor-pointer"
+        >
+          <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <i data-lucide="cloud" class="w-4 h-4 text-violet-200" aria-hidden="true"></i>
+          <span id="cloudStatusText" class="hidden md:inline text-violet-100">Local</span>
         </button>
-        <button id="mobModBtn_brigadas" onclick="switchModule('brigadas')" class="py-2 px-1 rounded-xl text-[10px] font-bold bg-[#161224] text-violet-200 border border-violet-500/20 flex flex-col items-center justify-center gap-0.5">
-          <span class="text-sm leading-none">🚀</span>
-          <span class="truncate">Brigadas</span>
-        </button>
-        <button id="mobModBtn_daily" onclick="switchModule('daily')" class="py-2 px-1 rounded-xl text-[10px] font-bold bg-[#161224] text-violet-200 border border-violet-500/20 flex flex-col items-center justify-center gap-0.5">
-          <span class="text-sm leading-none">☀️</span>
-          <span class="truncate">Daily Day</span>
-        </button>
-        <button id="mobModBtn_tareas" onclick="switchModule('tareas')" class="py-2 px-1 rounded-xl text-[10px] font-bold bg-[#161224] text-violet-200 border border-violet-500/20 flex flex-col items-center justify-center gap-0.5">
-          <span class="text-sm leading-none">✅</span>
-          <span class="truncate">Tareas</span>
-        </button>
-        <button id="mobModBtn_llamados" onclick="switchModule('llamados')" class="py-2 px-1 rounded-xl text-[10px] font-bold bg-[#161224] text-violet-200 border border-violet-500/20 flex flex-col items-center justify-center gap-0.5">
-          <span class="text-sm leading-none">⚠️</span>
-          <span class="truncate">Llamados</span>
-        </button>
-      </div>
 
+        <!-- Botón Burger Menu (Despliega el Drawer Lateral) -->
+        <button
+          type="button"
+          id="btnOpenDrawer"
+          onclick="openAppDrawer()"
+          aria-label="Abrir menú lateral y opciones"
+          aria-controls="appDrawer"
+          aria-expanded="false"
+          class="min-h-[44px] min-w-[44px] rounded-2xl bg-violet-600/20 hover:bg-violet-600/35 border border-violet-400/30 text-violet-100 flex items-center justify-center cursor-pointer transition-colors"
+        >
+          <i data-lucide="menu" class="w-5 h-5" aria-hidden="true"></i>
+        </button>
+
+      </div>
     </div>
   </header>
 
   <!-- ===================================================================== -->
+  <!-- DRAWER LATERAL GLASSMORPHIC (DESPLEGADO POR EL BURGER MENU)           -->
+  <!-- ===================================================================== -->
+  <div
+    id="drawerBackdrop"
+    onclick="closeAppDrawer()"
+    class="hidden fixed inset-0 z-50 bg-black/65 backdrop-blur-sm transition-opacity"
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    id="appDrawer"
+    aria-label="Menú principal y configuración de equipo"
+    class="fixed top-0 right-0 bottom-0 z-50 w-full max-w-sm glass-popover border-l border-violet-400/25 translate-x-full transition-transform duration-300 ease-out flex flex-col justify-between overflow-y-auto"
+  >
+    <div class="p-5 sm:p-6 space-y-6">
+      <!-- Cabecera del Drawer -->
+      <div class="flex items-center justify-between border-b border-violet-400/15 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-600/30">
+            <i data-lucide="layers" class="w-5 h-5" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-extrabold text-white">Notas Quickss</h2>
+            <p class="text-xs text-violet-300/75">Panel de Control & Equipo</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onclick="closeAppDrawer()"
+          aria-label="Cerrar menú lateral"
+          class="min-h-[44px] min-w-[44px] rounded-xl glass-panel hover:border-violet-400/40 flex items-center justify-center text-violet-200 hover:text-white cursor-pointer"
+        >
+          <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- Tarjeta de Bienvenida en Drawer -->
+      <div class="glass-panel rounded-2xl p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-semibold text-violet-300">Sesión activa</span>
+          <span id="drawerUserRole" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">
+            Líder / Admin
+          </span>
+        </div>
+        <p id="drawerUserName" class="text-base font-extrabold text-white">Andrés Gómez</p>
+        <p id="drawerGoalSummary" class="text-xs text-violet-200/80 tabular-nums">Meta de brigada hoy: 0 / 12 acercamientos</p>
+      </div>
+
+      <!-- Navegación Directa de Módulos desde el Drawer -->
+      <div class="space-y-2">
+        <p class="text-xs font-bold text-violet-300/80 px-1">Módulos de Notas Quickss</p>
+        <nav class="space-y-1.5" aria-label="Módulos en menú lateral">
+          <button
+            type="button"
+            onclick="switchModule('hub'); closeAppDrawer();"
+            class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl glass-panel hover:border-violet-400/40 flex items-center justify-between text-xs font-bold text-white cursor-pointer"
+          >
+            <span class="flex items-center gap-2.5">
+              <i data-lucide="layout-grid" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+              <span>Dashboard Principal</span>
+            </span>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/60" aria-hidden="true"></i>
+          </button>
+
+          <button
+            type="button"
+            onclick="switchModule('brigadas'); closeAppDrawer();"
+            class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl glass-panel hover:border-violet-400/40 flex items-center justify-between text-xs font-bold text-white cursor-pointer"
+          >
+            <span class="flex items-center gap-2.5">
+              <i data-lucide="compass" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+              <span>Brigadas Comerciales</span>
+            </span>
+            <span id="drawerBadgeBrigadas" class="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-200 text-[11px] tabular-nums">0</span>
+          </button>
+
+          <button
+            type="button"
+            onclick="switchModule('daily'); closeAppDrawer();"
+            class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl glass-panel hover:border-violet-400/40 flex items-center justify-between text-xs font-bold text-white cursor-pointer"
+          >
+            <span class="flex items-center gap-2.5">
+              <i data-lucide="sun" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+              <span>Daily Day</span>
+            </span>
+            <span id="drawerBadgeDaily" class="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-200 text-[11px] tabular-nums">0</span>
+          </button>
+
+          <button
+            type="button"
+            onclick="switchModule('tareas'); closeAppDrawer();"
+            class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl glass-panel hover:border-violet-400/40 flex items-center justify-between text-xs font-bold text-white cursor-pointer"
+          >
+            <span class="flex items-center gap-2.5">
+              <i data-lucide="check-square" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+              <span>Tareas Pendientes</span>
+            </span>
+            <span id="drawerBadgeTareas" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-200 text-[11px] tabular-nums">0</span>
+          </button>
+
+          <button
+            type="button"
+            onclick="switchModule('llamados'); closeAppDrawer();"
+            class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl glass-panel hover:border-violet-400/40 flex items-center justify-between text-xs font-bold text-white cursor-pointer"
+          >
+            <span class="flex items-center gap-2.5">
+              <i data-lucide="shield-alert" class="w-4 h-4 text-rose-300" aria-hidden="true"></i>
+              <span>Llamados de Atención</span>
+            </span>
+            <span id="drawerBadgeLlamados" class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-200 text-[11px] tabular-nums">0</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Cambiar de Integrante o Agregar Nuevo (Sin prompt nativo) -->
+      <div class="space-y-3 pt-2 border-t border-violet-400/15">
+        <p class="text-xs font-bold text-violet-300/80 px-1">Cambiar Responsable Activo</p>
+        <div id="drawerUsersList" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
+
+        <!-- Formulario Inline Tailwind para Agregar Persona al Equipo -->
+        <form id="drawerNewMemberForm" onsubmit="handleCreateTeamMember(event)" class="glass-panel rounded-2xl p-3 space-y-2.5">
+          <label for="newMemberNameInput" class="block text-xs font-bold text-violet-200">
+            Agregar integrante al equipo
+          </label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              id="newMemberNameInput"
+              name="memberName"
+              autocomplete="off"
+              placeholder="Nombre y apellido…"
+              class="flex-1 px-3 py-2.5 rounded-xl text-xs font-semibold placeholder:text-violet-300/40"
+            />
+            <button
+              type="submit"
+              class="min-h-[40px] px-3.5 py-2 rounded-xl btn-purple-primary text-xs font-extrabold flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <i data-lucide="plus" class="w-4 h-4" aria-hidden="true"></i>
+              <span>Crear</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Acciones Rápidas de Datos -->
+      <div class="space-y-2 pt-2 border-t border-violet-400/15">
+        <p class="text-xs font-bold text-violet-300/80 px-1">Herramientas y Sincronización</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onclick="closeAppDrawer(); openCloudModal();"
+            class="min-h-[44px] px-3 py-2.5 rounded-xl glass-panel hover:border-violet-400/40 text-xs font-bold text-violet-100 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i data-lucide="cloud" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+            <span>Supabase Cloud</span>
+          </button>
+          <button
+            type="button"
+            onclick="exportToExcelCSV(); closeAppDrawer();"
+            class="min-h-[44px] px-3 py-2.5 rounded-xl glass-panel hover:border-violet-400/40 text-xs font-bold text-violet-100 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i data-lucide="download" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+            <span>Exportar CSV</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-4 border-t border-violet-400/15 text-center text-[11px] text-violet-300/60">
+      Notas Quickss · Glassmorphism-Minimalism UI
+    </div>
+  </aside>
+
+  <!-- ===================================================================== -->
   <!-- CONTENEDOR PRINCIPAL DE NOTAS QUICKSS                                 -->
   <!-- ===================================================================== -->
-  <main class="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
+  <main id="mainContent" class="max-w-7xl mx-auto px-3.5 sm:px-6 pt-5">
 
     <!-- =================================================================== -->
     <!-- MÓDULO 0: DASHBOARD PRINCIPAL DE NOTAS QUICKSS (TODOS LOS MÓDULOS)  -->
     <!-- =================================================================== -->
-    <div id="module_hub" class="space-y-5 fade-slide-in">
+    <div id="module_hub" class="space-y-6 fade-slide-in">
 
-      <!-- Banner de Bienvenida Compacto y Elegante -->
-      <div class="glass-card rounded-3xl p-5 sm:p-7 border border-violet-500/35">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div class="space-y-1.5 max-w-2xl">
-            <div class="inline-flex items-center gap-2 bg-violet-500/20 border border-violet-400/30 px-3 py-1 rounded-full text-[11px] font-extrabold text-violet-200">
-              <span>⚡ Centro Operativo</span>
-              <span>·</span>
-              <span id="hubTodayDate">Hoy</span>
+      <!-- Hero / Resumen Operativo Glassmorphic -->
+      <div class="glass-card rounded-3xl p-5 sm:p-7">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-2 bg-violet-500/15 border border-violet-400/25 px-3 py-1 rounded-full text-xs font-bold text-violet-200">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+              <span>Centro Operativo en Tiempo Real</span>
             </div>
-            <h1 class="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Hola, <span id="hubWelcomeName" class="text-violet-400">Equipo</span> 👋
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Bienvenido a Notas Quickss, <span id="hubWelcomeName" class="text-violet-300">Equipo</span>
             </h1>
             <p class="text-xs sm:text-sm text-violet-200/80 leading-relaxed">
-              Elige un módulo para anotar en segundos. La fecha, hora y tu usuario quedan registrados automáticamente.
+              Selecciona un módulo para registrar visitas en calle, acuerdos del Daily Day, tareas pendientes o novedades de equipo.
             </p>
           </div>
 
-          <!-- Resumen global rápido -->
-          <div class="grid grid-cols-4 gap-2 sm:gap-3 shrink-0">
-            <div onclick="switchModule('brigadas')" class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-2.5 sm:p-3.5 text-center cursor-pointer hover:border-violet-400 transition">
-              <p class="text-[9px] sm:text-[10px] font-bold uppercase text-violet-300/70 truncate">Brigadas</p>
-              <p id="hubStatBrigadas" class="text-lg sm:text-2xl font-extrabold text-white mt-0.5">0</p>
-            </div>
-            <div onclick="switchModule('daily')" class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-2.5 sm:p-3.5 text-center cursor-pointer hover:border-violet-400 transition">
-              <p class="text-[9px] sm:text-[10px] font-bold uppercase text-violet-300/70 truncate">Daily Hoy</p>
-              <p id="hubStatDaily" class="text-lg sm:text-2xl font-extrabold text-violet-300 mt-0.5">0</p>
-            </div>
-            <div onclick="switchModule('tareas')" class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-2.5 sm:p-3.5 text-center cursor-pointer hover:border-violet-400 transition">
-              <p class="text-[9px] sm:text-[10px] font-bold uppercase text-violet-300/70 truncate">Tareas</p>
-              <p id="hubStatTareas" class="text-lg sm:text-2xl font-extrabold text-amber-300 mt-0.5">0</p>
-            </div>
-            <div onclick="switchModule('llamados')" class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-2.5 sm:p-3.5 text-center cursor-pointer hover:border-violet-400 transition">
-              <p class="text-[9px] sm:text-[10px] font-bold uppercase text-violet-300/70 truncate">Llamados</p>
-              <p id="hubStatLlamados" class="text-lg sm:text-2xl font-extrabold text-rose-300 mt-0.5">0</p>
-            </div>
+          <!-- KPIs Globales Interactivos (Botones semánticos) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 shrink-0">
+            <button
+              type="button"
+              onclick="switchModule('brigadas')"
+              class="glass-panel rounded-2xl p-3 sm:p-4 text-left hover:border-violet-400/50 cursor-pointer transition-colors"
+            >
+              <div class="flex items-center justify-between text-violet-300 mb-1">
+                <span class="text-[11px] font-bold">Brigadas</span>
+                <i data-lucide="compass" class="w-4 h-4" aria-hidden="true"></i>
+              </div>
+              <p id="hubStatBrigadas" class="text-xl sm:text-2xl font-extrabold text-white tabular-nums">0</p>
+            </button>
+
+            <button
+              type="button"
+              onclick="switchModule('daily')"
+              class="glass-panel rounded-2xl p-3 sm:p-4 text-left hover:border-violet-400/50 cursor-pointer transition-colors"
+            >
+              <div class="flex items-center justify-between text-violet-300 mb-1">
+                <span class="text-[11px] font-bold">Daily Hoy</span>
+                <i data-lucide="sun" class="w-4 h-4" aria-hidden="true"></i>
+              </div>
+              <p id="hubStatDaily" class="text-xl sm:text-2xl font-extrabold text-violet-200 tabular-nums">0</p>
+            </button>
+
+            <button
+              type="button"
+              onclick="switchModule('tareas')"
+              class="glass-panel rounded-2xl p-3 sm:p-4 text-left hover:border-violet-400/50 cursor-pointer transition-colors"
+            >
+              <div class="flex items-center justify-between text-amber-300 mb-1">
+                <span class="text-[11px] font-bold">Tareas</span>
+                <i data-lucide="check-square" class="w-4 h-4" aria-hidden="true"></i>
+              </div>
+              <p id="hubStatTareas" class="text-xl sm:text-2xl font-extrabold text-amber-300 tabular-nums">0</p>
+            </button>
+
+            <button
+              type="button"
+              onclick="switchModule('llamados')"
+              class="glass-panel rounded-2xl p-3 sm:p-4 text-left hover:border-violet-400/50 cursor-pointer transition-colors"
+            >
+              <div class="flex items-center justify-between text-rose-300 mb-1">
+                <span class="text-[11px] font-bold">Llamados</span>
+                <i data-lucide="shield-alert" class="w-4 h-4" aria-hidden="true"></i>
+              </div>
+              <p id="hubStatLlamados" class="text-xl sm:text-2xl font-extrabold text-rose-300 tabular-nums">0</p>
+            </button>
           </div>
         </div>
       </div>
 
       <!-- TARJETAS DE LOS 4 MÓDULOS ACTIVOS -->
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-violet-300">
-            📦 Módulos Activos (Toca para abrir)
+      <section class="space-y-3.5" aria-labelledby="activeModulesHeading">
+        <div class="flex items-center justify-between">
+          <h2 id="activeModulesHeading" class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+            <i data-lucide="layout-grid" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+            <span>Módulos Operativos</span>
           </h2>
-          <span class="text-[11px] text-violet-300/60 font-semibold">4 disponibles</span>
+          <span class="text-xs text-violet-300/70 font-semibold">4 módulos activos</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-          <!-- Tarjeta Módulo 1: Brigadas Comerciales -->
-          <div
+          <!-- Módulo 1: Brigadas Comerciales -->
+          <button
+            type="button"
             onclick="switchModule('brigadas')"
-            class="glass-card rounded-3xl p-5 border border-violet-500/40 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-3"
+            class="glass-card rounded-3xl p-5 sm:p-6 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-4"
           >
-            <div class="space-y-2.5">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-11 h-11 rounded-2xl bg-violet-600 text-white flex items-center justify-center text-xl shadow-lg shadow-violet-600/30 shrink-0">
-                    🚀
+            <div class="space-y-3 w-full">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3.5">
+                  <div class="w-12 h-12 rounded-2xl bg-violet-600 text-white flex items-center justify-center shadow-lg shadow-violet-600/30 shrink-0">
+                    <i data-lucide="compass" class="w-6 h-6" aria-hidden="true"></i>
                   </div>
                   <div>
-                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition leading-tight">
+                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition-colors">
                       Brigadas Comerciales
                     </h3>
-                    <span class="text-[11px] font-bold text-violet-300">Meta: 12 acercamientos diarios</span>
+                    <span class="text-xs font-semibold text-violet-300">Meta: 12 acercamientos diarios</span>
                   </div>
                 </div>
-                <span class="text-xs font-extrabold bg-violet-600/25 text-violet-200 border border-violet-400/30 px-2.5 py-1 rounded-xl shrink-0">
-                  Entrar →
+                <span class="inline-flex items-center gap-1 text-xs font-extrabold bg-violet-500/20 text-violet-200 border border-violet-400/30 px-3 py-1.5 rounded-xl shrink-0">
+                  <span>Abrir</span>
+                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
                 </span>
               </div>
-              <p class="text-xs text-violet-200/75 leading-relaxed">
-                Check-in de carnet/tarjetas/folletos, registro de negocios y direcciones en segundos, condiciones de interesados y analítica.
+              <p class="text-xs sm:text-sm text-violet-200/75 leading-relaxed">
+                Check-in de carnet, tarjetas y folletos, captura de negocios con GPS en segundos, condiciones de clientes interesados y analítica.
               </p>
             </div>
-            <div class="flex items-center justify-between pt-2.5 border-t border-violet-500/15 text-[11px] font-extrabold text-violet-300">
+            <div class="w-full flex items-center justify-between pt-3 border-t border-violet-400/15 text-xs font-bold text-violet-300 tabular-nums">
               <span id="hubCardBrigadasInfo">0 visitas registradas · 0 muy interesados</span>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/70" aria-hidden="true"></i>
             </div>
-          </div>
+          </button>
 
-          <!-- Tarjeta Módulo 2: Daily Day -->
-          <div
+          <!-- Módulo 2: Daily Day -->
+          <button
+            type="button"
             onclick="switchModule('daily')"
-            class="glass-card rounded-3xl p-5 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-3"
+            class="glass-card rounded-3xl p-5 sm:p-6 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-4"
           >
-            <div class="space-y-2.5">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-11 h-11 rounded-2xl bg-[#271d42] border border-violet-400/30 text-white flex items-center justify-center text-xl shrink-0">
-                    ☀️
+            <div class="space-y-3 w-full">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3.5">
+                  <div class="w-12 h-12 rounded-2xl glass-panel text-violet-200 flex items-center justify-center shrink-0">
+                    <i data-lucide="sun" class="w-6 h-6" aria-hidden="true"></i>
                   </div>
                   <div>
-                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition leading-tight">
+                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition-colors">
                       Daily Day
                     </h3>
-                    <span class="text-[11px] font-bold text-violet-300">Enfoque diario, avances y bloqueos</span>
+                    <span class="text-xs font-semibold text-violet-300">Foco diario, avances y bloqueos</span>
                   </div>
                 </div>
-                <span class="text-xs font-extrabold bg-[#251b3d] text-violet-200 border border-violet-400/25 px-2.5 py-1 rounded-xl shrink-0">
-                  Entrar →
+                <span class="inline-flex items-center gap-1 text-xs font-extrabold glass-panel text-violet-200 px-3 py-1.5 rounded-xl shrink-0">
+                  <span>Abrir</span>
+                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
                 </span>
               </div>
-              <p class="text-xs text-violet-200/75 leading-relaxed">
-                Anota cuál es tu foco de hoy, qué lograste ayer y si tienes algún bloqueo para sincronizar a todo el equipo rápido.
+              <p class="text-xs sm:text-sm text-violet-200/75 leading-relaxed">
+                Sincroniza al equipo en segundos anotando tu enfoque principal de hoy, tus logros recientes y cualquier bloqueo operativo.
               </p>
             </div>
-            <div class="flex items-center justify-between pt-2.5 border-t border-violet-500/15 text-[11px] font-extrabold text-violet-300">
+            <div class="w-full flex items-center justify-between pt-3 border-t border-violet-400/15 text-xs font-bold text-violet-300 tabular-nums">
               <span id="hubCardDailyInfo">0 reportes diarios registrados</span>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/70" aria-hidden="true"></i>
             </div>
-          </div>
+          </button>
 
-          <!-- Tarjeta Módulo 3: Tareas Pendientes -->
-          <div
+          <!-- Módulo 3: Tareas Pendientes -->
+          <button
+            type="button"
             onclick="switchModule('tareas')"
-            class="glass-card rounded-3xl p-5 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-3"
+            class="glass-card rounded-3xl p-5 sm:p-6 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-4"
           >
-            <div class="space-y-2.5">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-11 h-11 rounded-2xl bg-[#271d42] border border-violet-400/30 text-white flex items-center justify-center text-xl shrink-0">
-                    ✅
+            <div class="space-y-3 w-full">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3.5">
+                  <div class="w-12 h-12 rounded-2xl glass-panel text-violet-200 flex items-center justify-center shrink-0">
+                    <i data-lucide="check-square" class="w-6 h-6" aria-hidden="true"></i>
                   </div>
                   <div>
-                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition leading-tight">
+                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition-colors">
                       Tareas Pendientes
                     </h3>
-                    <span class="text-[11px] font-bold text-violet-300">To-Do por responsable y prioridad</span>
+                    <span class="text-xs font-semibold text-violet-300">Seguimientos por responsable y prioridad</span>
                   </div>
                 </div>
-                <span class="text-xs font-extrabold bg-[#251b3d] text-violet-200 border border-violet-400/25 px-2.5 py-1 rounded-xl shrink-0">
-                  Entrar →
+                <span class="inline-flex items-center gap-1 text-xs font-extrabold glass-panel text-violet-200 px-3 py-1.5 rounded-xl shrink-0">
+                  <span>Abrir</span>
+                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
                 </span>
               </div>
-              <p class="text-xs text-violet-200/75 leading-relaxed">
-                Crea pendientes para ti o para el equipo (cotizaciones, llamadas, entregas), asigna prioridad y márcalos listos con 1 toque.
+              <p class="text-xs sm:text-sm text-violet-200/75 leading-relaxed">
+                Crea compromisos rápidos de cotizaciones, llamadas o demos, asigna prioridad con controles Tailwind y márcalos listos con 1 toque.
               </p>
             </div>
-            <div class="flex items-center justify-between pt-2.5 border-t border-violet-500/15 text-[11px] font-extrabold text-violet-300">
+            <div class="w-full flex items-center justify-between pt-3 border-t border-violet-400/15 text-xs font-bold text-violet-300 tabular-nums">
               <span id="hubCardTareasInfo">0 tareas pendientes</span>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/70" aria-hidden="true"></i>
             </div>
-          </div>
+          </button>
 
-          <!-- Tarjeta Módulo 4: Llamados de Atención & Feedback -->
-          <div
+          <!-- Módulo 4: Llamados de Atención -->
+          <button
+            type="button"
             onclick="switchModule('llamados')"
-            class="glass-card rounded-3xl p-5 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-3"
+            class="glass-card rounded-3xl p-5 sm:p-6 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-4"
           >
-            <div class="space-y-2.5">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-11 h-11 rounded-2xl bg-[#271d42] border border-rose-400/30 text-white flex items-center justify-center text-xl shrink-0">
-                    ⚠️
+            <div class="space-y-3 w-full">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3.5">
+                  <div class="w-12 h-12 rounded-2xl glass-panel border-rose-400/30 text-rose-300 flex items-center justify-center shrink-0">
+                    <i data-lucide="shield-alert" class="w-6 h-6" aria-hidden="true"></i>
                   </div>
                   <div>
-                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition leading-tight">
+                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition-colors">
                       Llamados de Atención
                     </h3>
-                    <span class="text-[11px] font-bold text-rose-300">Control disciplinario y acuerdos</span>
+                    <span class="text-xs font-semibold text-rose-300">Bitácora disciplinaria y compromisos</span>
                   </div>
                 </div>
-                <span class="text-xs font-extrabold bg-[#251b3d] text-violet-200 border border-violet-400/25 px-2.5 py-1 rounded-xl shrink-0">
-                  Entrar →
+                <span class="inline-flex items-center gap-1 text-xs font-extrabold glass-panel text-violet-200 px-3 py-1.5 rounded-xl shrink-0">
+                  <span>Abrir</span>
+                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
                 </span>
               </div>
-              <p class="text-xs text-violet-200/75 leading-relaxed">
-                Registra llamados de atención por no portar carnet, puntualidad o bajo registro, dejando escrito el compromiso acordado.
+              <p class="text-xs sm:text-sm text-violet-200/75 leading-relaxed">
+                Registra llamados de atención por carnet, puntualidad o bajo registro, dejando constancia del compromiso acordado.
               </p>
             </div>
-            <div class="flex items-center justify-between pt-2.5 border-t border-violet-500/15 text-[11px] font-extrabold text-violet-300">
+            <div class="w-full flex items-center justify-between pt-3 border-t border-violet-400/15 text-xs font-bold text-violet-300 tabular-nums">
               <span id="hubCardLlamadosInfo">0 llamados registrados</span>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/70" aria-hidden="true"></i>
             </div>
-          </div>
+          </button>
 
         </div>
-      </div>
+      </section>
 
-      <!-- PRÓXIMOS MÓDULOS / EXPANSIONES DE NOTAS QUICKSS (OPTIMIZADO PARA MÓVIL 2x2) -->
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-violet-300/80">
-            ✨ Próximas Opciones en Notas Quickss
+      <!-- PRÓXIMAS OPCIONES EN NOTAS QUICKSS (GRID 2x2 EN MÓVIL CON ICONOS SVG) -->
+      <section class="space-y-3" aria-labelledby="upcomingModulesHeading">
+        <div class="flex items-center justify-between">
+          <h2 id="upcomingModulesHeading" class="text-xs sm:text-sm font-bold text-violet-300 flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Próximas Opciones en Notas Quickss</span>
           </h2>
-          <span class="text-[10px] bg-violet-500/15 text-violet-300 border border-violet-500/30 px-2.5 py-0.5 rounded-full font-bold">
-            Toca para votar / activar
+          <span class="text-[11px] glass-panel text-violet-200 px-2.5 py-0.5 rounded-full font-semibold">
+            Toca para solicitar
           </span>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <button
             type="button"
-            onclick="showToast('💡 Módulo de Actas y Reuniones rápidas: listo para activar cuando lo necesites.')"
-            class="glass-card rounded-2xl p-3.5 text-left border border-violet-500/20 hover:border-violet-400/50 transition space-y-1.5"
+            onclick="showToast('Módulo de Minutas y Reuniones listo para activarse cuando lo indiques.')"
+            class="glass-card rounded-2xl p-4 text-left hover:border-violet-400/45 cursor-pointer space-y-2"
           >
             <div class="flex items-center justify-between">
-              <span class="text-xl">🎙️</span>
-              <span class="text-[9px] font-extrabold uppercase bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
+              <div class="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-400/25 flex items-center justify-center text-violet-300">
+                <i data-lucide="mic" class="w-4 h-4" aria-hidden="true"></i>
+              </div>
+              <span class="text-[10px] font-bold bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
             </div>
             <p class="font-extrabold text-xs sm:text-sm text-white">Minutas & Reuniones</p>
             <p class="text-[11px] text-violet-300/70 leading-snug">Acuerdos rápidos por voz de reuniones del equipo</p>
@@ -328,100 +564,133 @@
 
           <button
             type="button"
-            onclick="showToast('💰 Módulo de Cierres y Comisiones: conectará los prospectos 🔥 interesados con ventas cerradas.')"
-            class="glass-card rounded-2xl p-3.5 text-left border border-violet-500/20 hover:border-violet-400/50 transition space-y-1.5"
+            onclick="showToast('Módulo de Cierres y Ventas: conectará prospectos interesados con cierres.')"
+            class="glass-card rounded-2xl p-4 text-left hover:border-violet-400/45 cursor-pointer space-y-2"
           >
             <div class="flex items-center justify-between">
-              <span class="text-xl">💰</span>
-              <span class="text-[9px] font-extrabold uppercase bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
+              <div class="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-400/25 flex items-center justify-center text-violet-300">
+                <i data-lucide="badge-dollar-sign" class="w-4 h-4" aria-hidden="true"></i>
+              </div>
+              <span class="text-[10px] font-bold bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
             </div>
             <p class="font-extrabold text-xs sm:text-sm text-white">Cierres & Ventas</p>
-            <p class="text-[11px] text-violet-300/70 leading-snug">Seguimiento de negocios que sí compraron</p>
+            <p class="text-[11px] text-violet-300/70 leading-snug">Seguimiento de negocios que concretaron compra</p>
           </button>
 
           <button
             type="button"
-            onclick="showToast('📦 Módulo de Inventario de Brigada: control de entrega de carnets, folletos y tarjetas.')"
-            class="glass-card rounded-2xl p-3.5 text-left border border-violet-500/20 hover:border-violet-400/50 transition space-y-1.5"
+            onclick="showToast('Módulo de Stock Publicitario: control de entrega de carnets, folletos y tarjetas.')"
+            class="glass-card rounded-2xl p-4 text-left hover:border-violet-400/45 cursor-pointer space-y-2"
           >
             <div class="flex items-center justify-between">
-              <span class="text-xl">📦</span>
-              <span class="text-[9px] font-extrabold uppercase bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
+              <div class="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-400/25 flex items-center justify-center text-violet-300">
+                <i data-lucide="package-check" class="w-4 h-4" aria-hidden="true"></i>
+              </div>
+              <span class="text-[10px] font-bold bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
             </div>
             <p class="font-extrabold text-xs sm:text-sm text-white">Stock Publicitario</p>
-            <p class="text-[11px] text-violet-300/70 leading-snug">Control de folletos, volantes y tarjetas</p>
+            <p class="text-[11px] text-violet-300/70 leading-snug">Control de inventario de folletos y tarjetas</p>
           </button>
 
           <button
             type="button"
-            onclick="showToast('⚡ Dime qué otro apartado quieres agregar a Notas Quickss y lo activamos.')"
-            class="glass-card rounded-2xl p-3.5 text-left border border-dashed border-violet-400/40 hover:border-violet-300 transition space-y-1.5"
+            onclick="showToast('Indica qué otro apartado deseas sumar a Notas Quickss y lo activamos.')"
+            class="glass-card rounded-2xl p-4 text-left border-dashed border-violet-400/35 hover:border-violet-300 cursor-pointer space-y-2"
           >
             <div class="flex items-center justify-between">
-              <span class="text-xl">➕</span>
-              <span class="text-[9px] font-extrabold uppercase bg-violet-600 text-white px-2 py-0.5 rounded-full">Nuevo</span>
+              <div class="w-9 h-9 rounded-xl bg-violet-600/25 border border-violet-400/35 flex items-center justify-center text-violet-200">
+                <i data-lucide="plus" class="w-4 h-4" aria-hidden="true"></i>
+              </div>
+              <span class="text-[10px] font-bold bg-violet-600 text-white px-2 py-0.5 rounded-full">Nuevo</span>
             </div>
             <p class="font-extrabold text-xs sm:text-sm text-white">Otro Apartado</p>
-            <p class="text-[11px] text-violet-300/70 leading-snug">Personaliza un nuevo bloque de notas</p>
+            <p class="text-[11px] text-violet-300/70 leading-snug">Personaliza un nuevo bloque operativo</p>
           </button>
         </div>
-      </div>
+      </section>
 
       <!-- Feed Global Reciente de Todo Notas Quickss -->
-      <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4">
+      <section class="glass-card rounded-3xl p-5 sm:p-6 space-y-4" aria-labelledby="recentActivityHeading">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-sm sm:text-base font-extrabold text-white">⚡ Actividad Reciente en Notas Quickss</h3>
+            <h3 id="recentActivityHeading" class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+              <i data-lucide="activity" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+              <span>Actividad Reciente en Notas Quickss</span>
+            </h3>
             <p class="text-xs text-violet-300/70">Últimos movimientos en Brigadas, Daily Day, Tareas y Llamados</p>
           </div>
         </div>
-        <div id="hubUnifiedFeed" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <!-- Dinámico -->
-        </div>
-      </div>
+        <div id="hubUnifiedFeed" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+      </section>
 
     </div>
 
     <!-- =================================================================== -->
     <!-- MÓDULO 1: APARTADO DE BRIGADAS COMERCIALES                          -->
     <!-- =================================================================== -->
-    <div id="module_brigadas" class="hidden space-y-4 sm:space-y-5 fade-slide-in">
+    <div id="module_brigadas" class="hidden space-y-5 fade-slide-in">
 
-      <!-- Sub-Barra del Módulo de Brigadas Optimizada para Móvil (Grid 2x2 + Barra limpia) -->
-      <div class="glass-card rounded-3xl p-3.5 sm:p-5 border border-violet-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
-        <!-- 4 pestañas en Grid 2x2 simétrico en móvil -->
+      <!-- Sub-Barra del Módulo de Brigadas (Grid 2x2 en móvil + Progreso) -->
+      <div class="glass-card rounded-3xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
-          <button id="deskNavCapture" onclick="switchTab('capture')" class="px-3 py-2.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow text-center">
-            ⚡ Anotar Visita
+          <button
+            type="button"
+            id="deskNavCapture"
+            onclick="switchTab('capture')"
+            class="min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i data-lucide="zap" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Anotar Visita</span>
           </button>
-          <button id="deskNavHistory" onclick="switchTab('history')" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-[#1d1630] text-violet-200 hover:text-white text-center">
-            🗺️ Mapa (<span id="deskHistoryCount">0</span>)
+          <button
+            type="button"
+            id="deskNavHistory"
+            onclick="switchTab('history')"
+            class="min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-bold glass-panel text-violet-200 hover:text-white flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i data-lucide="map" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Mapa (<span id="deskHistoryCount" class="tabular-nums">0</span>)</span>
           </button>
-          <button id="deskNavLeaderboard" onclick="switchTab('leaderboard')" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-[#1d1630] text-violet-200 hover:text-white text-center">
-            🏆 Podio & XP
+          <button
+            type="button"
+            id="deskNavLeaderboard"
+            onclick="switchTab('leaderboard')"
+            class="min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-bold glass-panel text-violet-200 hover:text-white flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i data-lucide="trophy" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Podio & XP</span>
           </button>
-          <button id="deskNavAnalytics" onclick="switchTab('analytics')" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-[#1d1630] text-violet-200 hover:text-white text-center">
-            📊 Análisis
+          <button
+            type="button"
+            id="deskNavAnalytics"
+            onclick="switchTab('analytics')"
+            class="min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-bold glass-panel text-violet-200 hover:text-white flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i data-lucide="bar-chart-3" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Análisis</span>
           </button>
         </div>
 
-        <!-- Barra de Progreso del Objetivo Diario sin quiebres de línea en móvil -->
-        <div class="glass-panel rounded-2xl px-3.5 py-2.5 w-full lg:w-auto lg:min-w-[360px]">
+        <!-- Barra de Progreso del Objetivo Diario -->
+        <div class="glass-panel rounded-2xl px-4 py-3 w-full lg:w-auto lg:min-w-[380px]">
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs mb-2">
             <div class="flex items-center gap-1.5 whitespace-nowrap">
-              <span class="font-bold text-violet-200">🎯 Meta Hoy:</span>
-              <span id="goalProgressCounter" class="font-extrabold text-white text-sm">0 / 12</span>
+              <i data-lucide="target" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+              <span class="font-bold text-violet-200">Meta Hoy:</span>
+              <span id="goalProgressCounter" class="font-extrabold text-white text-sm tabular-nums">0 / 12</span>
             </div>
-            <div class="flex items-center gap-1.5 whitespace-nowrap">
-              <span class="bg-violet-500/25 text-violet-200 border border-violet-400/40 px-2.5 py-0.5 rounded-full font-extrabold text-[11px]">
-                🔥 <span id="hotProgressCounter">0</span> Interesados
+            <div class="flex items-center gap-1.5 whitespace-nowrap tabular-nums">
+              <span class="inline-flex items-center gap-1 bg-violet-500/20 text-violet-200 border border-violet-400/35 px-2.5 py-0.5 rounded-full font-extrabold text-[11px]">
+                <i data-lucide="flame" class="w-3 h-3 text-violet-300" aria-hidden="true"></i>
+                <span id="hotProgressCounter">0</span> Interesados
               </span>
-              <span class="bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold text-[11px]">
-                🌤️ <span id="infoProgressCounter">0</span> Info
+              <span class="inline-flex items-center gap-1 bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold text-[11px]">
+                <i data-lucide="cloud-sun" class="w-3 h-3 text-amber-300" aria-hidden="true"></i>
+                <span id="infoProgressCounter">0</span> Info
               </span>
             </div>
           </div>
-          <div class="w-full h-2.5 bg-[#0c0914] rounded-full overflow-hidden p-0.5 border border-violet-500/20">
+          <div class="w-full h-2.5 bg-[#09070f] rounded-full overflow-hidden p-0.5 border border-violet-500/20">
             <div id="goalProgressBar" class="progress-bar-fill h-full rounded-full" style="width: 0%"></div>
           </div>
         </div>
@@ -430,97 +699,159 @@
       <!-- SUB-VISTA 1.1: CAPTURA DE BRIGADA -->
       <section id="tabCapture" class="space-y-6">
 
-        <!-- PASO 1: CHECK-IN DE SALIDA ANTES DE INICIAR LA BRIGADA -->
-        <div id="preBrigadaCard" class="glass-card rounded-3xl overflow-hidden border border-violet-500/40 shadow-2xl fade-slide-in">
-          <div class="bg-[#211838] p-6 sm:p-7 border-b border-violet-500/20">
+        <!-- PASO 1: CHECK-IN DE SALIDA ANTES DE INICIAR LA BRIGADA (SIN CHECKBOX NATIVO) -->
+        <div id="preBrigadaCard" class="glass-card rounded-3xl overflow-hidden fade-slide-in">
+          <div class="bg-violet-950/35 p-6 sm:p-7 border-b border-violet-400/15">
             <div class="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <span class="text-[11px] uppercase tracking-widest font-extrabold bg-violet-500/25 text-violet-200 border border-violet-400/30 px-3 py-1 rounded-full">
-                  Paso 1 · Check-in Previo de Brigada
+              <div class="space-y-1.5">
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-violet-500/20 text-violet-200 border border-violet-400/30 px-3 py-1 rounded-full">
+                  <i data-lucide="shield-check" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                  <span>Paso 1 · Check-in Previo de Brigada</span>
                 </span>
-                <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-2">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white">
                   ¿Cómo sales equipado hoy a la brigada?
                 </h2>
-                <p class="text-xs sm:text-sm text-violet-200/80 mt-1">
-                  Confirma si llevas carnet, tarjetas y folletos para habilitar el registro rápido de locales.
+                <p class="text-xs sm:text-sm text-violet-200/80">
+                  Confirma tu carnet, tarjetas y folletos para habilitar el registro rápido de negocios.
                 </p>
               </div>
-              <div class="bg-[#140f23] border border-violet-500/30 rounded-2xl px-4 py-3 text-center">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-violet-300">Nivel de Preparación</p>
-                <p id="readinessScoreText" class="text-2xl font-extrabold text-violet-300">100% Equipado</p>
+              <div class="glass-panel rounded-2xl px-4 py-3 text-center">
+                <p class="text-[11px] font-bold text-violet-300">Nivel de Preparación</p>
+                <p id="readinessScoreText" class="text-2xl font-extrabold text-violet-200 tabular-nums">100% Equipado</p>
               </div>
             </div>
           </div>
 
           <div class="p-6 sm:p-7 space-y-6">
+            <!-- 3 Tarjetas Switch Tailwind Personalizadas (Sin <input type="checkbox"> nativo) -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div id="checkCardCarnet" onclick="togglePreCheck('carnet')" class="equip-card equipped border-2 rounded-2xl p-4 flex items-center justify-between">
+              <button
+                type="button"
+                id="checkCardCarnet"
+                role="switch"
+                aria-checked="true"
+                onclick="togglePreCheck('carnet')"
+                class="equip-card equipped rounded-2xl p-4 flex items-center justify-between text-left w-full"
+              >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-2xl">🪪</div>
+                  <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-violet-200 shrink-0">
+                    <i data-lucide="id-card" class="w-6 h-6" aria-hidden="true"></i>
+                  </div>
                   <div>
-                    <p class="font-extrabold text-base text-white">¿Tienes el carnet puesto?</p>
-                    <p id="labelCarnetState" class="text-xs font-bold text-violet-300 mt-0.5">✅ Sí, visible y puesto</p>
+                    <p class="font-extrabold text-sm sm:text-base text-white">¿Tienes el carnet puesto?</p>
+                    <p id="labelCarnetState" class="text-xs font-bold text-violet-300 mt-0.5">Sí, visible y puesto</p>
                   </div>
                 </div>
-                <input type="checkbox" id="chkCarnet" checked class="w-5 h-5 accent-violet-600 pointer-events-none" />
-              </div>
+                <div id="switchPillCarnet" class="w-7 h-7 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow shrink-0">
+                  <i data-lucide="check" class="w-4 h-4" aria-hidden="true"></i>
+                </div>
+              </button>
 
-              <div id="checkCardTarjetas" onclick="togglePreCheck('tarjetas')" class="equip-card equipped border-2 rounded-2xl p-4 flex items-center justify-between">
+              <button
+                type="button"
+                id="checkCardTarjetas"
+                role="switch"
+                aria-checked="true"
+                onclick="togglePreCheck('tarjetas')"
+                class="equip-card equipped rounded-2xl p-4 flex items-center justify-between text-left w-full"
+              >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-2xl">📇</div>
+                  <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-violet-200 shrink-0">
+                    <i data-lucide="contact" class="w-6 h-6" aria-hidden="true"></i>
+                  </div>
                   <div>
-                    <p class="font-extrabold text-base text-white">¿Tienes tarjetas?</p>
-                    <p id="labelTarjetasState" class="text-xs font-bold text-violet-300 mt-0.5">✅ Sí, llevo tarjetas</p>
+                    <p class="font-extrabold text-sm sm:text-base text-white">¿Tienes tarjetas?</p>
+                    <p id="labelTarjetasState" class="text-xs font-bold text-violet-300 mt-0.5">Sí, llevo tarjetas</p>
                   </div>
                 </div>
-                <input type="checkbox" id="chkTarjetas" checked class="w-5 h-5 accent-violet-600 pointer-events-none" />
-              </div>
+                <div id="switchPillTarjetas" class="w-7 h-7 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow shrink-0">
+                  <i data-lucide="check" class="w-4 h-4" aria-hidden="true"></i>
+                </div>
+              </button>
 
-              <div id="checkCardFolletos" onclick="togglePreCheck('folletos')" class="equip-card equipped border-2 rounded-2xl p-4 flex items-center justify-between">
+              <button
+                type="button"
+                id="checkCardFolletos"
+                role="switch"
+                aria-checked="true"
+                onclick="togglePreCheck('folletos')"
+                class="equip-card equipped rounded-2xl p-4 flex items-center justify-between text-left w-full"
+              >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-2xl">📄</div>
+                  <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-violet-200 shrink-0">
+                    <i data-lucide="file-text" class="w-6 h-6" aria-hidden="true"></i>
+                  </div>
                   <div>
-                    <p class="font-extrabold text-base text-white">¿Tienes folletos?</p>
-                    <p id="labelFolletosState" class="text-xs font-bold text-violet-300 mt-0.5">✅ Sí, llevo folletos</p>
+                    <p class="font-extrabold text-sm sm:text-base text-white">¿Tienes folletos?</p>
+                    <p id="labelFolletosState" class="text-xs font-bold text-violet-300 mt-0.5">Sí, llevo folletos</p>
                   </div>
                 </div>
-                <input type="checkbox" id="chkFolletos" checked class="w-5 h-5 accent-violet-600 pointer-events-none" />
-              </div>
+                <div id="switchPillFolletos" class="w-7 h-7 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow shrink-0">
+                  <i data-lucide="check" class="w-4 h-4" aria-hidden="true"></i>
+                </div>
+              </button>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-extrabold text-violet-200 uppercase tracking-wider mb-2">
-                  📍 Zona / Barrio / Sector a recorrer hoy
+                <label for="inputZonaBrigada" class="flex items-center gap-1.5 text-xs font-bold text-violet-200 mb-2">
+                  <i data-lucide="map-pin" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+                  <span>Zona / Barrio / Sector a recorrer hoy</span>
                 </label>
                 <input
                   type="text"
                   id="inputZonaBrigada"
-                  placeholder="Ej: Zona Comercial Centro, Calle 80, Galerías..."
-                  class="w-full px-4 py-3.5 rounded-2xl border text-sm font-semibold outline-none placeholder:text-violet-300/40"
+                  name="zonaBrigada"
+                  autocomplete="off"
+                  placeholder="Ej: Zona Comercial Centro, Calle 80, Galerías…"
+                  class="w-full px-4 py-3.5 rounded-2xl text-sm font-semibold placeholder:text-violet-300/40"
                 />
               </div>
+
+              <!-- Stepper Tailwind Personalizado para Meta Diaria (Sin flechas nativas) -->
               <div>
-                <label class="block text-xs font-extrabold text-violet-200 uppercase tracking-wider mb-2">
-                  🎯 Tu objetivo de acercamientos para hoy
+                <label for="inputMetaDiaria" class="flex items-center gap-1.5 text-xs font-bold text-violet-200 mb-2">
+                  <i data-lucide="target" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+                  <span>Tu objetivo de acercamientos para hoy</span>
                 </label>
-                <input
-                  type="number"
-                  id="inputMetaDiaria"
-                  value="12"
-                  min="1"
-                  max="100"
-                  class="w-full px-4 py-3.5 rounded-2xl border text-base font-extrabold text-violet-300 outline-none"
-                />
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onclick="adjustDailyGoal(-1)"
+                    aria-label="Disminuir meta diaria"
+                    class="min-h-[48px] min-w-[48px] rounded-2xl glass-panel hover:border-violet-400/50 flex items-center justify-center text-violet-200 hover:text-white cursor-pointer"
+                  >
+                    <i data-lucide="minus" class="w-4 h-4" aria-hidden="true"></i>
+                  </button>
+                  <input
+                    type="number"
+                    id="inputMetaDiaria"
+                    name="metaDiaria"
+                    inputmode="numeric"
+                    value="12"
+                    min="1"
+                    max="100"
+                    class="w-full px-4 py-3 rounded-2xl text-center text-base font-extrabold text-violet-200 tabular-nums"
+                  />
+                  <button
+                    type="button"
+                    onclick="adjustDailyGoal(1)"
+                    aria-label="Aumentar meta diaria"
+                    class="min-h-[48px] min-w-[48px] rounded-2xl glass-panel hover:border-violet-400/50 flex items-center justify-center text-violet-200 hover:text-white cursor-pointer"
+                  >
+                    <i data-lucide="plus" class="w-4 h-4" aria-hidden="true"></i>
+                  </button>
+                </div>
               </div>
             </div>
 
             <button
               type="button"
               onclick="confirmPreBrigada()"
-              class="btn-purple-primary w-full font-extrabold py-4 rounded-2xl text-base flex items-center justify-center gap-2"
+              class="btn-purple-primary w-full min-h-[52px] font-extrabold py-4 rounded-2xl text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-pointer"
             >
-              <span>🚀 Confirmar Equipamiento y Empezar a Anotar</span>
+              <i data-lucide="check-circle-2" class="w-5 h-5" aria-hidden="true"></i>
+              <span>Confirmar Equipamiento y Empezar a Anotar</span>
             </button>
           </div>
         </div>
@@ -532,183 +863,279 @@
           <div class="lg:col-span-7 space-y-4">
             <div id="activeBrigadaBanner" class="glass-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-2">
               <div class="flex flex-wrap items-center gap-2 text-xs">
-                <span class="font-extrabold text-violet-300 uppercase tracking-wider text-[11px]">Kit Activo:</span>
-                <span id="badgeCarnet" class="px-2.5 py-1 rounded-full font-bold">🪪 Carnet</span>
-                <span id="badgeTarjetas" class="px-2.5 py-1 rounded-full font-bold">📇 Tarjetas</span>
-                <span id="badgeFolletos" class="px-2.5 py-1 rounded-full font-bold">📄 Folletos</span>
-                <span id="badgeZona" class="px-2.5 py-1 rounded-full font-bold bg-[#211936] text-violet-200 border border-violet-500/25">📍 Sector</span>
+                <span class="font-extrabold text-violet-300 text-[11px]">Kit Activo:</span>
+                <span id="badgeCarnet" class="px-2.5 py-1 rounded-full font-bold">Carnet</span>
+                <span id="badgeTarjetas" class="px-2.5 py-1 rounded-full font-bold">Tarjetas</span>
+                <span id="badgeFolletos" class="px-2.5 py-1 rounded-full font-bold">Folletos</span>
+                <span id="badgeZona" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold glass-panel text-violet-200">Sector</span>
               </div>
-              <button type="button" onclick="reopenPreBrigada()" class="text-xs font-extrabold text-violet-300 hover:text-white underline">
-                Cambiar Kit
+              <button
+                type="button"
+                onclick="reopenPreBrigada()"
+                class="text-xs font-extrabold text-violet-300 hover:text-white flex items-center gap-1 cursor-pointer"
+              >
+                <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Editar Kit</span>
               </button>
             </div>
 
             <form id="visitForm" class="space-y-4">
               <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between gap-2">
                   <div class="flex items-center gap-2.5">
                     <span class="w-7 h-7 rounded-xl bg-violet-600 text-white text-xs flex items-center justify-center font-extrabold shadow">1</span>
                     <h3 class="font-extrabold text-white text-base sm:text-lg">Negocio y Dirección abordada</h3>
                   </div>
-                  <span id="visitTimestampPreview" class="text-xs font-bold text-violet-200 bg-violet-500/15 border border-violet-500/30 px-3 py-1 rounded-full">
-                    🕒 Hora automática
+                  <span class="inline-flex items-center gap-1.5 text-xs font-bold text-violet-200 bg-violet-500/15 border border-violet-500/30 px-3 py-1 rounded-full tabular-nums">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+                    <span id="visitTimestampPreview">Hora automática</span>
                   </span>
                 </div>
 
-                <input
-                  type="text"
-                  id="negocioNombre"
-                  required
-                  placeholder="🏪 Nombre del negocio o cliente (Ej: Ferretería El Sol)"
-                  class="w-full px-4 py-3.5 rounded-2xl border-2 outline-none text-base font-bold placeholder:text-violet-300/40 placeholder:font-normal transition"
-                />
-
-                <div class="flex gap-2">
+                <div>
+                  <label for="negocioNombre" class="sr-only">Nombre del negocio o cliente</label>
                   <input
                     type="text"
-                    id="negocioDireccion"
+                    id="negocioNombre"
+                    name="negocioNombre"
+                    autocomplete="off"
                     required
-                    placeholder="📍 Dirección o referencia (Ej: Cra 15 # 72-10)"
-                    class="flex-1 px-4 py-3.5 rounded-2xl border-2 outline-none text-sm font-semibold placeholder:text-violet-300/40 transition"
+                    placeholder="Nombre del negocio o cliente (Ej: Ferretería El Sol)…"
+                    class="w-full px-4 py-3.5 rounded-2xl text-base font-bold placeholder:text-violet-300/40 placeholder:font-normal"
                   />
+                </div>
+
+                <div class="flex gap-2">
+                  <div class="flex-1">
+                    <label for="negocioDireccion" class="sr-only">Dirección o referencia</label>
+                    <input
+                      type="text"
+                      id="negocioDireccion"
+                      name="negocioDireccion"
+                      autocomplete="off"
+                      required
+                      placeholder="Dirección o referencia (Ej: Cra 15 # 72-10)…"
+                      class="w-full px-4 py-3.5 rounded-2xl text-sm font-semibold placeholder:text-violet-300/40"
+                    />
+                  </div>
                   <button
                     type="button"
                     id="btnDetectGps"
                     onclick="detectAddressByGps()"
-                    class="px-4 py-3 rounded-2xl bg-violet-600/20 hover:bg-violet-600/35 text-violet-200 border border-violet-500/40 font-extrabold text-xs shrink-0 flex items-center gap-1.5 transition"
+                    class="min-h-[48px] px-4 py-3 rounded-2xl bg-violet-600/20 hover:bg-violet-600/35 text-violet-200 border border-violet-500/40 font-extrabold text-xs shrink-0 flex items-center gap-1.5 cursor-pointer transition-colors"
                   >
-                    <span>📡</span>
+                    <i data-lucide="locate-fixed" class="w-4 h-4" aria-hidden="true"></i>
                     <span id="gpsBtnLabel">GPS</span>
                   </button>
                 </div>
 
-                <div id="duplicateWarning" class="hidden bg-amber-500/15 border border-amber-500/40 text-amber-200 rounded-2xl p-3 text-xs font-medium"></div>
+                <div id="duplicateWarning" role="status" aria-live="polite" class="hidden bg-amber-500/15 border border-amber-500/40 text-amber-200 rounded-2xl p-3.5 text-xs font-medium"></div>
 
                 <div>
-                  <label class="block text-[11px] font-extrabold uppercase tracking-wider text-violet-300/70 mb-2">
+                  <label class="block text-xs font-bold text-violet-300/80 mb-2">
                     Categoría del negocio (1 toque):
                   </label>
                   <div id="rubroChips" class="flex flex-wrap gap-2">
-                    <button type="button" onclick="selectRubro('Comercio / Tienda')" class="chip-btn active-blue px-3.5 py-2 rounded-xl text-xs font-bold">🛍️ Comercio / Tienda</button>
-                    <button type="button" onclick="selectRubro('Restaurante / Gastronomía')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">🍔 Restaurante / Café</button>
-                    <button type="button" onclick="selectRubro('Salud / Farmacia / Belleza')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">💊 Salud / Belleza</button>
-                    <button type="button" onclick="selectRubro('Ferretería / Repuestos')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">🔧 Ferretería / Autos</button>
-                    <button type="button" onclick="selectRubro('Servicios / Oficina')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">💼 Servicios / Oficina</button>
-                    <button type="button" onclick="selectRubro('Supermercado / Minimarket')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">🛒 Minimarket</button>
+                    <button type="button" data-rubro="Comercio / Tienda" onclick="selectRubro('Comercio / Tienda')" class="chip-btn active-blue min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                      <i data-lucide="store" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                      <span>Comercio / Tienda</span>
+                    </button>
+                    <button type="button" data-rubro="Restaurante / Gastronomía" onclick="selectRubro('Restaurante / Gastronomía')" class="chip-btn min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                      <i data-lucide="utensils" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                      <span>Restaurante / Café</span>
+                    </button>
+                    <button type="button" data-rubro="Salud / Farmacia / Belleza" onclick="selectRubro('Salud / Farmacia / Belleza')" class="chip-btn min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                      <i data-lucide="heart-pulse" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                      <span>Salud / Belleza</span>
+                    </button>
+                    <button type="button" data-rubro="Ferretería / Repuestos" onclick="selectRubro('Ferretería / Repuestos')" class="chip-btn min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                      <i data-lucide="wrench" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                      <span>Ferretería / Autos</span>
+                    </button>
+                    <button type="button" data-rubro="Servicios / Oficina" onclick="selectRubro('Servicios / Oficina')" class="chip-btn min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                      <i data-lucide="briefcase" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                      <span>Servicios / Oficina</span>
+                    </button>
+                    <button type="button" data-rubro="Supermercado / Minimarket" onclick="selectRubro('Supermercado / Minimarket')" class="chip-btn min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                      <i data-lucide="shopping-bag" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                      <span>Minimarket</span>
+                    </button>
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-violet-500/15">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-violet-400/15">
                   <div>
-                    <label class="block text-[11px] font-extrabold uppercase tracking-wider text-violet-300/70 mb-2">🗣️ ¿Con quién hablaste?</label>
+                    <label class="block text-xs font-bold text-violet-300/80 mb-2">¿Con quién hablaste?</label>
                     <div id="interlocutorChips" class="flex flex-wrap gap-1.5">
-                      <button type="button" onclick="selectInterlocutor('Dueño / Decisor')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">👑 Dueño (+15 XP)</button>
-                      <button type="button" onclick="selectInterlocutor('Administrador / Encargado')" class="chip-btn px-3 py-2 rounded-xl text-xs font-bold">👔 Encargado</button>
-                      <button type="button" onclick="selectInterlocutor('Empleado / Mostrador')" class="chip-btn px-3 py-2 rounded-xl text-xs font-bold">🙋 Empleado</button>
+                      <button type="button" onclick="selectInterlocutor('Dueño / Decisor')" class="chip-btn active-indigo min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                        <i data-lucide="crown" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                        <span>Dueño (+15 XP)</span>
+                      </button>
+                      <button type="button" onclick="selectInterlocutor('Administrador / Encargado')" class="chip-btn min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                        <i data-lucide="user-check" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                        <span>Encargado</span>
+                      </button>
+                      <button type="button" onclick="selectInterlocutor('Empleado / Mostrador')" class="chip-btn min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                        <i data-lucide="user" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                        <span>Empleado</span>
+                      </button>
                     </div>
                   </div>
 
                   <div>
-                    <label class="block text-[11px] font-extrabold uppercase tracking-wider text-violet-300/70 mb-2">📦 ¿Qué entregaste?</label>
+                    <label class="block text-xs font-bold text-violet-300/80 mb-2">¿Qué entregaste?</label>
                     <div id="materialChips" class="flex flex-wrap gap-1.5">
-                      <button type="button" data-mat="Folleto" onclick="toggleMaterial('Folleto')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">📄 Folleto</button>
-                      <button type="button" data-mat="Tarjeta" onclick="toggleMaterial('Tarjeta')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">📇 Tarjeta</button>
-                      <button type="button" data-mat="Explicación verbal" onclick="toggleMaterial('Explicación verbal')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">💬 Pitch</button>
-                      <button type="button" data-mat="Demo / Muestra" onclick="toggleMaterial('Demo / Muestra')" class="chip-btn px-3 py-2 rounded-xl text-xs font-bold">📱 Demo</button>
+                      <button type="button" data-mat="Folleto" onclick="toggleMaterial('Folleto')" class="chip-btn active-indigo min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                        <span>Folleto</span>
+                      </button>
+                      <button type="button" data-mat="Tarjeta" onclick="toggleMaterial('Tarjeta')" class="chip-btn active-indigo min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                        <i data-lucide="contact" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                        <span>Tarjeta</span>
+                      </button>
+                      <button type="button" data-mat="Explicación verbal" onclick="toggleMaterial('Explicación verbal')" class="chip-btn active-indigo min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                        <i data-lucide="message-square" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                        <span>Pitch</span>
+                      </button>
+                      <button type="button" data-mat="Demo / Muestra" onclick="toggleMaterial('Demo / Muestra')" class="chip-btn min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                        <i data-lucide="smartphone" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                        <span>Demo</span>
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
 
+              <!-- BLOQUE 2: RESPUESTA DEL CLIENTE -->
               <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2.5">
                     <span class="w-7 h-7 rounded-xl bg-violet-600 text-white text-xs flex items-center justify-center font-extrabold shadow">2</span>
                     <h3 class="font-extrabold text-white text-base sm:text-lg">¿Qué respondió el cliente?</h3>
                   </div>
-                  <span class="text-[11px] text-violet-300/70 font-semibold">1 toque</span>
+                  <span class="text-xs text-violet-300/70 font-semibold">Selecciona 1 opción</span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div id="cardResultHot" onclick="selectVisitResult('interesado')" class="result-card selected-hot rounded-2xl p-4 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
+                  <button
+                    type="button"
+                    id="cardResultHot"
+                    onclick="selectVisitResult('interesado')"
+                    class="result-card selected-hot rounded-2xl p-4 text-left flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2.5"
+                  >
                     <div class="flex items-center justify-between w-full">
-                      <span class="text-3xl">🔥</span>
-                      <span class="text-[10px] font-extrabold uppercase bg-violet-500/30 text-violet-200 px-2 py-0.5 rounded-full">+50 XP</span>
+                      <div class="w-10 h-10 rounded-xl bg-violet-500/25 border border-violet-400/35 flex items-center justify-center text-violet-200">
+                        <i data-lucide="flame" class="w-5 h-5" aria-hidden="true"></i>
+                      </div>
+                      <span class="text-[10px] font-extrabold bg-violet-500/30 text-violet-200 px-2.5 py-0.5 rounded-full tabular-nums">+50 XP</span>
                     </div>
                     <div>
-                      <p class="font-extrabold text-sm text-white">¡Muy Interesado!</p>
+                      <p class="font-extrabold text-sm text-white">Muy Interesado</p>
                       <p class="text-[11px] text-violet-200/80 leading-snug mt-0.5">Con o sin condiciones, pide cotización o demo</p>
                     </div>
-                  </div>
+                  </button>
 
-                  <div id="cardResultWarm" onclick="selectVisitResult('solo_info')" class="result-card rounded-2xl p-4 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
+                  <button
+                    type="button"
+                    id="cardResultWarm"
+                    onclick="selectVisitResult('solo_info')"
+                    class="result-card rounded-2xl p-4 text-left flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2.5"
+                  >
                     <div class="flex items-center justify-between w-full">
-                      <span class="text-3xl">🌤️</span>
-                      <span class="text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full">+20 XP</span>
+                      <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/35 flex items-center justify-center text-amber-300">
+                        <i data-lucide="cloud-sun" class="w-5 h-5" aria-hidden="true"></i>
+                      </div>
+                      <span class="text-[10px] font-extrabold bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full tabular-nums">+20 XP</span>
                     </div>
                     <div>
                       <p class="font-extrabold text-sm text-white">Solo Info / Ya tiene</p>
-                      <p class="text-[11px] text-violet-200/70 leading-snug mt-0.5">"Ya tengo sistema" o se dejó info en esa dirección</p>
+                      <p class="text-[11px] text-violet-200/70 leading-snug mt-0.5">“Ya tengo sistema” o se dejó info en esa dirección</p>
                     </div>
-                  </div>
+                  </button>
 
-                  <div id="cardResultCold" onclick="selectVisitResult('no_interesado')" class="result-card rounded-2xl p-4 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
+                  <button
+                    type="button"
+                    id="cardResultCold"
+                    onclick="selectVisitResult('no_interesado')"
+                    class="result-card rounded-2xl p-4 text-left flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2.5"
+                  >
                     <div class="flex items-center justify-between w-full">
-                      <span class="text-3xl">❄️</span>
-                      <span class="text-[10px] font-extrabold uppercase bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">+10 XP</span>
+                      <div class="w-10 h-10 rounded-xl bg-slate-700/60 border border-slate-500/35 flex items-center justify-center text-slate-300">
+                        <i data-lucide="snowflake" class="w-5 h-5" aria-hidden="true"></i>
+                      </div>
+                      <span class="text-[10px] font-extrabold bg-slate-700 text-slate-300 px-2.5 py-0.5 rounded-full tabular-nums">+10 XP</span>
                     </div>
                     <div>
                       <p class="font-extrabold text-sm text-white">No interesado</p>
                       <p class="text-[11px] text-violet-200/60 leading-snug mt-0.5">Rechazo directo o no aplica</p>
                     </div>
-                  </div>
+                  </button>
                 </div>
 
-                <div id="dynamicOutcomeBox" class="pt-3 space-y-4 border-t border-violet-500/15">
+                <div id="dynamicOutcomeBox" class="pt-3 space-y-4 border-t border-violet-400/15">
                   <div>
-                    <label id="outcomeChipsLabel" class="block text-xs font-extrabold text-violet-200 mb-2">⚡ Selecciona el caso con 1 toque:</label>
+                    <label id="outcomeChipsLabel" class="block text-xs font-extrabold text-violet-200 mb-2">Selecciona el caso con 1 toque:</label>
                     <div id="outcomeQuickChips" class="flex flex-wrap gap-2"></div>
                   </div>
 
                   <div class="space-y-2">
                     <div class="flex items-center justify-between gap-2">
-                      <label id="conditionsLabel" class="text-xs font-extrabold text-violet-200">✍️ Condiciones específicas o nota rápida:</label>
+                      <label id="conditionsLabel" for="condicionesNotas" class="text-xs font-extrabold text-violet-200">
+                        Condiciones específicas o nota rápida:
+                      </label>
                       <button
                         type="button"
                         id="btnVoiceDictation"
                         onclick="toggleVoiceDictation()"
-                        class="px-3 py-1.5 rounded-xl bg-violet-600/25 hover:bg-violet-600/40 border border-violet-400/40 text-violet-200 text-xs font-extrabold flex items-center gap-1.5 transition"
+                        class="min-h-[38px] px-3 py-1.5 rounded-xl bg-violet-600/25 hover:bg-violet-600/40 border border-violet-400/40 text-violet-200 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer transition-colors"
                       >
-                        <span>🎙️</span>
+                        <i data-lucide="mic" class="w-3.5 h-3.5" aria-hidden="true"></i>
                         <span id="voiceBtnText">Dictar con voz</span>
                       </button>
                     </div>
                     <textarea
                       id="condicionesNotas"
+                      name="condicionesNotas"
                       rows="2"
-                      placeholder="Ej: 'Oye muchachos, me interesa pero si tienen estas condiciones...' o 'Ya tiene sistema Siigo, se dejó folleto'"
-                      class="w-full px-4 py-3 rounded-2xl border-2 outline-none text-sm font-medium placeholder:text-violet-300/40"
+                      placeholder="Ej: “Me interesa si incluye control por bodega…” o “Ya tiene sistema actual, se dejó folleto”…"
+                      class="w-full px-4 py-3 rounded-2xl text-sm font-medium placeholder:text-violet-300/40"
                     ></textarea>
                   </div>
 
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      id="contactoNombre"
-                      placeholder="👤 Nombre del encargado/dueño (Opcional)"
-                      class="w-full px-4 py-3 rounded-2xl border text-sm font-semibold placeholder:text-violet-300/40 outline-none"
-                    />
-                    <input
-                      type="tel"
-                      id="contactoTelefono"
-                      placeholder="📱 WhatsApp / Celular (Ej: 3001234567)"
-                      class="w-full px-4 py-3 rounded-2xl border text-sm font-semibold placeholder:text-violet-300/40 outline-none"
-                    />
+                    <div>
+                      <label for="contactoNombre" class="sr-only">Nombre del encargado o dueño</label>
+                      <input
+                        type="text"
+                        id="contactoNombre"
+                        name="contactoNombre"
+                        autocomplete="off"
+                        placeholder="Nombre del encargado o dueño (Opcional)…"
+                        class="w-full px-4 py-3 rounded-2xl text-sm font-semibold placeholder:text-violet-300/40"
+                      />
+                    </div>
+                    <div>
+                      <label for="contactoTelefono" class="sr-only">WhatsApp o Celular</label>
+                      <input
+                        type="tel"
+                        id="contactoTelefono"
+                        name="contactoTelefono"
+                        inputmode="tel"
+                        autocomplete="off"
+                        placeholder="WhatsApp / Celular (Ej: 3001234567)…"
+                        class="w-full px-4 py-3 rounded-2xl text-sm font-semibold placeholder:text-violet-300/40"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <button type="submit" id="btnSubmitVisit" class="btn-purple-primary w-full font-extrabold py-4 rounded-2xl text-base flex items-center justify-center gap-2">
-                  <span>⚡ Registrar Visita y Sumar al Objetivo</span>
+                <button
+                  type="submit"
+                  id="btnSubmitVisit"
+                  class="btn-purple-primary w-full min-h-[52px] font-extrabold py-4 rounded-2xl text-sm sm:text-base flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <i data-lucide="check-circle-2" class="w-5 h-5" aria-hidden="true"></i>
+                  <span>Registrar Visita y Sumar al Objetivo</span>
                 </button>
               </div>
             </form>
@@ -719,7 +1146,7 @@
             <div class="glass-card rounded-3xl p-5">
               <div class="flex items-center gap-5">
                 <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
-                  <svg class="w-24 h-24" viewBox="0 0 100 100">
+                  <svg class="w-24 h-24" viewBox="0 0 100 100" aria-hidden="true">
                     <circle cx="50" cy="50" r="42" stroke="rgba(139,92,246,0.15)" stroke-width="10" fill="transparent" />
                     <circle
                       id="radialGoalCircle"
@@ -736,13 +1163,13 @@
                     />
                   </svg>
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span id="radialPctText" class="text-xl font-extrabold text-white">0%</span>
-                    <span class="text-[9px] uppercase font-bold text-violet-300">Meta</span>
+                    <span id="radialPctText" class="text-xl font-extrabold text-white tabular-nums">0%</span>
+                    <span class="text-[10px] font-bold text-violet-300">Meta</span>
                   </div>
                 </div>
 
                 <div class="space-y-1.5 flex-1">
-                  <span id="missionStatusPill" class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">
+                  <span id="missionStatusPill" class="inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">
                     En progreso
                   </span>
                   <h4 class="font-extrabold text-white text-base">Tu Ritmo de Brigada Hoy</h4>
@@ -753,19 +1180,24 @@
               </div>
             </div>
 
-            <div id="lastSavedHighlightBox" class="hidden glass-card rounded-3xl p-5 border-2 border-violet-500/50 bg-[#211838] space-y-3 fade-slide-in"></div>
+            <div id="lastSavedHighlightBox" class="hidden glass-card rounded-3xl p-5 border-violet-400/50 space-y-3 fade-slide-in"></div>
 
             <div class="glass-card rounded-3xl p-5 space-y-3">
               <div class="flex items-center justify-between">
                 <div>
                   <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
-                    Últimos Negocios Abordados
+                    <span class="w-2 h-2 rounded-full bg-violet-400"></span>
+                    <span>Últimos Negocios Abordados</span>
                   </h4>
                   <p class="text-[11px] text-violet-300/70">Trazabilidad de direcciones e interesados</p>
                 </div>
-                <button onclick="switchTab('history')" class="text-xs font-extrabold text-violet-300 hover:text-white">
-                  Ver mapa →
+                <button
+                  type="button"
+                  onclick="switchTab('history')"
+                  class="text-xs font-extrabold text-violet-300 hover:text-white inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Ver mapa</span>
+                  <i data-lucide="chevron-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
                 </button>
               </div>
               <div id="recentVisitsMiniList" class="space-y-2.5"></div>
@@ -775,53 +1207,122 @@
         </div>
       </section>
 
-      <!-- SUB-VISTA 1.2: MAPA Y DIRECTORIO DE NEGOCIOS -->
+      <!-- SUB-VISTA 1.2: MAPA Y DIRECTORIO DE NEGOCIOS (CON DROPDOWNS TAILWIND) -->
       <section id="tabHistory" class="hidden space-y-5 fade-slide-in">
         <div class="glass-card rounded-3xl p-5 space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 class="text-xl font-extrabold text-white">🗺️ Mapa de Cobertura y Direcciones</h2>
-              <p class="text-xs text-violet-200/70">Negocios 🔥 Muy Interesados (Morado), 🌤️ Solo Info / Ya tiene sistema (Ámbar) o ❄️ No interesados.</p>
+              <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
+                <i data-lucide="map" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+                <span>Mapa de Cobertura y Direcciones</span>
+              </h2>
+              <p class="text-xs text-violet-200/70">Negocios Muy Interesados (Violeta), Solo Info / Ya tiene sistema (Ámbar) o No interesados (Gris).</p>
             </div>
-            <button onclick="exportToExcelCSV()" class="btn-purple-primary px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center gap-1.5">
-              📥 Descargar Excel (.CSV)
+            <button
+              type="button"
+              onclick="exportToExcelCSV()"
+              class="btn-purple-primary min-h-[44px] px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center gap-2 cursor-pointer"
+            >
+              <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
+              <span>Descargar Excel (.CSV)</span>
             </button>
           </div>
           <div id="brigadaMap" class="border border-violet-500/25 shadow-inner"></div>
         </div>
 
+        <!-- Barra de Búsqueda + 2 Custom Tailwind Dropdowns (Sin <select> nativo) -->
         <div class="glass-card rounded-3xl p-5 space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input
-              type="search"
-              id="searchHistoryInput"
-              oninput="renderHistoryList()"
-              placeholder="🔍 Buscar por negocio, dirección, condición o brigadista..."
-              class="md:col-span-2 w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
-            />
-            <select id="filterHistoryResult" onchange="renderHistoryList()" class="w-full px-3.5 py-3 rounded-2xl border text-sm font-bold outline-none">
-              <option value="all">📋 Todos los estados</option>
-              <option value="interesado">🔥 Solo Muy Interesados</option>
-              <option value="solo_info">🌤️ Solo Info / Ya tiene sistema</option>
-              <option value="no_interesado">❄️ No interesados</option>
-            </select>
-            <select id="filterHistoryBrigadista" onchange="renderHistoryList()" class="w-full px-3.5 py-3 rounded-2xl border text-sm font-bold outline-none">
-              <option value="all">👥 Todos los brigadistas</option>
-            </select>
+            <div class="md:col-span-2 relative">
+              <label for="searchHistoryInput" class="sr-only">Buscar negocio o dirección</label>
+              <input
+                type="search"
+                id="searchHistoryInput"
+                name="searchHistory"
+                autocomplete="off"
+                oninput="renderHistoryList()"
+                placeholder="Buscar por negocio, dirección, condición o brigadista…"
+                class="w-full pl-10 pr-4 py-3 rounded-2xl text-sm placeholder:text-violet-300/40"
+              />
+              <i data-lucide="search" class="w-4 h-4 text-violet-300/60 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true"></i>
+            </div>
+
+            <!-- Custom Dropdown 1: Estado del Negocio -->
+            <div class="relative">
+              <button
+                type="button"
+                onclick="toggleCustomDropdown('historyResultMenu', event)"
+                aria-haspopup="true"
+                class="w-full min-h-[46px] px-3.5 py-2.5 rounded-2xl glass-panel hover:border-violet-400/40 flex items-center justify-between text-xs font-bold text-white cursor-pointer"
+              >
+                <span class="flex items-center gap-2 truncate">
+                  <i data-lucide="filter" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+                  <span id="labelFilterHistoryResult" class="truncate">Todos los estados</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+              </button>
+              <div
+                id="historyResultMenu"
+                class="custom-dropdown-menu hidden absolute left-0 right-0 mt-2 rounded-2xl glass-popover p-1.5 z-40 space-y-1"
+              >
+                <button type="button" onclick="selectHistoryResultFilter('all', 'Todos los estados')" class="w-full min-h-[40px] px-3 py-2 rounded-xl text-left text-xs font-bold text-violet-100 hover:bg-violet-600/30 flex items-center gap-2 cursor-pointer">
+                  <i data-lucide="layers" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+                  <span>Todos los estados</span>
+                </button>
+                <button type="button" onclick="selectHistoryResultFilter('interesado', 'Solo Muy Interesados')" class="w-full min-h-[40px] px-3 py-2 rounded-xl text-left text-xs font-bold text-violet-100 hover:bg-violet-600/30 flex items-center gap-2 cursor-pointer">
+                  <i data-lucide="flame" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+                  <span>Solo Muy Interesados</span>
+                </button>
+                <button type="button" onclick="selectHistoryResultFilter('solo_info', 'Solo Info / Ya tiene sistema')" class="w-full min-h-[40px] px-3 py-2 rounded-xl text-left text-xs font-bold text-violet-100 hover:bg-violet-600/30 flex items-center gap-2 cursor-pointer">
+                  <i data-lucide="cloud-sun" class="w-4 h-4 text-amber-300" aria-hidden="true"></i>
+                  <span>Solo Info / Ya tiene sistema</span>
+                </button>
+                <button type="button" onclick="selectHistoryResultFilter('no_interesado', 'No interesados')" class="w-full min-h-[40px] px-3 py-2 rounded-xl text-left text-xs font-bold text-violet-100 hover:bg-violet-600/30 flex items-center gap-2 cursor-pointer">
+                  <i data-lucide="snowflake" class="w-4 h-4 text-slate-300" aria-hidden="true"></i>
+                  <span>No interesados</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom Dropdown 2: Brigadista -->
+            <div class="relative">
+              <button
+                type="button"
+                onclick="toggleCustomDropdown('historyBrigadistaMenu', event)"
+                aria-haspopup="true"
+                class="w-full min-h-[46px] px-3.5 py-2.5 rounded-2xl glass-panel hover:border-violet-400/40 flex items-center justify-between text-xs font-bold text-white cursor-pointer"
+              >
+                <span class="flex items-center gap-2 truncate">
+                  <i data-lucide="users" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+                  <span id="labelFilterHistoryBrigadista" class="truncate">Todos los brigadistas</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+              </button>
+              <div
+                id="historyBrigadistaMenu"
+                class="custom-dropdown-menu hidden absolute left-0 right-0 mt-2 rounded-2xl glass-popover p-1.5 z-40 space-y-1 max-h-60 overflow-y-auto"
+              ></div>
+            </div>
           </div>
         </div>
 
-        <div id="fullHistoryList" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+        <div id="fullHistoryList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </section>
 
       <!-- SUB-VISTA 1.3: PODIO DE BRIGADA -->
       <section id="tabLeaderboard" class="hidden space-y-6 fade-slide-in">
         <div class="glass-card rounded-3xl p-6 space-y-4">
-          <h3 class="font-extrabold text-lg text-white">🏆 Podio hacia los 12 Acercamientos y Prospectos Calientes</h3>
+          <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+            <i data-lucide="trophy" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+            <span>Podio hacia los 12 Acercamientos y Prospectos Calientes</span>
+          </h3>
           <div id="brigadistasRankingList" class="space-y-3.5"></div>
         </div>
         <div class="glass-card rounded-3xl p-6 space-y-4">
-          <h3 class="font-extrabold text-lg text-white">🎖️ Insignias Desbloqueadas</h3>
+          <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+            <i data-lucide="award" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+            <span>Insignias Desbloqueadas</span>
+          </h3>
           <div id="badgesGridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
         </div>
       </section>
@@ -830,44 +1331,69 @@
       <section id="tabAnalytics" class="hidden space-y-6 fade-slide-in">
         <div class="glass-card rounded-3xl p-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 class="text-2xl font-extrabold text-white">📊 Radiografía de la Brigada Comercial</h2>
+            <h2 class="text-2xl font-extrabold text-white flex items-center gap-2">
+              <i data-lucide="bar-chart-3" class="w-6 h-6 text-violet-300" aria-hidden="true"></i>
+              <span>Radiografía de la Brigada Comercial</span>
+            </h2>
             <p class="text-xs text-violet-200/70">Análisis de efectividad de protocolo, objeciones y condiciones de clientes interesados.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2.5">
-            <button onclick="loadSampleBrigadaData()" class="px-4 py-2.5 rounded-2xl bg-[#241b3d] hover:bg-[#2f234f] text-violet-200 border border-violet-500/40 text-xs font-extrabold transition">
-              ✨ Simular +Visitas
+            <button
+              type="button"
+              onclick="loadSampleBrigadaData()"
+              class="min-h-[44px] px-4 py-2.5 rounded-2xl glass-panel hover:border-violet-400/50 text-violet-200 text-xs font-extrabold flex items-center gap-2 cursor-pointer"
+            >
+              <i data-lucide="plus-circle" class="w-4 h-4" aria-hidden="true"></i>
+              <span>Simular +Visitas</span>
             </button>
-            <button onclick="exportToExcelCSV()" class="btn-purple-primary px-4 py-2.5 rounded-2xl text-xs font-extrabold">
-              📥 Exportar a Excel
+            <button
+              type="button"
+              onclick="exportToExcelCSV()"
+              class="btn-purple-primary min-h-[44px] px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center gap-2 cursor-pointer"
+            >
+              <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
+              <span>Exportar a Excel</span>
             </button>
           </div>
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="glass-card p-5 rounded-3xl">
-            <p class="text-xs font-extrabold text-violet-300/70 uppercase">Total Abordados</p>
-            <p id="kpiTotalVisits" class="text-4xl font-extrabold text-white mt-2">0</p>
+            <p class="text-xs font-bold text-violet-300/80">Total Abordados</p>
+            <p id="kpiTotalVisits" class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tabular-nums">0</p>
             <p id="kpiGoalAvg" class="text-xs text-violet-300 font-semibold mt-1">Meta: 12 por brigadista</p>
           </div>
-          <div class="glass-card p-5 rounded-3xl border border-violet-500/40 bg-violet-600/10">
-            <p class="text-xs font-extrabold text-violet-200 uppercase">🔥 Muy Interesados</p>
-            <p id="kpiHotLeads" class="text-4xl font-extrabold text-violet-300 mt-2">0</p>
-            <p id="kpiConversionRate" class="text-xs font-bold text-violet-200 mt-1">0% conversión</p>
+          <div class="glass-card p-5 rounded-3xl border-violet-400/35 bg-violet-600/10">
+            <p class="text-xs font-bold text-violet-200 flex items-center gap-1.5">
+              <i data-lucide="flame" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+              <span>Muy Interesados</span>
+            </p>
+            <p id="kpiHotLeads" class="text-3xl sm:text-4xl font-extrabold text-violet-300 mt-2 tabular-nums">0</p>
+            <p id="kpiConversionRate" class="text-xs font-bold text-violet-200 mt-1 tabular-nums">0% conversión</p>
           </div>
-          <div class="glass-card p-5 rounded-3xl border border-amber-500/30">
-            <p class="text-xs font-extrabold text-amber-300 uppercase">🌤️ Solo Info / Ya Tienen</p>
-            <p id="kpiWarmInfo" class="text-4xl font-extrabold text-amber-300 mt-2">0</p>
-            <p id="kpiAlreadyHasSystem" class="text-xs font-bold text-amber-200/80 mt-1">0 ya tienen sistema</p>
+          <div class="glass-card p-5 rounded-3xl border-amber-500/30">
+            <p class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <i data-lucide="cloud-sun" class="w-3.5 h-3.5 text-amber-300" aria-hidden="true"></i>
+              <span>Solo Info / Ya Tienen</span>
+            </p>
+            <p id="kpiWarmInfo" class="text-3xl sm:text-4xl font-extrabold text-amber-300 mt-2 tabular-nums">0</p>
+            <p id="kpiAlreadyHasSystem" class="text-xs font-bold text-amber-200/80 mt-1 tabular-nums">0 ya tienen sistema</p>
           </div>
           <div class="glass-card p-5 rounded-3xl">
-            <p class="text-xs font-extrabold text-violet-300/70 uppercase">🪪 Uso de Carnet + Kit</p>
-            <p id="kpiCarnetRate" class="text-4xl font-extrabold text-white mt-2">100%</p>
-            <p id="kpiDecisionMakerRate" class="text-xs font-bold text-violet-300 mt-1">0% hablaron con dueño</p>
+            <p class="text-xs font-bold text-violet-300/80 flex items-center gap-1.5">
+              <i data-lucide="id-card" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+              <span>Uso de Carnet + Kit</span>
+            </p>
+            <p id="kpiCarnetRate" class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tabular-nums">100%</p>
+            <p id="kpiDecisionMakerRate" class="text-xs font-bold text-violet-300 mt-1 tabular-nums">0% hablaron con dueño</p>
           </div>
         </div>
 
-        <div class="glass-card rounded-3xl p-6 border border-violet-500/30 space-y-4">
-          <h3 class="font-extrabold text-lg text-white">🧠 Hallazgos Automáticos del Comportamiento en Calle</h3>
+        <div class="glass-card rounded-3xl p-6 space-y-4">
+          <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+            <i data-lucide="lightbulb" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+            <span>Hallazgos Automáticos del Comportamiento en Calle</span>
+          </h3>
           <div id="aiInsightsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"></div>
         </div>
 
@@ -882,8 +1408,11 @@
           </div>
         </div>
 
-        <div class="glass-card rounded-3xl p-6 border border-violet-500/35">
-          <h3 class="font-extrabold text-violet-200 text-lg mb-3">🔥 Oportunidades Calientes y Condiciones para Cerrar Venta</h3>
+        <div class="glass-card rounded-3xl p-6">
+          <h3 class="font-extrabold text-violet-200 text-lg mb-3 flex items-center gap-2">
+            <i data-lucide="flame" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+            <span>Oportunidades Calientes y Condiciones para Cerrar Venta</span>
+          </h3>
           <div id="hotLeadsTableContainer" class="overflow-x-auto"></div>
         </div>
       </section>
@@ -896,59 +1425,81 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
         <!-- Formulario Rápido de Daily Day -->
-        <form id="dailyForm" class="lg:col-span-5 glass-card rounded-3xl p-6 space-y-4 border border-violet-500/35">
+        <form id="dailyForm" class="lg:col-span-5 glass-card rounded-3xl p-6 space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <span class="text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/20 text-violet-200 px-2.5 py-0.5 rounded-full">
-                Módulo Daily Day
+              <span class="text-[11px] font-bold bg-violet-500/20 text-violet-200 px-2.5 py-0.5 rounded-full">
+                Sincronización Diaria
               </span>
-              <h2 class="text-xl font-extrabold text-white mt-1">☀️ Registrar mi Daily de Hoy</h2>
+              <h2 class="text-xl font-extrabold text-white mt-1.5 flex items-center gap-2">
+                <i data-lucide="sun" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+                <span>Registrar mi Daily de Hoy</span>
+              </h2>
             </div>
-            <span class="text-2xl">⚡</span>
           </div>
 
           <div>
-            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">🎯 ¿Cuál es tu foco / meta principal de hoy?</label>
+            <label for="dailyFocusInput" class="block text-xs font-extrabold text-violet-200 mb-1.5">
+              ¿Cuál es tu foco o meta principal de hoy?
+            </label>
             <textarea
               id="dailyFocusInput"
+              name="dailyFocus"
               required
               rows="2"
-              placeholder="Ej: Cerrar las 3 cotizaciones pendientes de la brigada y avanzar módulo de facturación..."
-              class="w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+              placeholder="Ej: Cerrar las 3 cotizaciones pendientes de la brigada y avanzar módulo de facturación…"
+              class="w-full px-4 py-3 rounded-2xl text-sm placeholder:text-violet-300/40"
             ></textarea>
           </div>
 
           <div>
-            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">✅ ¿Qué lograste o avanzaste recientemente?</label>
+            <label for="dailyDoneInput" class="block text-xs font-extrabold text-violet-200 mb-1.5">
+              ¿Qué lograste o avanzaste recientemente?
+            </label>
             <textarea
               id="dailyDoneInput"
+              name="dailyDone"
               rows="2"
-              placeholder="Ej: Visité 12 locales en Calle 80, dejé 3 demos agendadas..."
-              class="w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+              placeholder="Ej: Visité 12 locales en Calle 80, dejé 3 demos agendadas…"
+              class="w-full px-4 py-3 rounded-2xl text-sm placeholder:text-violet-300/40"
             ></textarea>
           </div>
 
           <div>
-            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">🚧 ¿Tienes algún bloqueo o necesitas apoyo?</label>
+            <label for="dailyBlockerInput" class="block text-xs font-extrabold text-violet-200 mb-1.5">
+              ¿Tienes algún bloqueo o necesitas apoyo?
+            </label>
             <input
               type="text"
               id="dailyBlockerInput"
-              placeholder="Ej: Ninguno / Necesito material impreso o apoyo técnico..."
-              class="w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+              name="dailyBlocker"
+              autocomplete="off"
+              placeholder="Ej: Ninguno / Necesito material impreso o apoyo técnico…"
+              class="w-full px-4 py-3 rounded-2xl text-sm placeholder:text-violet-300/40"
             />
           </div>
 
           <div>
-            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">🔋 Nivel de energía / ritmo hoy:</label>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Nivel de energía / ritmo hoy:</label>
             <div id="dailyMoodChips" class="grid grid-cols-3 gap-2">
-              <button type="button" onclick="selectDailyMood('🔥 A tope')" class="chip-btn active-blue py-2 rounded-xl text-xs font-bold">🔥 A tope</button>
-              <button type="button" onclick="selectDailyMood('⚡ Enfocad@')" class="chip-btn py-2 rounded-xl text-xs font-bold">⚡ Enfocad@</button>
-              <button type="button" onclick="selectDailyMood('🆘 Con bloqueos')" class="chip-btn py-2 rounded-xl text-xs font-bold">🆘 Con bloqueos</button>
+              <button type="button" data-mood="A tope" onclick="selectDailyMood('A tope')" class="chip-btn active-blue min-h-[42px] py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                <i data-lucide="flame" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>A tope</span>
+              </button>
+              <button type="button" data-mood="Enfocado" onclick="selectDailyMood('Enfocado')" class="chip-btn min-h-[42px] py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                <i data-lucide="zap" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Enfocado</span>
+              </button>
+              <button type="button" data-mood="Con bloqueos" onclick="selectDailyMood('Con bloqueos')" class="chip-btn min-h-[42px] py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                <i data-lucide="life-buoy" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Con bloqueos</span>
+              </button>
             </div>
           </div>
 
-          <button type="submit" class="btn-purple-primary w-full py-3.5 rounded-2xl font-extrabold text-sm">
-            ☀️ Publicar mi Daily Day
+          <button type="submit" class="btn-purple-primary w-full min-h-[48px] py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 cursor-pointer">
+            <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Publicar mi Daily Day</span>
           </button>
         </form>
 
@@ -956,163 +1507,248 @@
         <div class="lg:col-span-7 glass-card rounded-3xl p-6 space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-lg font-extrabold text-white">📋 Tablero Daily Day del Equipo</h3>
-              <p class="text-xs text-violet-300/70">En qué está trabajando cada persona hoy y qué bloqueos hay que resolver</p>
+              <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                <i data-lucide="layout-list" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+                <span>Tablero Daily Day del Equipo</span>
+              </h3>
+              <p class="text-xs text-violet-300/70">En qué está trabajando cada integrante hoy y qué bloqueos requieren apoyo</p>
             </div>
           </div>
-          <div id="dailyListContainer" class="space-y-3">
-            <!-- Dinámico -->
-          </div>
+          <div id="dailyListContainer" class="space-y-3"></div>
         </div>
 
       </div>
     </div>
 
     <!-- =================================================================== -->
-    <!-- MÓDULO 3: TAREAS PENDIENTES & COMPROMISOS                           -->
+    <!-- MÓDULO 3: TAREAS PENDIENTES & COMPROMISOS (CON DROPDOWN TAILWIND)   -->
     <!-- =================================================================== -->
     <div id="module_tareas" class="hidden space-y-6 fade-slide-in">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
         <!-- Crear Tarea Rápida -->
-        <form id="taskForm" class="lg:col-span-4 glass-card rounded-3xl p-6 space-y-4 border border-violet-500/35">
+        <form id="taskForm" class="lg:col-span-4 glass-card rounded-3xl p-6 space-y-4">
           <div>
-            <span class="text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/20 text-violet-200 px-2.5 py-0.5 rounded-full">
+            <span class="text-[11px] font-bold bg-violet-500/20 text-violet-200 px-2.5 py-0.5 rounded-full">
               Gestión Ágil
             </span>
-            <h2 class="text-xl font-extrabold text-white mt-1">✅ Nueva Tarea Pendiente</h2>
+            <h2 class="text-xl font-extrabold text-white mt-1.5 flex items-center gap-2">
+              <i data-lucide="check-square" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+              <span>Nueva Tarea Pendiente</span>
+            </h2>
           </div>
 
           <div>
-            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Descripción de la tarea</label>
+            <label for="taskTitleInput" class="block text-xs font-extrabold text-violet-200 mb-1.5">Descripción de la tarea</label>
             <input
               type="text"
               id="taskTitleInput"
+              name="taskTitle"
+              autocomplete="off"
               required
-              placeholder="Ej: Enviar cotización a Ferretería El Tornillo..."
-              class="w-full px-4 py-3 rounded-2xl border text-sm font-semibold outline-none placeholder:text-violet-300/40"
+              placeholder="Ej: Enviar cotización a Ferretería El Tornillo…"
+              class="w-full px-4 py-3 rounded-2xl text-sm font-semibold placeholder:text-violet-300/40"
             />
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Responsable</label>
-              <select id="taskAssigneeSelect" class="w-full px-3 py-3 rounded-2xl border text-xs font-bold outline-none"></select>
+          <!-- Custom Tailwind Dropdown para Responsable -->
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Responsable asignado</label>
+            <div class="relative">
+              <button
+                type="button"
+                onclick="toggleCustomDropdown('taskAssigneeMenu', event)"
+                aria-haspopup="true"
+                class="w-full min-h-[46px] px-3.5 py-2.5 rounded-2xl glass-panel hover:border-violet-400/40 flex items-center justify-between text-xs font-bold text-white cursor-pointer"
+              >
+                <span class="flex items-center gap-2 truncate">
+                  <i data-lucide="user" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+                  <span id="labelTaskAssignee" class="truncate">Seleccionar responsable</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+              </button>
+              <div
+                id="taskAssigneeMenu"
+                class="custom-dropdown-menu hidden absolute left-0 right-0 mt-2 rounded-2xl glass-popover p-1.5 z-40 space-y-1 max-h-56 overflow-y-auto"
+              ></div>
             </div>
-            <div>
-              <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Prioridad</label>
-              <select id="taskPriorityInput" class="w-full px-3 py-3 rounded-2xl border text-xs font-bold outline-none">
-                <option value="Alta">🔥 Alta / Urgente</option>
-                <option value="Media" selected>⚡ Media</option>
-                <option value="Baja">📌 Baja / Idea</option>
-              </select>
+          </div>
+
+          <!-- Custom Tailwind Segmented Pill Control para Prioridad -->
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Prioridad</label>
+            <div id="taskPriorityGroup" class="grid grid-cols-3 gap-2">
+              <button type="button" data-prio="Alta" onclick="selectTaskPriority('Alta')" class="chip-btn min-h-[42px] py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                <i data-lucide="flame" class="w-3.5 h-3.5 text-rose-300" aria-hidden="true"></i>
+                <span>Alta</span>
+              </button>
+              <button type="button" data-prio="Media" onclick="selectTaskPriority('Media')" class="chip-btn active-blue min-h-[42px] py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                <i data-lucide="zap" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Media</span>
+              </button>
+              <button type="button" data-prio="Baja" onclick="selectTaskPriority('Baja')" class="chip-btn min-h-[42px] py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                <i data-lucide="bookmark" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Baja</span>
+              </button>
             </div>
           </div>
 
           <div>
-            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Notas o detalles adicionales (Opcional)</label>
+            <label for="taskNotesInput" class="block text-xs font-extrabold text-violet-200 mb-1.5">Notas o detalles adicionales (Opcional)</label>
             <textarea
               id="taskNotesInput"
+              name="taskNotes"
               rows="2"
-              placeholder="Detalles, teléfono o enlace..."
-              class="w-full px-4 py-2.5 rounded-2xl border text-xs outline-none placeholder:text-violet-300/40"
+              placeholder="Detalles, teléfono o condición acordada…"
+              class="w-full px-4 py-2.5 rounded-2xl text-xs placeholder:text-violet-300/40"
             ></textarea>
           </div>
 
-          <button type="submit" class="btn-purple-primary w-full py-3.5 rounded-2xl font-extrabold text-sm">
-            ➕ Agregar Tarea Pendiente
+          <button type="submit" class="btn-purple-primary w-full min-h-[48px] py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 cursor-pointer">
+            <i data-lucide="plus" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Agregar Tarea Pendiente</span>
           </button>
         </form>
 
         <!-- Lista de Tareas -->
         <div class="lg:col-span-8 glass-card rounded-3xl p-6 space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 class="text-lg font-extrabold text-white">📌 Tablero de Tareas Pendientes</h3>
-              <p class="text-xs text-violet-300/70">Marca con un clic las tareas completadas</p>
+              <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                <i data-lucide="list-todo" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+                <span>Tablero de Tareas Pendientes</span>
+              </h3>
+              <p class="text-xs text-violet-300/70">Toca el botón de verificación para completar cualquier tarea</p>
             </div>
-            <div class="flex gap-1.5">
-              <button onclick="filterTasksView('all')" class="px-3 py-1.5 rounded-xl bg-[#221a38] text-xs font-bold text-violet-200">Todas</button>
-              <button onclick="filterTasksView('pending')" class="px-3 py-1.5 rounded-xl bg-[#221a38] text-xs font-bold text-amber-300">Pendientes</button>
-              <button onclick="filterTasksView('done')" class="px-3 py-1.5 rounded-xl bg-[#221a38] text-xs font-bold text-emerald-300">Completadas</button>
+            <div id="taskFilterPills" class="flex gap-1.5 glass-panel p-1 rounded-2xl">
+              <button type="button" data-filter="all" onclick="filterTasksView('all')" class="min-h-[36px] px-3 py-1.5 rounded-xl bg-violet-600 text-xs font-bold text-white cursor-pointer">Todas</button>
+              <button type="button" data-filter="pending" onclick="filterTasksView('pending')" class="min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-bold text-violet-200 hover:text-white cursor-pointer">Pendientes</button>
+              <button type="button" data-filter="done" onclick="filterTasksView('done')" class="min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-bold text-violet-200 hover:text-white cursor-pointer">Completadas</button>
             </div>
           </div>
 
-          <div id="tasksListContainer" class="space-y-2.5">
-            <!-- Dinámico -->
-          </div>
+          <div id="tasksListContainer" class="space-y-2.5"></div>
         </div>
 
       </div>
     </div>
 
     <!-- =================================================================== -->
-    <!-- MÓDULO 4: LLAMADOS DE ATENCIÓN & BITÁCORA DISCIPLINARIA             -->
+    <!-- MÓDULO 4: LLAMADOS DE ATENCIÓN & BITÁCORA (CON CONTROLES TAILWIND)  -->
     <!-- =================================================================== -->
     <div id="module_llamados" class="hidden space-y-6 fade-slide-in">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
         <!-- Formulario de Llamado de Atención -->
-        <form id="warningForm" class="lg:col-span-5 glass-card rounded-3xl p-6 space-y-4 border border-rose-500/35">
+        <form id="warningForm" class="lg:col-span-5 glass-card rounded-3xl p-6 space-y-4 border-rose-500/30">
           <div>
-            <span class="text-[10px] font-extrabold uppercase tracking-wider bg-rose-500/20 text-rose-200 border border-rose-400/30 px-2.5 py-0.5 rounded-full">
+            <span class="text-[11px] font-bold bg-rose-500/20 text-rose-200 border border-rose-400/30 px-2.5 py-0.5 rounded-full">
               Bitácora de Equipo
             </span>
-            <h2 class="text-xl font-extrabold text-white mt-1">⚠️ Registrar Llamado de Atención / Novedad</h2>
+            <h2 class="text-xl font-extrabold text-white mt-1.5 flex items-center gap-2">
+              <i data-lucide="shield-alert" class="w-5 h-5 text-rose-300" aria-hidden="true"></i>
+              <span>Registrar Llamado de Atención</span>
+            </h2>
             <p class="text-xs text-violet-200/70 mt-0.5">
               Registra novedades de disciplina, puntualidad, uso de carnet o compromisos de mejora.
             </p>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-extrabold text-violet-200 mb-1.5">👤 Colaborador involucrado</label>
-              <select id="warnMemberSelect" class="w-full px-3.5 py-3 rounded-2xl border text-xs font-bold outline-none"></select>
+          <!-- Custom Tailwind Dropdown para Colaborador -->
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Colaborador involucrado</label>
+            <div class="relative">
+              <button
+                type="button"
+                onclick="toggleCustomDropdown('warnMemberMenu', event)"
+                aria-haspopup="true"
+                class="w-full min-h-[46px] px-3.5 py-2.5 rounded-2xl glass-panel hover:border-violet-400/40 flex items-center justify-between text-xs font-bold text-white cursor-pointer"
+              >
+                <span class="flex items-center gap-2 truncate">
+                  <i data-lucide="user-check" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+                  <span id="labelWarnMember" class="truncate">Seleccionar colaborador</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+              </button>
+              <div
+                id="warnMemberMenu"
+                class="custom-dropdown-menu hidden absolute left-0 right-0 mt-2 rounded-2xl glass-popover p-1.5 z-40 space-y-1 max-h-56 overflow-y-auto"
+              ></div>
             </div>
-            <div>
-              <label class="block text-xs font-extrabold text-violet-200 mb-1.5">📌 Nivel / Tipo</label>
-              <select id="warnSeverityInput" class="w-full px-3.5 py-3 rounded-2xl border text-xs font-bold outline-none">
-                <option value="Observación Preventiva">🔔 Observación Preventiva</option>
-                <option value="Llamado de Atención Verbal" selected>⚠️ Llamado de Atención Verbal</option>
-                <option value="Llamado de Atención Formal">🚨 Llamado de Atención Formal</option>
-              </select>
+          </div>
+
+          <!-- Custom Tailwind Segmented Pill Control para Severidad -->
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Nivel / Tipo de Novedad</label>
+            <div id="warnSeverityGroup" class="grid grid-cols-3 gap-2">
+              <button type="button" data-sev="Observación Preventiva" onclick="selectWarnSeverity('Observación Preventiva')" class="chip-btn min-h-[42px] py-2 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1">
+                <i data-lucide="bell" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+                <span>Preventiva</span>
+              </button>
+              <button type="button" data-sev="Llamado de Atención Verbal" onclick="selectWarnSeverity('Llamado de Atención Verbal')" class="chip-btn active-blue min-h-[42px] py-2 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1">
+                <i data-lucide="triangle-alert" class="w-3.5 h-3.5 text-amber-300" aria-hidden="true"></i>
+                <span>Verbal</span>
+              </button>
+              <button type="button" data-sev="Llamado de Atención Formal" onclick="selectWarnSeverity('Llamado de Atención Formal')" class="chip-btn min-h-[42px] py-2 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1">
+                <i data-lucide="octagon-alert" class="w-3.5 h-3.5 text-rose-300" aria-hidden="true"></i>
+                <span>Formal</span>
+              </button>
             </div>
           </div>
 
           <div>
             <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Categoría rápida (1 toque):</label>
             <div id="warnCategoryChips" class="flex flex-wrap gap-1.5">
-              <button type="button" onclick="selectWarnCategory('No portar carnet / Kit incompleto')" class="chip-btn active-blue px-3 py-1.5 rounded-xl text-xs font-bold">🪪 Sin carnet / Kit</button>
-              <button type="button" onclick="selectWarnCategory('Puntualidad / Horario')" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-bold">⏰ Puntualidad</button>
-              <button type="button" onclick="selectWarnCategory('Bajo registro en brigada')" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-bold">📉 Bajo registro</button>
-              <button type="button" onclick="selectWarnCategory('Incumplimiento de tarea / acuerdo')" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-bold">📋 Incumplimiento</button>
-              <button type="button" onclick="selectWarnCategory('Actitud / Servicio al cliente')" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-bold">🗣️ Actitud / Trato</button>
+              <button type="button" onclick="selectWarnCategory('No portar carnet / Kit incompleto')" class="chip-btn active-blue min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                <i data-lucide="id-card" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Sin carnet / Kit</span>
+              </button>
+              <button type="button" onclick="selectWarnCategory('Puntualidad / Horario')" class="chip-btn min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Puntualidad</span>
+              </button>
+              <button type="button" onclick="selectWarnCategory('Bajo registro en brigada')" class="chip-btn min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                <i data-lucide="trending-down" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Bajo registro</span>
+              </button>
+              <button type="button" onclick="selectWarnCategory('Incumplimiento de tarea / acuerdo')" class="chip-btn min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                <i data-lucide="clipboard-x" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Incumplimiento</span>
+              </button>
+              <button type="button" onclick="selectWarnCategory('Actitud / Servicio al cliente')" class="chip-btn min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5">
+                <i data-lucide="message-square-warning" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Actitud / Trato</span>
+              </button>
             </div>
           </div>
 
           <div>
-            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">📝 ¿Qué ocurrió? (Motivo detallado)</label>
+            <label for="warnReasonInput" class="block text-xs font-extrabold text-violet-200 mb-1.5">¿Qué ocurrió? (Motivo detallado)</label>
             <textarea
               id="warnReasonInput"
+              name="warnReason"
               required
               rows="2"
-              placeholder="Ej: Salió a la brigada sin el carnet puesto y no registró las visitas a tiempo..."
-              class="w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+              placeholder="Ej: Salió a la brigada sin el carnet puesto y no registró las visitas a tiempo…"
+              class="w-full px-4 py-3 rounded-2xl text-sm placeholder:text-violet-300/40"
             ></textarea>
           </div>
 
           <div>
-            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">🤝 Compromiso acordado con la persona</label>
+            <label for="warnCommitmentInput" class="block text-xs font-extrabold text-violet-200 mb-1.5">Compromiso acordado con la persona</label>
             <input
               type="text"
               id="warnCommitmentInput"
-              placeholder="Ej: Portar siempre el kit completo y cumplir los 12 acercamientos diarios."
-              class="w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+              name="warnCommitment"
+              autocomplete="off"
+              placeholder="Ej: Portar siempre el kit completo y cumplir los 12 acercamientos diarios…"
+              class="w-full px-4 py-3 rounded-2xl text-sm placeholder:text-violet-300/40"
             />
           </div>
 
-          <button type="submit" class="btn-purple-primary w-full py-3.5 rounded-2xl font-extrabold text-sm">
-            ⚠️ Guardar Llamado de Atención
+          <button type="submit" class="btn-purple-primary w-full min-h-[48px] py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 cursor-pointer">
+            <i data-lucide="shield-check" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Guardar Llamado de Atención</span>
           </button>
         </form>
 
@@ -1120,13 +1756,14 @@
         <div class="lg:col-span-7 glass-card rounded-3xl p-6 space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-lg font-extrabold text-white">📂 Historial de Llamados de Atención y Compromisos</h3>
+              <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                <i data-lucide="folder-kanban" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+                <span>Historial de Llamados de Atención y Compromisos</span>
+              </h3>
               <p class="text-xs text-violet-300/70">Trazabilidad por fecha, colaborador, motivo y quién lo registró</p>
             </div>
           </div>
-          <div id="warningsListContainer" class="space-y-3">
-            <!-- Dinámico -->
-          </div>
+          <div id="warningsListContainer" class="space-y-3"></div>
         </div>
 
       </div>
@@ -1135,13 +1772,88 @@
   </main>
 
   <!-- ===================================================================== -->
+  <!-- FLOATING GLASS NAVBAR INFERIOR CON ICONOS CLAROS                      -->
+  <!-- ===================================================================== -->
+  <nav
+    id="bottomGlassNavbar"
+    aria-label="Navegación principal inferior"
+    class="fixed bottom-3 inset-x-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-[580px] z-40 glass-nav-dock rounded-2xl p-1.5"
+  >
+    <div class="grid grid-cols-5 gap-1">
+      <button
+        type="button"
+        id="navDockBtn_hub"
+        onclick="switchModule('hub')"
+        class="min-h-[52px] py-1.5 px-1 rounded-xl bg-violet-600 text-white font-extrabold flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors relative"
+      >
+        <i data-lucide="layout-grid" class="w-4 h-4" aria-hidden="true"></i>
+        <span class="text-[10px] sm:text-[11px] leading-none truncate">Inicio</span>
+      </button>
+
+      <button
+        type="button"
+        id="navDockBtn_brigadas"
+        onclick="switchModule('brigadas')"
+        class="min-h-[52px] py-1.5 px-1 rounded-xl text-violet-200/80 hover:text-white font-bold flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors relative"
+      >
+        <i data-lucide="compass" class="w-4 h-4" aria-hidden="true"></i>
+        <span class="text-[10px] sm:text-[11px] leading-none truncate">Brigadas</span>
+        <span id="badgeCountBrigadas" class="absolute top-1 right-2 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-violet-500/30 text-violet-200 tabular-nums">0</span>
+      </button>
+
+      <button
+        type="button"
+        id="navDockBtn_daily"
+        onclick="switchModule('daily')"
+        class="min-h-[52px] py-1.5 px-1 rounded-xl text-violet-200/80 hover:text-white font-bold flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors relative"
+      >
+        <i data-lucide="sun" class="w-4 h-4" aria-hidden="true"></i>
+        <span class="text-[10px] sm:text-[11px] leading-none truncate">Daily Day</span>
+        <span id="badgeCountDaily" class="absolute top-1 right-2 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-violet-500/30 text-violet-200 tabular-nums">0</span>
+      </button>
+
+      <button
+        type="button"
+        id="navDockBtn_tareas"
+        onclick="switchModule('tareas')"
+        class="min-h-[52px] py-1.5 px-1 rounded-xl text-violet-200/80 hover:text-white font-bold flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors relative"
+      >
+        <i data-lucide="check-square" class="w-4 h-4" aria-hidden="true"></i>
+        <span class="text-[10px] sm:text-[11px] leading-none truncate">Tareas</span>
+        <span id="badgeCountTareas" class="absolute top-1 right-2 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-amber-500/30 text-amber-200 tabular-nums">0</span>
+      </button>
+
+      <button
+        type="button"
+        id="navDockBtn_llamados"
+        onclick="switchModule('llamados')"
+        class="min-h-[52px] py-1.5 px-1 rounded-xl text-violet-200/80 hover:text-white font-bold flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors relative"
+      >
+        <i data-lucide="shield-alert" class="w-4 h-4" aria-hidden="true"></i>
+        <span class="text-[10px] sm:text-[11px] leading-none truncate">Llamados</span>
+        <span id="badgeCountLlamados" class="absolute top-1 right-2 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-rose-500/30 text-rose-200 tabular-nums">0</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===================================================================== -->
   <!-- MODAL DE CONEXIÓN A SUPABASE (NUBE 100% GRATUITA)                     -->
   <!-- ===================================================================== -->
-  <div id="cloudModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="glass-card w-full max-w-lg rounded-3xl p-6 space-y-4 border border-violet-500/30">
+  <div id="cloudModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cloudModalTitle">
+    <div class="glass-popover w-full max-w-lg rounded-3xl p-6 space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-extrabold text-white">☁️ Sincronización en la Nube ($0 Gratis)</h3>
-        <button onclick="closeCloudModal()" class="text-violet-300 hover:text-white font-bold text-lg">✕</button>
+        <h3 id="cloudModalTitle" class="text-lg font-extrabold text-white flex items-center gap-2">
+          <i data-lucide="cloud" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+          <span>Sincronización en la Nube ($0 Gratis)</span>
+        </h3>
+        <button
+          type="button"
+          onclick="closeCloudModal()"
+          aria-label="Cerrar ventana de sincronización"
+          class="min-h-[40px] min-w-[40px] rounded-xl glass-panel flex items-center justify-center text-violet-300 hover:text-white cursor-pointer"
+        >
+          <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+        </button>
       </div>
       <p class="text-xs text-violet-200/80 leading-relaxed">
         Conecta tu proyecto gratuito de <b>Supabase</b> para sincronizar en tiempo real todos los módulos de Notas Quickss.
@@ -1149,20 +1861,20 @@
 
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-bold text-violet-200 mb-1">Supabase Project URL</label>
-          <input type="url" id="supaUrlInput" placeholder="https://xyzcompany.supabase.co" class="w-full px-4 py-3 rounded-xl border text-xs font-mono outline-none" />
+          <label for="supaUrlInput" class="block text-xs font-bold text-violet-200 mb-1">Supabase Project URL</label>
+          <input type="url" id="supaUrlInput" name="supabaseUrl" autocomplete="off" spellcheck="false" placeholder="https://xyzcompany.supabase.co…" class="w-full px-4 py-3 rounded-xl text-xs font-mono" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-violet-200 mb-1">Supabase Anon Public Key</label>
-          <input type="text" id="supaKeyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full px-4 py-3 rounded-xl border text-xs font-mono outline-none" />
+          <label for="supaKeyInput" class="block text-xs font-bold text-violet-200 mb-1">Supabase Anon Public Key</label>
+          <input type="text" id="supaKeyInput" name="supabaseKey" autocomplete="off" spellcheck="false" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…" class="w-full px-4 py-3 rounded-xl text-xs font-mono" />
         </div>
       </div>
 
       <div class="flex justify-end gap-2 pt-2">
-        <button type="button" onclick="disconnectSupabase()" class="px-4 py-2.5 rounded-xl border border-violet-500/30 text-xs font-bold text-violet-200 hover:bg-violet-950/50">
+        <button type="button" onclick="disconnectSupabase()" class="min-h-[44px] px-4 py-2.5 rounded-xl glass-panel text-xs font-bold text-violet-200 hover:text-white cursor-pointer">
           Modo Local
         </button>
-        <button type="button" onclick="saveSupabaseConfig()" class="btn-purple-primary px-5 py-2.5 rounded-xl text-xs font-extrabold">
+        <button type="button" onclick="saveSupabaseConfig()" class="btn-purple-primary min-h-[44px] px-5 py-2.5 rounded-xl text-xs font-extrabold cursor-pointer">
           Guardar y Conectar
         </button>
       </div>
@@ -1170,10 +1882,17 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- TOAST FLOTANTE                                                        -->
+  <!-- TOAST FLOTANTE ACCESIBLE                                              -->
   <!-- ===================================================================== -->
-  <div id="toastNotification" class="hidden fixed bottom-20 lg:bottom-8 right-4 left-4 sm:left-auto sm:w-96 z-50 bg-[#1a132c] text-white px-5 py-4 rounded-2xl shadow-2xl border border-violet-500/50 text-xs font-bold flex items-center gap-3">
-    <span id="toastIcon" class="text-xl">✅</span>
+  <div
+    id="toastNotification"
+    role="status"
+    aria-live="polite"
+    class="hidden fixed bottom-24 right-4 left-4 sm:left-auto sm:w-96 z-50 glass-popover text-white px-4 py-3.5 rounded-2xl border border-violet-400/40 text-xs font-bold flex items-center gap-3"
+  >
+    <div class="w-8 h-8 rounded-xl bg-violet-600/30 border border-violet-400/40 flex items-center justify-center text-violet-200 shrink-0">
+      <i data-lucide="check-circle-2" class="w-4 h-4" aria-hidden="true"></i>
+    </div>
     <span id="toastMessage" class="leading-snug">Guardado correctamente</span>
   </div>
 

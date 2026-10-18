@@ -1,14 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --bg-main: #0e0b16;
-  --bg-card: #161224;
-  --bg-input: #110d1d;
-  --border-purple: #2d2447;
+  --bg-canvas: #09070f;
+  --bg-surface: rgba(22, 17, 36, 0.62);
+  --bg-elevated: rgba(30, 22, 49, 0.86);
+  --bg-input: rgba(14, 10, 24, 0.72);
+  --glass-border: rgba(167, 139, 250, 0.16);
+  --glass-border-hover: rgba(167, 139, 250, 0.36);
   --purple-main: #7c3aed;
   --purple-hover: #6d28d9;
   --purple-light: #a78bfa;
-  --purple-soft: rgba(124, 58, 237, 0.16);
+  --purple-soft: rgba(124, 58, 237, 0.18);
+  --text-primary: #f5f3ff;
+  --text-muted: #a89ec4;
 }
 
 * {
@@ -16,39 +20,97 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-main);
-  background-image: radial-gradient(circle at 50% -10%, rgba(124, 58, 237, 0.18), transparent 60%);
-  background-attachment: fixed;
-  color: #f5f3ff;
-  overflow-x: hidden;
+html {
+  scroll-behavior: smooth;
 }
 
-/* Tarjetas elegantes en tono ciruela/morado oscuro sin arcoíris de IA */
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-canvas);
+  background-image:
+    radial-gradient(circle at 18% 0%, rgba(124, 58, 237, 0.16), transparent 45%),
+    radial-gradient(circle at 85% 12%, rgba(139, 92, 246, 0.11), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(109, 40, 217, 0.10), transparent 50%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4 {
+  text-wrap: balance;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========================================================================= */
+/* GLASSMORPHISM-MINIMALISM SURFACES                                         */
+/* ========================================================================= */
 .glass-card {
-  background: #161224;
-  border: 1px solid #2b2244;
-  box-shadow: 0 14px 32px -12px rgba(5, 3, 12, 0.7);
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 16px 36px -14px rgba(3, 2, 8, 0.75),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .glass-panel {
-  background: #1d1730;
-  border: 1px solid #332852;
+  background: rgba(29, 22, 48, 0.56);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Botones primarios morados limpios */
+.glass-popover {
+  background: rgba(24, 18, 40, 0.94);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  box-shadow:
+    0 22px 48px -12px rgba(2, 1, 6, 0.88),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-nav-dock {
+  background: rgba(18, 13, 31, 0.82);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(167, 139, 250, 0.24);
+  box-shadow:
+    0 20px 45px -10px rgba(2, 1, 7, 0.85),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ========================================================================= */
+/* BOTONES Y CONTROLES INTERACTIVOS (MIN 44PX TOUCH TARGETS)                 */
+/* ========================================================================= */
 .btn-purple-primary {
   background-color: #7c3aed;
   color: #ffffff;
-  border: 1px solid #8b5cf6;
-  box-shadow: 0 8px 20px -4px rgba(124, 58, 237, 0.45);
-  transition: all 0.18s ease;
+  border: 1px solid rgba(196, 181, 253, 0.35);
+  box-shadow:
+    0 10px 24px -6px rgba(124, 58, 237, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .btn-purple-primary:hover {
   background-color: #6d28d9;
-  border-color: #a78bfa;
+  border-color: #c4b5fd;
   transform: translateY(-1px);
 }
 
@@ -56,73 +118,89 @@ body {
   transform: scale(0.98);
 }
 
-/* Chips interactivos */
 .chip-btn {
-  transition: all 0.16s ease;
   user-select: none;
   cursor: pointer;
-  background-color: #1d1730;
-  border: 1px solid #31274c;
+  background-color: rgba(29, 23, 48, 0.65);
+  border: 1px solid rgba(167, 139, 250, 0.18);
   color: #ddd6fe;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .chip-btn:hover {
-  border-color: #6d28d9;
-  background-color: #251d3d;
+  border-color: rgba(167, 139, 250, 0.42);
+  background-color: rgba(40, 31, 66, 0.78);
+  color: #ffffff;
 }
 
 .chip-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 .chip-btn.active-blue,
 .chip-btn.active-indigo {
-  background-color: #7c3aed !important;
+  background-color: rgba(124, 58, 237, 0.88) !important;
   color: #ffffff !important;
-  border-color: #a78bfa !important;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+  border-color: #c4b5fd !important;
+  box-shadow: 0 6px 16px -3px rgba(124, 58, 237, 0.45);
 }
 
-/* Tarjetas de Respuesta del Cliente */
+/* ========================================================================= */
+/* TARJETAS DE RESPUESTA DEL CLIENTE Y EQUIPAMIENTO                          */
+/* ========================================================================= */
 .result-card {
-  transition: all 0.2s ease;
   cursor: pointer;
   user-select: none;
-  background-color: #1b152c;
-  border: 2px solid #2d2447;
+  background-color: rgba(26, 20, 44, 0.62);
+  border: 1.5px solid rgba(167, 139, 250, 0.16);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .result-card:hover {
   transform: translateY(-2px);
-  border-color: #4c3c78;
+  border-color: rgba(167, 139, 250, 0.38);
 }
 
 .result-card:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .result-card.selected-hot {
   background-color: rgba(124, 58, 237, 0.22) !important;
-  border: 2px solid #a78bfa !important;
-  box-shadow: 0 10px 25px -6px rgba(124, 58, 237, 0.4);
+  border-color: #a78bfa !important;
+  box-shadow: 0 10px 26px -6px rgba(124, 58, 237, 0.38);
 }
 
 .result-card.selected-warm {
   background-color: rgba(217, 119, 6, 0.16) !important;
-  border: 2px solid #fbbf24 !important;
-  box-shadow: 0 10px 25px -6px rgba(245, 158, 11, 0.28);
+  border-color: #fbbf24 !important;
+  box-shadow: 0 10px 26px -6px rgba(245, 158, 11, 0.26);
 }
 
 .result-card.selected-cold {
   background-color: rgba(100, 116, 139, 0.18) !important;
-  border: 2px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
 }
 
-/* Tarjetas de Check-in Pre-Brigada */
 .equip-card {
-  transition: all 0.18s ease;
   cursor: pointer;
   user-select: none;
+  background-color: rgba(24, 18, 40, 0.58);
+  border: 1.5px solid rgba(167, 139, 250, 0.18);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .equip-card:hover {
@@ -132,15 +210,51 @@ body {
 .equip-card.equipped {
   background-color: rgba(124, 58, 237, 0.16);
   border-color: #8b5cf6 !important;
-  box-shadow: 0 6px 20px -5px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 8px 22px -6px rgba(124, 58, 237, 0.3);
 }
 
 .equip-card.not-equipped {
   background-color: rgba(244, 63, 94, 0.12);
-  border-color: #f43f5e !important;
+  border-color: rgba(244, 63, 94, 0.65) !important;
 }
 
-/* Botón de Micrófono grabando */
+/* ========================================================================= */
+/* INPUTS, FOCUS VISIBLE & OCULTAR CONTROLES NATIVOS DEL NAVEGADOR           */
+/* ========================================================================= */
+input[type="text"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+input[type="search"],
+textarea {
+  background-color: var(--bg-input) !important;
+  border: 1px solid rgba(167, 139, 250, 0.2) !important;
+  color: var(--text-primary) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: none !important;
+  border-color: #a78bfa !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.28) !important;
+}
+
+/* Eliminar spinners nativos de inputs number */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ========================================================================= */
+/* ANIMACIONES & ACCESIBILIDAD (PREFERS-REDUCED-MOTION)                      */
+/* ========================================================================= */
 .mic-recording {
   animation: pulsePurple 1.2s infinite;
   background-color: #9333ea !important;
@@ -154,9 +268,8 @@ body {
   100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
 }
 
-/* Animaciones suaves */
 .fade-slide-in {
-  animation: fadeSlide 0.24s ease-out forwards;
+  animation: fadeSlide 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 @keyframes fadeSlide {
@@ -170,21 +283,18 @@ body {
   }
 }
 
-/* Barra de progreso morada elegante */
 .progress-bar-fill {
-  transition: width 0.5s ease;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   background-color: #8b5cf6;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.55);
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.6);
 }
 
-/* Anillo Radial */
 .radial-ring-circle {
-  transition: stroke-dashoffset 0.6s ease;
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   transform: rotate(-90deg);
   transform-origin: 50% 50%;
 }
 
-/* Mapa Leaflet */
 #brigadaMap {
   height: 360px;
   width: 100%;
@@ -193,30 +303,9 @@ body {
 }
 
 .leaflet-tile-pane {
-  filter: brightness(0.88) contrast(1.06) saturate(0.9);
+  filter: brightness(0.86) contrast(1.08) saturate(0.85);
 }
 
-/* Inputs unificados */
-input[type="text"],
-input[type="tel"],
-input[type="url"],
-input[type="number"],
-input[type="search"],
-textarea,
-select {
-  background-color: #110d1d !important;
-  border-color: #2f254b !important;
-  color: #f5f3ff !important;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: #8b5cf6 !important;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
-}
-
-/* Ocultar barra de scroll en contenedores horizontales móviles */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -230,12 +319,21 @@ select:focus {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0e0b16;
+  background: #09070f;
 }
 ::-webkit-scrollbar-thumb {
-  background: #352954;
+  background: #2f234d;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4c3b78;
+  background: #483675;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
