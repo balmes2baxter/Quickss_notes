@@ -101,16 +101,16 @@
           </div>
         </div>
 
-        <!-- Botón Estado de Sincronización Nube -->
+        <!-- Botón Estado de Guardado y Sincronización Nube -->
         <button
           type="button"
           id="btnOpenCloudModal"
-          aria-label="Configurar sincronización en la nube"
+          aria-label="Gestionar guardado de datos y nube"
           class="min-h-[44px] px-3 py-2 rounded-2xl glass-panel hover:border-violet-400/40 text-xs font-bold flex items-center gap-2 cursor-pointer"
         >
-          <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
-          <i data-lucide="cloud" class="w-4 h-4 text-violet-200" aria-hidden="true"></i>
-          <span id="cloudStatusText" class="hidden md:inline text-violet-100">Local</span>
+          <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <i data-lucide="database" class="w-4 h-4 text-violet-200" aria-hidden="true"></i>
+          <span id="cloudStatusText" class="hidden md:inline text-violet-100">Guardado Activo</span>
         </button>
 
         <!-- Botón Burger Menu (Despliega el Drawer Lateral) -->
@@ -1955,46 +1955,134 @@
   </nav>
 
   <!-- ===================================================================== -->
-  <!-- MODAL DE CONEXIÓN A SUPABASE (NUBE 100% GRATUITA)                     -->
+  <!-- MODAL DE PRODUCCIÓN, GUARDADO DE DATOS Y SINCRONIZACIÓN NUBE          -->
   <!-- ===================================================================== -->
   <div id="cloudModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cloudModalTitle">
-    <div class="glass-popover w-full max-w-lg rounded-3xl p-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 id="cloudModalTitle" class="text-lg font-extrabold text-white flex items-center gap-2">
-          <i data-lucide="cloud" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
-          <span>Sincronización en la Nube ($0 Gratis)</span>
-        </h3>
+    <div class="glass-popover w-full max-w-lg rounded-3xl p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-violet-400/15 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0">
+            <i data-lucide="database" class="w-4 h-4" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h3 id="cloudModalTitle" class="text-base font-extrabold text-white">
+              Datos y Producción
+            </h3>
+            <p id="cloudModalStatusSubtitle" class="text-[11px] text-emerald-300 font-semibold">
+              Autoguardado instantáneo activo en todos los módulos
+            </p>
+          </div>
+        </div>
         <button
           type="button"
           onclick="closeCloudModal()"
-          aria-label="Cerrar ventana de sincronización"
-          class="min-h-[40px] min-w-[40px] rounded-xl glass-panel flex items-center justify-center text-violet-300 hover:text-white cursor-pointer"
+          aria-label="Cerrar ventana"
+          class="min-h-[38px] min-w-[38px] rounded-xl glass-panel flex items-center justify-center text-violet-300 hover:text-white cursor-pointer"
         >
           <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
         </button>
       </div>
-      <p class="text-xs text-violet-200/80 leading-relaxed">
-        Conecta tu proyecto gratuito de <b>Supabase</b> para sincronizar en tiempo real todos los módulos de Notas Quickss.
-      </p>
 
-      <div class="space-y-3">
-        <div>
-          <label for="supaUrlInput" class="block text-xs font-bold text-violet-200 mb-1">Supabase Project URL</label>
-          <input type="url" id="supaUrlInput" name="supabaseUrl" autocomplete="off" spellcheck="false" placeholder="https://xyzcompany.supabase.co…" class="w-full px-4 py-3 rounded-xl text-xs font-mono" />
+      <!-- 1. Compartir Link de Producción con Socios -->
+      <div class="glass-panel rounded-2xl p-3.5 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold text-white flex items-center gap-1.5">
+            <i data-lucide="share-2" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+            <span>Link para Presentación a Socios</span>
+          </span>
+          <span class="text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-2 py-0.5 rounded-full">Online</span>
         </div>
-        <div>
-          <label for="supaKeyInput" class="block text-xs font-bold text-violet-200 mb-1">Supabase Anon Public Key</label>
-          <input type="text" id="supaKeyInput" name="supabaseKey" autocomplete="off" spellcheck="false" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…" class="w-full px-4 py-3 rounded-xl text-xs font-mono" />
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            onclick="copyPartnerShareLink()"
+            class="w-full btn-purple-primary min-h-[40px] px-4 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i data-lucide="copy" class="w-3.5 h-3.5" aria-hidden="true"></i>
+            <span>Copiar Link de Producción</span>
+          </button>
         </div>
       </div>
 
-      <div class="flex justify-end gap-2 pt-2">
-        <button type="button" onclick="disconnectSupabase()" class="min-h-[44px] px-4 py-2.5 rounded-xl glass-panel text-xs font-bold text-violet-200 hover:text-white cursor-pointer">
-          Modo Local
-        </button>
-        <button type="button" onclick="saveSupabaseConfig()" class="btn-purple-primary min-h-[44px] px-5 py-2.5 rounded-xl text-xs font-extrabold cursor-pointer">
-          Guardar y Conectar
-        </button>
+      <!-- 2. Modo de Datos para la Demostración -->
+      <div class="glass-panel rounded-2xl p-3.5 space-y-2.5">
+        <span class="text-xs font-extrabold text-white flex items-center gap-1.5">
+          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+          <span>Control de Datos en Vivo</span>
+        </span>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onclick="resetToDemoData()"
+            class="min-h-[40px] px-3 py-2 rounded-xl glass-panel hover:border-violet-400/50 text-xs font-bold text-violet-100 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+            <span>Cargar Demo</span>
+          </button>
+          <button
+            type="button"
+            onclick="clearAllWorkspaceData()"
+            class="min-h-[40px] px-3 py-2 rounded-xl glass-panel hover:border-rose-400/50 text-xs font-bold text-rose-200 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-rose-300" aria-hidden="true"></i>
+            <span>Desde Cero (0)</span>
+          </button>
+          <button
+            type="button"
+            onclick="exportFullBackupJSON()"
+            class="min-h-[38px] px-3 py-2 rounded-xl glass-panel hover:border-violet-400/50 text-xs font-bold text-violet-200 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <i data-lucide="download" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+            <span>Respaldo JSON</span>
+          </button>
+          <button
+            type="button"
+            onclick="document.getElementById('importBackupFileInput').click()"
+            class="min-h-[38px] px-3 py-2 rounded-xl glass-panel hover:border-violet-400/50 text-xs font-bold text-violet-200 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <i data-lucide="upload" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+            <span>Importar JSON</span>
+          </button>
+          <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="handleImportBackupJSON(event)" />
+        </div>
+      </div>
+
+      <!-- 3. Conexión Supabase Multi-Dispositivo ($0) -->
+      <div class="glass-panel rounded-2xl p-3.5 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold text-white flex items-center gap-1.5">
+            <i data-lucide="cloud" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+            <span>Base de Datos Supabase (Multi-Dispositivo)</span>
+          </span>
+          <button
+            type="button"
+            onclick="copySupabaseSQLSchema()"
+            class="text-[11px] font-extrabold text-violet-300 hover:text-white flex items-center gap-1 cursor-pointer"
+          >
+            <i data-lucide="terminal" class="w-3 h-3" aria-hidden="true"></i>
+            <span>Copiar SQL</span>
+          </button>
+        </div>
+
+        <div class="space-y-2.5">
+          <div>
+            <label for="supaUrlInput" class="block text-[11px] font-bold text-violet-200 mb-1">Supabase Project URL</label>
+            <input type="url" id="supaUrlInput" name="supabaseUrl" autocomplete="off" spellcheck="false" placeholder="https://xyzcompany.supabase.co" class="w-full px-3.5 py-2.5 rounded-xl text-xs font-mono" />
+          </div>
+          <div>
+            <label for="supaKeyInput" class="block text-[11px] font-bold text-violet-200 mb-1">Supabase Anon Public Key</label>
+            <input type="text" id="supaKeyInput" name="supabaseKey" autocomplete="off" spellcheck="false" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full px-3.5 py-2.5 rounded-xl text-xs font-mono" />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" onclick="disconnectSupabase()" class="min-h-[40px] px-3.5 py-2 rounded-xl glass-panel text-xs font-bold text-violet-200 hover:text-white cursor-pointer">
+            Solo Local
+          </button>
+          <button type="button" onclick="saveSupabaseConfig()" class="btn-purple-primary min-h-[40px] px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer">
+            Conectar y Sincronizar
+          </button>
+        </div>
       </div>
     </div>
   </div>

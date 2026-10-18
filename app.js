@@ -146,6 +146,16 @@ function updateClockPreview() {
 
 function loadLocalState() {
   try {
+    // Auto-configurar Supabase si viene por URL compartida con socios (?supa_url=...&supa_key=...)
+    const params = new URLSearchParams(window.location.search);
+    const urlParam = params.get('supa_url');
+    const keyParam = params.get('supa_key');
+    if (urlParam && keyParam) {
+      localStorage.setItem(STORAGE_KEYS.SUPABASE_CFG, JSON.stringify({ url: urlParam, key: keyParam }));
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    const isCleanMode = localStorage.getItem('quickss_clean_mode_v4') === 'true';
     const savedUsers = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     const savedCurrent = JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || 'null');
     const savedPre = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRE_CHECKIN) || 'null');
@@ -174,27 +184,55 @@ function loadLocalState() {
       state.preCheckin = null;
     }
 
-    state.visits = (savedVisits && Array.isArray(savedVisits) && savedVisits.length > 0)
-      ? savedVisits
-      : generateInitialSampleData();
+    state.visits = Array.isArray(savedVisits)
+      ? (savedVisits.length > 0 || isCleanMode ? savedVisits : generateInitialSampleData())
+      : (isCleanMode ? [] : generateInitialSampleData());
     localStorage.setItem(STORAGE_KEYS.VISITS, JSON.stringify(state.visits));
 
-    state.dailies = (savedDailies && Array.isArray(savedDailies))
+    state.dailies = Array.isArray(savedDailies)
       ? savedDailies
-      : generateInitialDailies();
+      : (isCleanMode ? [] : generateInitialDailies());
     localStorage.setItem(STORAGE_KEYS.DAILIES, JSON.stringify(state.dailies));
 
-    state.tasks = (savedTasks && Array.isArray(savedTasks))
+    state.tasks = Array.isArray(savedTasks)
       ? savedTasks
-      : generateInitialTasks();
+      : (isCleanMode ? [] : generateInitialTasks());
     localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(state.tasks));
 
-    state.warnings = (savedWarnings && Array.isArray(savedWarnings))
+    state.warnings = Array.isArray(savedWarnings)
       ? savedWarnings
-      : generateInitialWarnings();
+      : (isCleanMode ? [] : generateInitialWarnings());
     localStorage.setItem(STORAGE_KEYS.WARNINGS, JSON.stringify(state.warnings));
   } catch (e) {
     console.error('Error cargando estado:', e);
+  }
+}
+
+async function persistAndSyncState() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
+    if (state.currentUser) {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
+    }
+    if (state.preCheckin) {
+      localStorage.setItem(STORAGE_KEYS.PRE_CHECKIN, JSON.stringify(state.preCheckin));
+    }
+    localStorage.setItem(STORAGE_KEYS.VISITS, JSON.stringify(state.visits));
+    localStorage.setItem(STORAGE_KEYS.DAILIES, JSON.stringify(state.dailies));
+    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(state.tasks));
+    localStorage.setItem(STORAGE_KEYS.WARNINGS, JSON.stringify(state.warnings));
+
+    const dot = document.getElementById('cloudStatusDot');
+    if (dot) {
+      dot.classList.add('scale-125');
+      setTimeout(() => dot.classList.remove('scale-125'), 300);
+    }
+
+    if (state.supabase) {
+      await syncStateToCloud();
+    }
+  } catch (e) {
+    console.warn('Error guardando estado:', e);
   }
 }
 
@@ -440,16 +478,15 @@ window.handleCreateTeamMember = function(e) {
   if (!existing) {
     existing = { id: 'usr_' + Date.now(), nombre, rol: 'Brigadista', meta: 12 };
     state.users.push(existing);
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
   }
 
   state.currentUser = existing;
   state.taskAssignee = existing.nombre;
-  localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(existing));
+  persistAndSyncState();
 
   if (input) input.value = '';
   refreshAllUI();
-  showToast(`Integrante agregado y activo: ${existing.nombre}`);
+  showToast(`Integrante guardado: ${existing.nombre}`);
 };
 
 window.selectTaskAssignee = function(nombre) {
@@ -901,7 +938,7 @@ function handleDailySubmit(e) {
   };
 
   state.dailies.unshift(entry);
-  localStorage.setItem(STORAGE_KEYS.DAILIES, JSON.stringify(state.dailies));
+  persistAndSyncState();
 
   document.getElementById('dailyDoneInput').value = '';
   document.getElementById('dailyFocusInput').value = '';
@@ -909,7 +946,7 @@ function handleDailySubmit(e) {
 
   refreshAllUI();
   fireCelebrationConfetti(false);
-  showToast('Daily Chat (Ayer · Hoy · Bloqueante) publicado en el muro');
+  showToast('Daily Chat guardado y publicado');
 }
 
 function renderDailiesList() {
@@ -996,7 +1033,7 @@ function renderDailiesList() {
 
 window.deleteDaily = function(id) {
   state.dailies = state.dailies.filter(d => d.id !== id);
-  localStorage.setItem(STORAGE_KEYS.DAILIES, JSON.stringify(state.dailies));
+  persistAndSyncState();
   refreshAllUI();
 };
 
@@ -1023,27 +1060,27 @@ function handleTaskSubmit(e) {
   };
 
   state.tasks.unshift(newTask);
-  localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(state.tasks));
+  persistAndSyncState();
 
   document.getElementById('taskTitleInput').value = '';
   document.getElementById('taskNotesInput').value = '';
 
   refreshAllUI();
-  showToast('Tarea agregada al tablero');
+  showToast('Tarea guardada');
 }
 
 window.toggleTaskDone = function(id) {
   const t = state.tasks.find(item => item.id === id);
   if (!t) return;
   t.completed = !t.completed;
-  localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(state.tasks));
+  persistAndSyncState();
   if (t.completed) fireCelebrationConfetti(false);
   refreshAllUI();
 };
 
 window.deleteTask = function(id) {
   state.tasks = state.tasks.filter(t => t.id !== id);
-  localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(state.tasks));
+  persistAndSyncState();
   refreshAllUI();
 };
 
@@ -1157,13 +1194,13 @@ function handleWarningSubmit(e) {
   };
 
   state.warnings.unshift(newWarn);
-  localStorage.setItem(STORAGE_KEYS.WARNINGS, JSON.stringify(state.warnings));
+  persistAndSyncState();
 
   document.getElementById('warnReasonInput').value = '';
   document.getElementById('warnCommitmentInput').value = '';
 
   refreshAllUI();
-  showToast(`Llamado de atención registrado para ${member}`);
+  showToast(`Llamado guardado para ${member}`);
 }
 
 function renderWarningsList() {
@@ -1222,7 +1259,7 @@ function renderWarningsList() {
 
 window.deleteWarning = function(id) {
   state.warnings = state.warnings.filter(w => w.id !== id);
-  localStorage.setItem(STORAGE_KEYS.WARNINGS, JSON.stringify(state.warnings));
+  persistAndSyncState();
   refreshAllUI();
 };
 
@@ -1357,8 +1394,7 @@ window.confirmPreBrigada = async function() {
   };
 
   state.currentUser.meta = meta_diaria;
-  localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
-  localStorage.setItem(STORAGE_KEYS.PRE_CHECKIN, JSON.stringify(state.preCheckin));
+  persistAndSyncState();
 
   const defaultMat = ['Explicación verbal'];
   if (tiene_folletos) defaultMat.unshift('Folleto');
@@ -1605,14 +1641,14 @@ async function handleVisitSubmit(e) {
 
   state.visits.unshift(newVisit);
   state.lastSavedVisit = newVisit;
-  localStorage.setItem(STORAGE_KEYS.VISITS, JSON.stringify(state.visits));
+  await persistAndSyncState();
 
   if (state.supabase) {
     try {
       const { id, ...payload } = newVisit;
       await state.supabase.from('acercamientos').insert([payload]);
     } catch (err) {
-      console.warn('Sync pendiente:', err);
+      console.warn('Sync tabla acercamientos:', err);
     }
   }
 
@@ -2607,20 +2643,116 @@ window.loadSampleBrigadaData = function() {
   ];
 
   state.visits = [...extraSamples, ...state.visits];
-  localStorage.setItem(STORAGE_KEYS.VISITS, JSON.stringify(state.visits));
+  persistAndSyncState();
   refreshAllUI();
   fireCelebrationConfetti(false);
-  showToast('Visitas simuladas agregadas al tablero.');
+  showToast('Visitas simuladas agregadas y guardadas.');
 };
+
+// ============================================================================
+// 12. MOTOR DE PRODUCCIÓN: AUTOGUARDADO, SUPABASE REALTIME & CONTROLES SOCIOS
+// ============================================================================
+async function syncStateToCloud() {
+  if (!state.supabase) return;
+  try {
+    const payload = {
+      id: 'main_workspace',
+      users: state.users,
+      visits: state.visits,
+      dailies: state.dailies,
+      tasks: state.tasks,
+      warnings: state.warnings,
+      updated_at: new Date().toISOString()
+    };
+    await state.supabase
+      .from('quickss_workspace_state')
+      .upsert(payload, { onConflict: 'id' });
+  } catch (e) {
+    console.warn('Error sincronizando estado a Supabase:', e);
+  }
+}
+
+async function pullStateFromCloud() {
+  if (!state.supabase) return;
+  try {
+    const { data, error } = await state.supabase
+      .from('quickss_workspace_state')
+      .select('*')
+      .eq('id', 'main_workspace')
+      .maybeSingle();
+
+    if (error) return;
+
+    if (data) {
+      applyRemoteWorkspaceData(data);
+    } else {
+      // Primera vez en esta tabla: subir el estado actual para inicializar la nube
+      await syncStateToCloud();
+    }
+  } catch (e) {
+    console.warn('Error leyendo estado de Supabase:', e);
+  }
+}
+
+function applyRemoteWorkspaceData(data) {
+  if (!data) return;
+  if (Array.isArray(data.users) && data.users.length > 0) {
+    state.users = data.users;
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
+    const matchCurrent = state.users.find(u => u.id === state.currentUser?.id) || state.users[0];
+    state.currentUser = matchCurrent;
+    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
+  }
+  if (Array.isArray(data.visits)) {
+    state.visits = data.visits;
+    localStorage.setItem(STORAGE_KEYS.VISITS, JSON.stringify(state.visits));
+  }
+  if (Array.isArray(data.dailies)) {
+    state.dailies = data.dailies;
+    localStorage.setItem(STORAGE_KEYS.DAILIES, JSON.stringify(state.dailies));
+  }
+  if (Array.isArray(data.tasks)) {
+    state.tasks = data.tasks;
+    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(state.tasks));
+  }
+  if (Array.isArray(data.warnings)) {
+    state.warnings = data.warnings;
+    localStorage.setItem(STORAGE_KEYS.WARNINGS, JSON.stringify(state.warnings));
+  }
+  refreshAllUI();
+}
 
 function initSupabaseIfConfigured() {
   try {
     const cfg = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUPABASE_CFG) || 'null');
+    const dot = document.getElementById('cloudStatusDot');
+    const sub = document.getElementById('cloudModalStatusSubtitle');
+
     if (cfg && cfg.url && cfg.key && window.supabase) {
       state.supabase = window.supabase.createClient(cfg.url, cfg.key);
-      const dot = document.getElementById('cloudStatusDot');
       if (dot) dot.className = 'w-2 h-2 rounded-full bg-violet-400';
-      setText('cloudStatusText', 'Nube Activa');
+      setText('cloudStatusText', 'Nube En Vivo');
+      if (sub) sub.textContent = 'Conectado a Supabase en tiempo real + Autoguardado Local';
+
+      pullStateFromCloud();
+
+      // Suscripción en tiempo real para que tus socios vean cambios al instante
+      state.supabase
+        .channel('quickss_realtime_channel')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'quickss_workspace_state', filter: 'id=eq.main_workspace' },
+          (payload) => {
+            if (payload && payload.new) {
+              applyRemoteWorkspaceData(payload.new);
+            }
+          }
+        )
+        .subscribe();
+    } else {
+      if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+      setText('cloudStatusText', 'Guardado Activo');
+      if (sub) sub.textContent = 'Autoguardado instantáneo activo en este dispositivo';
     }
   } catch (e) {
     console.warn('Error Supabase:', e);
@@ -2629,32 +2761,144 @@ function initSupabaseIfConfigured() {
 
 function openCloudModal() {
   const cfg = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUPABASE_CFG) || 'null');
-  document.getElementById('supaUrlInput').value = cfg?.url || '';
-  document.getElementById('supaKeyInput').value = cfg?.key || '';
+  const urlEl = document.getElementById('supaUrlInput');
+  const keyEl = document.getElementById('supaKeyInput');
+  if (urlEl) urlEl.value = cfg?.url || '';
+  if (keyEl) keyEl.value = cfg?.key || '';
   document.getElementById('cloudModal')?.classList.remove('hidden');
+  refreshLucideIcons();
 }
 
 window.closeCloudModal = function() {
   document.getElementById('cloudModal')?.classList.add('hidden');
 };
 
-window.saveSupabaseConfig = function() {
+window.saveSupabaseConfig = async function() {
   const url = document.getElementById('supaUrlInput').value.trim();
   const key = document.getElementById('supaKeyInput').value.trim();
-  if (!url || !key) return;
+  if (!url || !key) {
+    showToast('Ingresa el Project URL y Anon Key de Supabase');
+    return;
+  }
   localStorage.setItem(STORAGE_KEYS.SUPABASE_CFG, JSON.stringify({ url, key }));
   initSupabaseIfConfigured();
+  await syncStateToCloud();
   closeCloudModal();
-  showToast('Conectado a Supabase en tiempo real.');
+  showToast('Conectado a Supabase y datos sincronizados');
 };
 
 window.disconnectSupabase = function() {
   localStorage.removeItem(STORAGE_KEYS.SUPABASE_CFG);
   state.supabase = null;
   const dot = document.getElementById('cloudStatusDot');
-  if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-  setText('cloudStatusText', 'Local');
+  if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+  setText('cloudStatusText', 'Guardado Activo');
   closeCloudModal();
+  showToast('Modo de autoguardado local activo');
+};
+
+window.copyPartnerShareLink = async function() {
+  const prodBase = 'https://balmes2baxter.github.io/Quickss_notes/';
+  const cfg = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUPABASE_CFG) || 'null');
+  let shareUrl = prodBase;
+  if (cfg && cfg.url && cfg.key) {
+    const params = new URLSearchParams({ supa_url: cfg.url, supa_key: cfg.key });
+    shareUrl = `${prodBase}?${params.toString()}`;
+  }
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+    showToast(
+      cfg?.url
+        ? 'Link de producción con conexión a tu nube copiado'
+        : 'Link público de producción copiado al portapapeles'
+    );
+  } catch {
+    showToast('Link: ' + prodBase);
+  }
+};
+
+window.resetToDemoData = async function() {
+  localStorage.removeItem('quickss_clean_mode_v4');
+  state.visits = generateInitialSampleData();
+  state.dailies = generateInitialDailies();
+  state.tasks = generateInitialTasks();
+  state.warnings = generateInitialWarnings();
+  await persistAndSyncState();
+  refreshAllUI();
+  closeCloudModal();
+  fireCelebrationConfetti(false);
+  showToast('Datos de demostración ejecutiva cargados');
+};
+
+window.clearAllWorkspaceData = async function() {
+  localStorage.setItem('quickss_clean_mode_v4', 'true');
+  state.visits = [];
+  state.dailies = [];
+  state.tasks = [];
+  state.warnings = [];
+  await persistAndSyncState();
+  refreshAllUI();
+  closeCloudModal();
+  showToast('Tablero limpio (0 registros). Listo para anotar desde cero');
+};
+
+window.exportFullBackupJSON = function() {
+  const backup = {
+    app: 'Notas Quickss',
+    exported_at: new Date().toISOString(),
+    users: state.users,
+    visits: state.visits,
+    dailies: state.dailies,
+    tasks: state.tasks,
+    warnings: state.warnings
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `NotasQuickss_Backup_${getTodayISO()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast('Respaldo JSON descargado');
+};
+
+window.handleImportBackupJSON = function(event) {
+  const file = event.target?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      applyRemoteWorkspaceData(parsed);
+      await persistAndSyncState();
+      closeCloudModal();
+      showToast('Respaldo JSON restaurado correctamente');
+    } catch {
+      showToast('El archivo JSON no tiene un formato válido');
+    }
+  };
+  reader.readAsText(file);
+};
+
+window.copySupabaseSQLSchema = async function() {
+  const sql = `CREATE TABLE IF NOT EXISTS public.quickss_workspace_state (
+  id TEXT PRIMARY KEY DEFAULT 'main_workspace',
+  users JSONB DEFAULT '[]'::jsonb NOT NULL,
+  visits JSONB DEFAULT '[]'::jsonb NOT NULL,
+  dailies JSONB DEFAULT '[]'::jsonb NOT NULL,
+  tasks JSONB DEFAULT '[]'::jsonb NOT NULL,
+  warnings JSONB DEFAULT '[]'::jsonb NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+ALTER TABLE public.quickss_workspace_state ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acceso total workspace" ON public.quickss_workspace_state FOR ALL USING (true) WITH CHECK (true);`;
+  try {
+    await navigator.clipboard.writeText(sql);
+    showToast('SQL copiado: pégalo en el SQL Editor de Supabase y dale Run');
+  } catch {
+    showToast('Consulta el archivo supabase_schema.sql del proyecto');
+  }
 };
 
 function showToast(msg) {
