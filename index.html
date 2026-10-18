@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>BrigadaPro — Command Center & Terreno</title>
+  <title>Notas Quickss — Apartado de Brigadas & Notas Rápidas</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js -->
@@ -20,22 +20,22 @@
 <body class="min-h-screen pb-24 lg:pb-10 text-slate-100 selection:bg-indigo-500 selection:text-white">
 
   <!-- ===================================================================== -->
-  <!-- PANTALLA DE ACCESO / SELECCIÓN DE CUENTA DE BRIGADISTA                -->
+  <!-- PANTALLA DE ACCESO / SELECCIÓN DE CUENTA EN NOTAS QUICKSS             -->
   <!-- ===================================================================== -->
   <div id="authScreen" class="fixed inset-0 z-50 bg-[#070a12]/95 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
     <div class="glass-card w-full max-w-lg rounded-3xl overflow-hidden border border-white/10 shadow-2xl my-auto">
       <div class="relative bg-gradient-to-br from-indigo-600 via-blue-600 to-emerald-500 p-7 text-white overflow-hidden">
         <div class="absolute -right-8 -top-8 w-36 h-36 bg-white/10 rounded-full blur-2xl"></div>
         <div class="relative z-10 flex items-center gap-4">
-          <div class="w-16 h-16 rounded-2xl bg-slate-950/30 backdrop-blur-md border border-white/20 flex items-center justify-center text-3xl shadow-inner">
+          <div class="w-16 h-16 rounded-2xl bg-slate-950/30 backdrop-blur-md border border-white/20 flex items-center justify-center text-3xl shadow-inner font-extrabold">
             ⚡
           </div>
           <div>
             <span class="text-[11px] font-extrabold uppercase tracking-widest bg-black/25 px-2.5 py-1 rounded-full">
-              Field Sales OS · v2.0
+              Plataforma Modular · Apartado Brigadas
             </span>
-            <h1 class="text-3xl font-extrabold tracking-tight mt-1">BrigadaPro</h1>
-            <p class="text-blue-100 text-xs sm:text-sm">Convierte cada calle en clientes reales en menos de 10 segundos</p>
+            <h1 class="text-3xl font-extrabold tracking-tight mt-1">Notas Quickss</h1>
+            <p class="text-blue-100 text-xs sm:text-sm">Tu centro de anotaciones ultrarrápidas para Brigadas y proyectos</p>
           </div>
         </div>
       </div>
@@ -44,7 +44,7 @@
         <div>
           <div class="flex items-center justify-between mb-3">
             <label class="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-              👥 Cuentas del Equipo Activas (1 clic para entrar)
+              👥 Cuentas Activas en Notas Quickss (1 clic)
             </label>
             <span class="text-[11px] text-emerald-400 font-semibold">Fecha y hora automáticas</span>
           </div>
@@ -55,7 +55,7 @@
 
         <div class="border-t border-white/10 pt-5">
           <p class="text-xs font-extrabold text-indigo-400 uppercase tracking-wider mb-3">
-            ✨ ¿Nuevo en la brigada? Crea tu perfil rápido
+            ✨ Crear nueva cuenta en Notas Quickss
           </p>
           <form id="loginForm" class="space-y-3">
             <input
@@ -89,7 +89,7 @@
               type="submit"
               class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 active:scale-[0.99] text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-indigo-600/30 transition text-sm"
             >
-              Iniciar Jornada Comercial →
+              Entrar a Notas Quickss →
             </button>
           </form>
         </div>
@@ -98,21 +98,57 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- TOP COMMAND BAR (GAMIFICACIÓN, PERFIL Y META DE 12 VISITAS)           -->
+  <!-- TOP COMMAND BAR: NOTAS QUICKSS + SELECTOR DE APARTADO (BRIGADAS)      -->
   <!-- ===================================================================== -->
   <header class="sticky top-0 z-30 bg-[#090d16]/90 backdrop-blur-xl border-b border-white/10">
     <div class="max-w-7xl mx-auto px-4 py-3">
+      <!-- Barra Superior de Marca y Selector de Módulos/Apartados -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-white/5">
+        <div class="flex items-center gap-2.5">
+          <div class="flex items-center gap-2 bg-indigo-600/20 border border-indigo-500/30 px-3 py-1 rounded-xl">
+            <span class="text-sm">⚡</span>
+            <span class="font-extrabold text-xs tracking-tight text-white">Notas Quickss</span>
+          </div>
+          <span class="text-slate-600 font-bold">/</span>
+          <select
+            id="moduleSelector"
+            onchange="handleModuleChange(this.value)"
+            class="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 rounded-xl px-3 py-1 text-xs font-extrabold outline-none cursor-pointer transition"
+          >
+            <option value="brigadas">🚀 Apartado: Brigadas Comerciales</option>
+            <option value="soon">➕ Próximos Apartados (Notas / Tareas / Ideas)...</option>
+          </select>
+        </div>
+
+        <!-- Botones de Nube y Cambio de Cuenta -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            id="btnOpenCloudModal"
+            class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-xs font-bold flex items-center gap-2 border border-white/10 transition"
+          >
+            <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span id="cloudStatusText" class="hidden sm:inline text-slate-200">Modo Local</span>
+          </button>
+          <button
+            id="btnSwitchUser"
+            class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-xs font-bold text-slate-300 border border-white/10 transition"
+          >
+            👤 Cambiar cuenta
+          </button>
+        </div>
+      </div>
+
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
 
-        <!-- Identidad + Nivel de Gamificación + Acciones -->
+        <!-- Identidad del Usuario Activo + Nivel XP -->
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-3 min-w-0">
-            <div id="userAvatarBadge" class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center font-extrabold text-base text-white shadow-lg shadow-indigo-500/25 shrink-0">
-              BP
+            <div id="userAvatarBadge" class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center font-extrabold text-sm text-white shadow-lg shadow-indigo-500/25 shrink-0">
+              NQ
             </div>
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2">
-                <span id="headerUserName" class="font-extrabold text-base text-white truncate">Brigadista</span>
+                <span id="headerUserName" class="font-extrabold text-base text-white truncate">Usuario</span>
                 <span id="headerUserRole" class="text-[10px] uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">
                   Brigadista
                 </span>
@@ -122,23 +158,6 @@
               </div>
               <p id="headerDateZone" class="text-xs text-slate-400 truncate mt-0.5">Cargando jornada...</p>
             </div>
-          </div>
-
-          <!-- Botones de Nube y Cambio de Cuenta -->
-          <div class="flex items-center gap-2 shrink-0">
-            <button
-              id="btnOpenCloudModal"
-              class="px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-xs font-bold flex items-center gap-2 border border-white/10 transition"
-            >
-              <span id="cloudStatusDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-              <span id="cloudStatusText" class="hidden sm:inline text-slate-200">Modo Local</span>
-            </button>
-            <button
-              id="btnSwitchUser"
-              class="px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-xs font-bold text-slate-300 border border-white/10 transition"
-            >
-              👤 Cambiar
-            </button>
           </div>
         </div>
 

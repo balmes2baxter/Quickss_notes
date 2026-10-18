@@ -1656,6 +1656,13 @@ function showToast(msg) {
   }, 3500);
 }
 
+window.handleModuleChange = function(mod) {
+  if (mod === 'soon') {
+    showToast('✨ Notas Quickss está preparado para agregar nuevos apartados (Notas generales, Tareas, Ideas) aquí.');
+    document.getElementById('moduleSelector').value = 'brigadas';
+  }
+};
+
 function escapeHtml(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
@@ -1664,3 +1671,4 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
