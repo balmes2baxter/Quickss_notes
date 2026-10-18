@@ -216,9 +216,18 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
+/* Ocultar barra de scroll en contenedores horizontales móviles */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: #0e0b16;

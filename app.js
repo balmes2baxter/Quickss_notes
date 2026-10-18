@@ -188,11 +188,11 @@ window.switchModule = function(modName) {
     if (m === modName) {
       el?.classList.remove('hidden');
       if (deskBtn) deskBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white transition shadow';
-      if (mobBtn) mobBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white shrink-0';
+      if (mobBtn) mobBtn.className = 'py-2 px-1 rounded-xl text-[10px] font-extrabold bg-violet-600 text-white flex flex-col items-center justify-center gap-0.5 shadow';
     } else {
       el?.classList.add('hidden');
       if (deskBtn) deskBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition';
-      if (mobBtn) mobBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-[#161224] text-violet-200 shrink-0';
+      if (mobBtn) mobBtn.className = 'py-2 px-1 rounded-xl text-[10px] font-bold bg-[#161224] text-violet-200 border border-violet-500/20 flex flex-col items-center justify-center gap-0.5';
     }
   });
 
@@ -1566,10 +1566,10 @@ window.switchTab = function(tab) {
   Object.keys(sections).forEach(k => {
     if (k === tab) {
       sections[k]?.classList.remove('hidden');
-      if (deskBtns[k]) deskBtns[k].className = 'px-4 py-2 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow';
+      if (deskBtns[k]) deskBtns[k].className = 'px-3 py-2.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow text-center';
     } else {
       sections[k]?.classList.add('hidden');
-      if (deskBtns[k]) deskBtns[k].className = 'px-4 py-2 rounded-xl text-xs font-bold text-violet-300/80 hover:text-white';
+      if (deskBtns[k]) deskBtns[k].className = 'px-3 py-2.5 rounded-xl text-xs font-bold bg-[#1d1630] text-violet-200 hover:text-white text-center';
     }
   });
 

@@ -23,66 +23,63 @@
   <!-- TOP HEADER: NOTAS QUICKSS + SELECTOR DE USUARIO SIN PANTALLA BLOQUEO  -->
   <!-- ===================================================================== -->
   <header class="sticky top-0 z-30 bg-[#0e0b16]/95 backdrop-blur-xl border-b border-violet-500/20">
-    <div class="max-w-7xl mx-auto px-4 py-3 space-y-3">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 space-y-2.5">
 
-      <!-- Fila 1: Identidad de Notas Quickss + Selector Rápido de Usuario + Nube -->
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <button
-            onclick="switchModule('hub')"
-            class="flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-2 rounded-2xl shadow-md shadow-violet-600/25 transition"
-          >
-            <span class="text-lg">📝</span>
-            <div class="text-left">
-              <span class="font-extrabold text-sm tracking-tight block leading-none">Notas Quickss</span>
-              <span class="text-[10px] text-violet-200 font-semibold">Workspace del Equipo</span>
-            </div>
-          </button>
-
-          <!-- Navegación Principal de Módulos -->
-          <div class="hidden md:flex items-center gap-1.5 bg-[#151024] p-1.5 rounded-2xl border border-violet-500/20">
-            <button id="modBtn_hub" onclick="switchModule('hub')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white transition">
-              🏠 Módulos
-            </button>
-            <button id="modBtn_brigadas" onclick="switchModule('brigadas')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
-              🚀 Brigadas (<span id="badgeCountBrigadas">0</span>)
-            </button>
-            <button id="modBtn_daily" onclick="switchModule('daily')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
-              ☀️ Daily Day (<span id="badgeCountDaily">0</span>)
-            </button>
-            <button id="modBtn_tareas" onclick="switchModule('tareas')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
-              ✅ Tareas (<span id="badgeCountTareas">0</span>)
-            </button>
-            <button id="modBtn_llamados" onclick="switchModule('llamados')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
-              ⚠️ Llamados de Atención (<span id="badgeCountLlamados">0</span>)
-            </button>
+      <!-- Fila 1: Marca + Selector Rápido de Usuario en 1 sola línea limpia en móvil -->
+      <div class="flex items-center justify-between gap-2">
+        <button
+          onclick="switchModule('hub')"
+          class="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-3 py-2 rounded-2xl shadow-md shadow-violet-600/25 transition shrink-0"
+        >
+          <span class="text-base">📝</span>
+          <div class="text-left">
+            <span class="font-extrabold text-xs sm:text-sm tracking-tight block leading-none">Notas Quickss</span>
+            <span class="text-[9px] sm:text-[10px] text-violet-200 font-semibold block mt-0.5">Workspace</span>
           </div>
+        </button>
+
+        <!-- Navegación Desktop -->
+        <div class="hidden md:flex items-center gap-1.5 bg-[#151024] p-1.5 rounded-2xl border border-violet-500/20">
+          <button id="modBtn_hub" onclick="switchModule('hub')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white transition">
+            🏠 Módulos
+          </button>
+          <button id="modBtn_brigadas" onclick="switchModule('brigadas')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
+            🚀 Brigadas (<span id="badgeCountBrigadas">0</span>)
+          </button>
+          <button id="modBtn_daily" onclick="switchModule('daily')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
+            ☀️ Daily Day (<span id="badgeCountDaily">0</span>)
+          </button>
+          <button id="modBtn_tareas" onclick="switchModule('tareas')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
+            ✅ Tareas (<span id="badgeCountTareas">0</span>)
+          </button>
+          <button id="modBtn_llamados" onclick="switchModule('llamados')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
+            ⚠️ Llamados (<span id="badgeCountLlamados">0</span>)
+          </button>
         </div>
 
-        <!-- Selector Rápido de Responsable / Cuenta Activa (Sin modal bloqueante) -->
-        <div class="flex items-center gap-2">
-          <div class="flex items-center gap-2 bg-[#161224] border border-violet-500/30 rounded-2xl px-3 py-1.5">
-            <span class="text-xs text-violet-300 font-bold">👤 Quién anota:</span>
+        <!-- Selector Rápido de Responsable Compacto -->
+        <div class="flex items-center gap-1.5 min-w-0">
+          <div class="flex items-center gap-1.5 bg-[#161224] border border-violet-500/30 rounded-2xl px-2.5 py-1.5 min-w-0">
+            <span class="text-xs">👤</span>
             <select
               id="quickUserSelect"
               onchange="handleQuickUserChange(this.value)"
-              class="bg-transparent text-xs font-extrabold text-white outline-none cursor-pointer border-0"
-            >
-              <!-- Se llena con los miembros del equipo -->
-            </select>
+              class="bg-transparent text-xs font-extrabold text-white outline-none cursor-pointer border-0 truncate max-w-[115px] sm:max-w-[160px]"
+            ></select>
             <button
               type="button"
               onclick="promptNewTeamMember()"
               title="Agregar nueva persona al equipo"
-              class="text-xs font-extrabold bg-violet-600/30 hover:bg-violet-600 text-violet-200 hover:text-white px-2 py-0.5 rounded-lg transition"
+              class="text-[11px] font-extrabold bg-violet-600/35 hover:bg-violet-600 text-violet-100 px-2 py-0.5 rounded-lg transition shrink-0"
             >
-              + Nuevo
+              +
             </button>
           </div>
 
           <button
             id="btnOpenCloudModal"
-            class="px-3 py-2 rounded-2xl bg-[#161224] hover:bg-[#221b38] text-xs font-bold flex items-center gap-2 border border-violet-500/25 transition"
+            title="Sincronización en la Nube"
+            class="p-2 sm:px-3 sm:py-2 rounded-2xl bg-[#161224] hover:bg-[#221b38] text-xs font-bold flex items-center gap-1.5 border border-violet-500/25 transition shrink-0"
           >
             <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
             <span id="cloudStatusText" class="hidden sm:inline text-violet-100">Local</span>
@@ -90,22 +87,27 @@
         </div>
       </div>
 
-      <!-- Selector de Módulos en Móvil -->
-      <div class="flex md:hidden items-center gap-1.5 overflow-x-auto pb-1">
-        <button id="mobModBtn_hub" onclick="switchModule('hub')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white shrink-0">
-          🏠 Inicio
+      <!-- Fila 2 Móvil: Grid de 5 Módulos 100% visibles sin barras de scroll ni cortes -->
+      <div class="grid grid-cols-5 gap-1.5 md:hidden">
+        <button id="mobModBtn_hub" onclick="switchModule('hub')" class="py-2 px-1 rounded-xl text-[10px] font-extrabold bg-violet-600 text-white flex flex-col items-center justify-center gap-0.5">
+          <span class="text-sm leading-none">🏠</span>
+          <span class="truncate">Módulos</span>
         </button>
-        <button id="mobModBtn_brigadas" onclick="switchModule('brigadas')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#161224] text-violet-200 shrink-0">
-          🚀 Brigadas
+        <button id="mobModBtn_brigadas" onclick="switchModule('brigadas')" class="py-2 px-1 rounded-xl text-[10px] font-bold bg-[#161224] text-violet-200 border border-violet-500/20 flex flex-col items-center justify-center gap-0.5">
+          <span class="text-sm leading-none">🚀</span>
+          <span class="truncate">Brigadas</span>
         </button>
-        <button id="mobModBtn_daily" onclick="switchModule('daily')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#161224] text-violet-200 shrink-0">
-          ☀️ Daily Day
+        <button id="mobModBtn_daily" onclick="switchModule('daily')" class="py-2 px-1 rounded-xl text-[10px] font-bold bg-[#161224] text-violet-200 border border-violet-500/20 flex flex-col items-center justify-center gap-0.5">
+          <span class="text-sm leading-none">☀️</span>
+          <span class="truncate">Daily Day</span>
         </button>
-        <button id="mobModBtn_tareas" onclick="switchModule('tareas')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#161224] text-violet-200 shrink-0">
-          ✅ Tareas
+        <button id="mobModBtn_tareas" onclick="switchModule('tareas')" class="py-2 px-1 rounded-xl text-[10px] font-bold bg-[#161224] text-violet-200 border border-violet-500/20 flex flex-col items-center justify-center gap-0.5">
+          <span class="text-sm leading-none">✅</span>
+          <span class="truncate">Tareas</span>
         </button>
-        <button id="mobModBtn_llamados" onclick="switchModule('llamados')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#161224] text-violet-200 shrink-0">
-          ⚠️ Llamados
+        <button id="mobModBtn_llamados" onclick="switchModule('llamados')" class="py-2 px-1 rounded-xl text-[10px] font-bold bg-[#161224] text-violet-200 border border-violet-500/20 flex flex-col items-center justify-center gap-0.5">
+          <span class="text-sm leading-none">⚠️</span>
+          <span class="truncate">Llamados</span>
         </button>
       </div>
 
@@ -115,176 +117,261 @@
   <!-- ===================================================================== -->
   <!-- CONTENEDOR PRINCIPAL DE NOTAS QUICKSS                                 -->
   <!-- ===================================================================== -->
-  <main class="max-w-7xl mx-auto px-3 sm:px-6 pt-6">
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
 
     <!-- =================================================================== -->
     <!-- MÓDULO 0: DASHBOARD PRINCIPAL DE NOTAS QUICKSS (TODOS LOS MÓDULOS)  -->
     <!-- =================================================================== -->
-    <div id="module_hub" class="space-y-6 fade-slide-in">
+    <div id="module_hub" class="space-y-5 fade-slide-in">
 
-      <!-- Banner de Bienvenida -->
-      <div class="glass-card rounded-3xl p-6 sm:p-8 border border-violet-500/35 relative overflow-hidden">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div class="space-y-2 max-w-2xl">
-            <div class="inline-flex items-center gap-2 bg-violet-500/20 border border-violet-400/30 px-3 py-1 rounded-full text-xs font-extrabold text-violet-200">
-              <span>⚡ Centro Operativo Unificado</span>
+      <!-- Banner de Bienvenida Compacto y Elegante -->
+      <div class="glass-card rounded-3xl p-5 sm:p-7 border border-violet-500/35">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="space-y-1.5 max-w-2xl">
+            <div class="inline-flex items-center gap-2 bg-violet-500/20 border border-violet-400/30 px-3 py-1 rounded-full text-[11px] font-extrabold text-violet-200">
+              <span>⚡ Centro Operativo</span>
               <span>·</span>
               <span id="hubTodayDate">Hoy</span>
             </div>
-            <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Bienvenido a Notas Quickss, <span id="hubWelcomeName" class="text-violet-400">Equipo</span>
+            <h1 class="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Hola, <span id="hubWelcomeName" class="text-violet-400">Equipo</span> 👋
             </h1>
-            <p class="text-sm text-violet-200/80 leading-relaxed">
-              Selecciona qué quieres anotar o revisar hoy. Todo queda registrado con fecha, hora y responsable automático en segundos.
+            <p class="text-xs sm:text-sm text-violet-200/80 leading-relaxed">
+              Elige un módulo para anotar en segundos. La fecha, hora y tu usuario quedan registrados automáticamente.
             </p>
           </div>
 
           <!-- Resumen global rápido -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
-            <div class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-3.5 text-center">
-              <p class="text-[10px] font-bold uppercase text-violet-300/70">Visitas Brigada</p>
-              <p id="hubStatBrigadas" class="text-2xl font-extrabold text-white mt-0.5">0</p>
+          <div class="grid grid-cols-4 gap-2 sm:gap-3 shrink-0">
+            <div onclick="switchModule('brigadas')" class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-2.5 sm:p-3.5 text-center cursor-pointer hover:border-violet-400 transition">
+              <p class="text-[9px] sm:text-[10px] font-bold uppercase text-violet-300/70 truncate">Brigadas</p>
+              <p id="hubStatBrigadas" class="text-lg sm:text-2xl font-extrabold text-white mt-0.5">0</p>
             </div>
-            <div class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-3.5 text-center">
-              <p class="text-[10px] font-bold uppercase text-violet-300/70">Daily Day Hoy</p>
-              <p id="hubStatDaily" class="text-2xl font-extrabold text-violet-300 mt-0.5">0</p>
+            <div onclick="switchModule('daily')" class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-2.5 sm:p-3.5 text-center cursor-pointer hover:border-violet-400 transition">
+              <p class="text-[9px] sm:text-[10px] font-bold uppercase text-violet-300/70 truncate">Daily Hoy</p>
+              <p id="hubStatDaily" class="text-lg sm:text-2xl font-extrabold text-violet-300 mt-0.5">0</p>
             </div>
-            <div class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-3.5 text-center">
-              <p class="text-[10px] font-bold uppercase text-violet-300/70">Tareas Activas</p>
-              <p id="hubStatTareas" class="text-2xl font-extrabold text-amber-300 mt-0.5">0</p>
+            <div onclick="switchModule('tareas')" class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-2.5 sm:p-3.5 text-center cursor-pointer hover:border-violet-400 transition">
+              <p class="text-[9px] sm:text-[10px] font-bold uppercase text-violet-300/70 truncate">Tareas</p>
+              <p id="hubStatTareas" class="text-lg sm:text-2xl font-extrabold text-amber-300 mt-0.5">0</p>
             </div>
-            <div class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-3.5 text-center">
-              <p class="text-[10px] font-bold uppercase text-violet-300/70">Llamados</p>
-              <p id="hubStatLlamados" class="text-2xl font-extrabold text-rose-300 mt-0.5">0</p>
+            <div onclick="switchModule('llamados')" class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-2.5 sm:p-3.5 text-center cursor-pointer hover:border-violet-400 transition">
+              <p class="text-[9px] sm:text-[10px] font-bold uppercase text-violet-300/70 truncate">Llamados</p>
+              <p id="hubStatLlamados" class="text-lg sm:text-2xl font-extrabold text-rose-300 mt-0.5">0</p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- TARJETAS DE LOS 4 MÓDULOS DE NOTAS QUICKSS -->
+      <!-- TARJETAS DE LOS 4 MÓDULOS ACTIVOS -->
       <div>
-        <h2 class="text-sm font-extrabold uppercase tracking-wider text-violet-300/80 mb-3">
-          📦 Módulos de Notas Quickss (Haz clic para entrar)
-        </h2>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-violet-300">
+            📦 Módulos Activos (Toca para abrir)
+          </h2>
+          <span class="text-[11px] text-violet-300/60 font-semibold">4 disponibles</span>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
 
           <!-- Tarjeta Módulo 1: Brigadas Comerciales -->
           <div
             onclick="switchModule('brigadas')"
-            class="glass-card rounded-3xl p-6 border border-violet-500/35 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-4"
+            class="glass-card rounded-3xl p-5 border border-violet-500/40 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-3"
           >
-            <div class="space-y-3">
+            <div class="space-y-2.5">
               <div class="flex items-center justify-between">
-                <div class="w-12 h-12 rounded-2xl bg-violet-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-violet-600/30">
-                  🚀
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl bg-violet-600 text-white flex items-center justify-center text-xl shadow-lg shadow-violet-600/30 shrink-0">
+                    🚀
+                  </div>
+                  <div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition leading-tight">
+                      Brigadas Comerciales
+                    </h3>
+                    <span class="text-[11px] font-bold text-violet-300">Meta: 12 acercamientos diarios</span>
+                  </div>
                 </div>
-                <span class="text-xs font-extrabold bg-violet-500/20 text-violet-200 border border-violet-400/30 px-3 py-1 rounded-full">
-                  Meta: 12 acercamientos
+                <span class="text-xs font-extrabold bg-violet-600/25 text-violet-200 border border-violet-400/30 px-2.5 py-1 rounded-xl shrink-0">
+                  Entrar →
                 </span>
               </div>
-              <h3 class="text-xl font-extrabold text-white group-hover:text-violet-300 transition">
-                1. Brigadas Comerciales & Terreno
-              </h3>
               <p class="text-xs text-violet-200/75 leading-relaxed">
-                Check-in de equipamiento (carnet, tarjetas, folletos), registro de negocios en menos de 10 segundos, condiciones de clientes interesados, mapa de direcciones y análisis comercial.
+                Check-in de carnet/tarjetas/folletos, registro de negocios y direcciones en segundos, condiciones de interesados y analítica.
               </p>
             </div>
-            <div class="flex items-center justify-between pt-3 border-t border-violet-500/15 text-xs font-extrabold text-violet-300">
+            <div class="flex items-center justify-between pt-2.5 border-t border-violet-500/15 text-[11px] font-extrabold text-violet-300">
               <span id="hubCardBrigadasInfo">0 visitas registradas · 0 muy interesados</span>
-              <span class="group-hover:translate-x-1 transition">Abrir Brigadas →</span>
             </div>
           </div>
 
           <!-- Tarjeta Módulo 2: Daily Day -->
           <div
             onclick="switchModule('daily')"
-            class="glass-card rounded-3xl p-6 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-4"
+            class="glass-card rounded-3xl p-5 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-3"
           >
-            <div class="space-y-3">
+            <div class="space-y-2.5">
               <div class="flex items-center justify-between">
-                <div class="w-12 h-12 rounded-2xl bg-[#271d42] border border-violet-400/30 text-white flex items-center justify-center text-2xl">
-                  ☀️
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl bg-[#271d42] border border-violet-400/30 text-white flex items-center justify-center text-xl shrink-0">
+                    ☀️
+                  </div>
+                  <div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition leading-tight">
+                      Daily Day
+                    </h3>
+                    <span class="text-[11px] font-bold text-violet-300">Enfoque diario, avances y bloqueos</span>
+                  </div>
                 </div>
-                <span class="text-xs font-extrabold bg-violet-500/15 text-violet-200 border border-violet-400/25 px-3 py-1 rounded-full">
-                  Sincronización Diaria
+                <span class="text-xs font-extrabold bg-[#251b3d] text-violet-200 border border-violet-400/25 px-2.5 py-1 rounded-xl shrink-0">
+                  Entrar →
                 </span>
               </div>
-              <h3 class="text-xl font-extrabold text-white group-hover:text-violet-300 transition">
-                2. Daily Day (Reporte & Enfoque del Día)
-              </h3>
               <p class="text-xs text-violet-200/75 leading-relaxed">
-                Registra en segundos qué lograste, cuál es tu foco principal de hoy, si tienes algún bloqueo o necesitas apoyo del equipo, y revisa el pulso diario de todos.
+                Anota cuál es tu foco de hoy, qué lograste ayer y si tienes algún bloqueo para sincronizar a todo el equipo rápido.
               </p>
             </div>
-            <div class="flex items-center justify-between pt-3 border-t border-violet-500/15 text-xs font-extrabold text-violet-300">
+            <div class="flex items-center justify-between pt-2.5 border-t border-violet-500/15 text-[11px] font-extrabold text-violet-300">
               <span id="hubCardDailyInfo">0 reportes diarios registrados</span>
-              <span class="group-hover:translate-x-1 transition">Abrir Daily Day →</span>
             </div>
           </div>
 
           <!-- Tarjeta Módulo 3: Tareas Pendientes -->
           <div
             onclick="switchModule('tareas')"
-            class="glass-card rounded-3xl p-6 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-4"
+            class="glass-card rounded-3xl p-5 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-3"
           >
-            <div class="space-y-3">
+            <div class="space-y-2.5">
               <div class="flex items-center justify-between">
-                <div class="w-12 h-12 rounded-2xl bg-[#271d42] border border-violet-400/30 text-white flex items-center justify-center text-2xl">
-                  ✅
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl bg-[#271d42] border border-violet-400/30 text-white flex items-center justify-center text-xl shrink-0">
+                    ✅
+                  </div>
+                  <div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition leading-tight">
+                      Tareas Pendientes
+                    </h3>
+                    <span class="text-[11px] font-bold text-violet-300">To-Do por responsable y prioridad</span>
+                  </div>
                 </div>
-                <span class="text-xs font-extrabold bg-violet-500/15 text-violet-200 border border-violet-400/25 px-3 py-1 rounded-full">
-                  To-Do & Compromisos
+                <span class="text-xs font-extrabold bg-[#251b3d] text-violet-200 border border-violet-400/25 px-2.5 py-1 rounded-xl shrink-0">
+                  Entrar →
                 </span>
               </div>
-              <h3 class="text-xl font-extrabold text-white group-hover:text-violet-300 transition">
-                3. Tareas Pendientes & Seguimientos
-              </h3>
               <p class="text-xs text-violet-200/75 leading-relaxed">
-                Anota pendientes rápidos personales o asignados a un compañero, clasifícalos por prioridad (Urgente, Normal, Idea) y márcalos como completados con un toque.
+                Crea pendientes para ti o para el equipo (cotizaciones, llamadas, entregas), asigna prioridad y márcalos listos con 1 toque.
               </p>
             </div>
-            <div class="flex items-center justify-between pt-3 border-t border-violet-500/15 text-xs font-extrabold text-violet-300">
+            <div class="flex items-center justify-between pt-2.5 border-t border-violet-500/15 text-[11px] font-extrabold text-violet-300">
               <span id="hubCardTareasInfo">0 tareas pendientes</span>
-              <span class="group-hover:translate-x-1 transition">Abrir Tareas →</span>
             </div>
           </div>
 
           <!-- Tarjeta Módulo 4: Llamados de Atención & Feedback -->
           <div
             onclick="switchModule('llamados')"
-            class="glass-card rounded-3xl p-6 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-4"
+            class="glass-card rounded-3xl p-5 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-3"
           >
-            <div class="space-y-3">
+            <div class="space-y-2.5">
               <div class="flex items-center justify-between">
-                <div class="w-12 h-12 rounded-2xl bg-[#271d42] border border-violet-400/30 text-white flex items-center justify-center text-2xl">
-                  ⚠️
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl bg-[#271d42] border border-rose-400/30 text-white flex items-center justify-center text-xl shrink-0">
+                    ⚠️
+                  </div>
+                  <div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition leading-tight">
+                      Llamados de Atención
+                    </h3>
+                    <span class="text-[11px] font-bold text-rose-300">Control disciplinario y acuerdos</span>
+                  </div>
                 </div>
-                <span class="text-xs font-extrabold bg-rose-500/20 text-rose-200 border border-rose-400/30 px-3 py-1 rounded-full">
-                  Control & Disciplina
+                <span class="text-xs font-extrabold bg-[#251b3d] text-violet-200 border border-violet-400/25 px-2.5 py-1 rounded-xl shrink-0">
+                  Entrar →
                 </span>
               </div>
-              <h3 class="text-xl font-extrabold text-white group-hover:text-violet-300 transition">
-                4. Llamados de Atención & Bitácora
-              </h3>
               <p class="text-xs text-violet-200/75 leading-relaxed">
-                Deja constancia clara de llamados de atención, novedades de puntualidad, no uso de carnet o incumplimiento de metas, junto con el compromiso acordado.
+                Registra llamados de atención por no portar carnet, puntualidad o bajo registro, dejando escrito el compromiso acordado.
               </p>
             </div>
-            <div class="flex items-center justify-between pt-3 border-t border-violet-500/15 text-xs font-extrabold text-violet-300">
+            <div class="flex items-center justify-between pt-2.5 border-t border-violet-500/15 text-[11px] font-extrabold text-violet-300">
               <span id="hubCardLlamadosInfo">0 llamados registrados</span>
-              <span class="group-hover:translate-x-1 transition">Abrir Llamados →</span>
             </div>
           </div>
 
         </div>
       </div>
 
+      <!-- PRÓXIMOS MÓDULOS / EXPANSIONES DE NOTAS QUICKSS (OPTIMIZADO PARA MÓVIL 2x2) -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-violet-300/80">
+            ✨ Próximas Opciones en Notas Quickss
+          </h2>
+          <span class="text-[10px] bg-violet-500/15 text-violet-300 border border-violet-500/30 px-2.5 py-0.5 rounded-full font-bold">
+            Toca para votar / activar
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <button
+            type="button"
+            onclick="showToast('💡 Módulo de Actas y Reuniones rápidas: listo para activar cuando lo necesites.')"
+            class="glass-card rounded-2xl p-3.5 text-left border border-violet-500/20 hover:border-violet-400/50 transition space-y-1.5"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xl">🎙️</span>
+              <span class="text-[9px] font-extrabold uppercase bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
+            </div>
+            <p class="font-extrabold text-xs sm:text-sm text-white">Minutas & Reuniones</p>
+            <p class="text-[11px] text-violet-300/70 leading-snug">Acuerdos rápidos por voz de reuniones del equipo</p>
+          </button>
+
+          <button
+            type="button"
+            onclick="showToast('💰 Módulo de Cierres y Comisiones: conectará los prospectos 🔥 interesados con ventas cerradas.')"
+            class="glass-card rounded-2xl p-3.5 text-left border border-violet-500/20 hover:border-violet-400/50 transition space-y-1.5"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xl">💰</span>
+              <span class="text-[9px] font-extrabold uppercase bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
+            </div>
+            <p class="font-extrabold text-xs sm:text-sm text-white">Cierres & Ventas</p>
+            <p class="text-[11px] text-violet-300/70 leading-snug">Seguimiento de negocios que sí compraron</p>
+          </button>
+
+          <button
+            type="button"
+            onclick="showToast('📦 Módulo de Inventario de Brigada: control de entrega de carnets, folletos y tarjetas.')"
+            class="glass-card rounded-2xl p-3.5 text-left border border-violet-500/20 hover:border-violet-400/50 transition space-y-1.5"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xl">📦</span>
+              <span class="text-[9px] font-extrabold uppercase bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
+            </div>
+            <p class="font-extrabold text-xs sm:text-sm text-white">Stock Publicitario</p>
+            <p class="text-[11px] text-violet-300/70 leading-snug">Control de folletos, volantes y tarjetas</p>
+          </button>
+
+          <button
+            type="button"
+            onclick="showToast('⚡ Dime qué otro apartado quieres agregar a Notas Quickss y lo activamos.')"
+            class="glass-card rounded-2xl p-3.5 text-left border border-dashed border-violet-400/40 hover:border-violet-300 transition space-y-1.5"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xl">➕</span>
+              <span class="text-[9px] font-extrabold uppercase bg-violet-600 text-white px-2 py-0.5 rounded-full">Nuevo</span>
+            </div>
+            <p class="font-extrabold text-xs sm:text-sm text-white">Otro Apartado</p>
+            <p class="text-[11px] text-violet-300/70 leading-snug">Personaliza un nuevo bloque de notas</p>
+          </button>
+        </div>
+      </div>
+
       <!-- Feed Global Reciente de Todo Notas Quickss -->
-      <div class="glass-card rounded-3xl p-6 space-y-4">
+      <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-base font-extrabold text-white">⚡ Actividad Reciente en Notas Quickss</h3>
+            <h3 class="text-sm sm:text-base font-extrabold text-white">⚡ Actividad Reciente en Notas Quickss</h3>
             <p class="text-xs text-violet-300/70">Últimos movimientos en Brigadas, Daily Day, Tareas y Llamados</p>
           </div>
         </div>
@@ -298,45 +385,44 @@
     <!-- =================================================================== -->
     <!-- MÓDULO 1: APARTADO DE BRIGADAS COMERCIALES                          -->
     <!-- =================================================================== -->
-    <div id="module_brigadas" class="hidden space-y-5 fade-slide-in">
+    <div id="module_brigadas" class="hidden space-y-4 sm:space-y-5 fade-slide-in">
 
-      <!-- Sub-Barra del Módulo de Brigadas: Meta de 12 visitas + Sub-pestañas -->
-      <div class="glass-card rounded-3xl p-4 sm:p-5 border border-violet-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="deskNavCapture" onclick="switchTab('capture')" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow">
-            ⚡ Anotar en Terreno
+      <!-- Sub-Barra del Módulo de Brigadas Optimizada para Móvil (Grid 2x2 + Barra limpia) -->
+      <div class="glass-card rounded-3xl p-3.5 sm:p-5 border border-violet-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
+        <!-- 4 pestañas en Grid 2x2 simétrico en móvil -->
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
+          <button id="deskNavCapture" onclick="switchTab('capture')" class="px-3 py-2.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow text-center">
+            ⚡ Anotar Visita
           </button>
-          <button id="deskNavHistory" onclick="switchTab('history')" class="px-4 py-2 rounded-xl text-xs font-bold text-violet-300/80 hover:text-white">
-            🗺️ Mapa & Negocios (<span id="deskHistoryCount">0</span>)
+          <button id="deskNavHistory" onclick="switchTab('history')" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-[#1d1630] text-violet-200 hover:text-white text-center">
+            🗺️ Mapa (<span id="deskHistoryCount">0</span>)
           </button>
-          <button id="deskNavLeaderboard" onclick="switchTab('leaderboard')" class="px-4 py-2 rounded-xl text-xs font-bold text-violet-300/80 hover:text-white">
+          <button id="deskNavLeaderboard" onclick="switchTab('leaderboard')" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-[#1d1630] text-violet-200 hover:text-white text-center">
             🏆 Podio & XP
           </button>
-          <button id="deskNavAnalytics" onclick="switchTab('analytics')" class="px-4 py-2 rounded-xl text-xs font-bold text-violet-300/80 hover:text-white">
-            📊 Análisis de Datos
+          <button id="deskNavAnalytics" onclick="switchTab('analytics')" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-[#1d1630] text-violet-200 hover:text-white text-center">
+            📊 Análisis
           </button>
         </div>
 
-        <!-- Barra de Progreso del Objetivo Diario (12 Acercamientos + 🔥 Positivos) -->
-        <div class="glass-panel rounded-2xl px-4 py-2.5 flex items-center gap-4 min-w-[280px] sm:min-w-[360px]">
-          <div class="flex-1">
-            <div class="flex items-center justify-between text-xs mb-1.5">
-              <div class="flex items-center gap-1.5">
-                <span class="font-bold text-violet-200">🎯 Meta Hoy:</span>
-                <span id="goalProgressCounter" class="font-extrabold text-white text-sm">0 / 12</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <span class="bg-violet-500/25 text-violet-200 border border-violet-400/40 px-2.5 py-0.5 rounded-full font-extrabold text-xs">
-                  🔥 <span id="hotProgressCounter">0</span> Interesados
-                </span>
-                <span class="bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold text-[11px]">
-                  🌤️ <span id="infoProgressCounter">0</span> Info
-                </span>
-              </div>
+        <!-- Barra de Progreso del Objetivo Diario sin quiebres de línea en móvil -->
+        <div class="glass-panel rounded-2xl px-3.5 py-2.5 w-full lg:w-auto lg:min-w-[360px]">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs mb-2">
+            <div class="flex items-center gap-1.5 whitespace-nowrap">
+              <span class="font-bold text-violet-200">🎯 Meta Hoy:</span>
+              <span id="goalProgressCounter" class="font-extrabold text-white text-sm">0 / 12</span>
             </div>
-            <div class="w-full h-2.5 bg-[#0c0914] rounded-full overflow-hidden p-0.5 border border-violet-500/20">
-              <div id="goalProgressBar" class="progress-bar-fill h-full rounded-full" style="width: 0%"></div>
+            <div class="flex items-center gap-1.5 whitespace-nowrap">
+              <span class="bg-violet-500/25 text-violet-200 border border-violet-400/40 px-2.5 py-0.5 rounded-full font-extrabold text-[11px]">
+                🔥 <span id="hotProgressCounter">0</span> Interesados
+              </span>
+              <span class="bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold text-[11px]">
+                🌤️ <span id="infoProgressCounter">0</span> Info
+              </span>
             </div>
+          </div>
+          <div class="w-full h-2.5 bg-[#0c0914] rounded-full overflow-hidden p-0.5 border border-violet-500/20">
+            <div id="goalProgressBar" class="progress-bar-fill h-full rounded-full" style="width: 0%"></div>
           </div>
         </div>
       </div>
