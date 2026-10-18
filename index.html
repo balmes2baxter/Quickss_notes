@@ -312,70 +312,67 @@
     <!-- =================================================================== -->
     <!-- MÓDULO 0: PANEL INICIAL DE ANALÍTICAS PERSONALES + SELECTOR MÓDULOS -->
     <!-- =================================================================== -->
-    <div id="module_hub" class="space-y-6 fade-slide-in">
+    <div id="module_hub" class="space-y-5 fade-slide-in">
 
-      <!-- PRIMER PANEL AL INICIAR SESIÓN: ANALÍTICAS DE ACTIVIDADES PLANTEADAS -->
-      <section class="glass-card rounded-3xl p-5 sm:p-7 space-y-6" aria-labelledby="personalAnalyticsTitle">
+      <!-- 1. PANEL DE ANALÍTICAS DE SESIÓN (LIMPIO Y ALINEADO) -->
+      <section class="glass-card rounded-3xl p-4 sm:p-6 space-y-4" aria-labelledby="personalAnalyticsTitle">
 
-        <!-- Fila 1: Identidad de la Persona Activa + Selector Tailwind (Mis Actividades vs Equipo) -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-violet-400/15">
-          <div class="flex items-start sm:items-center gap-4">
+        <!-- Cabecera Compacta: Usuario + Rango + Selector Personal/Equipo -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-violet-400/15">
+          <div class="flex items-center gap-3.5 min-w-0">
             <div
               id="hubUserAvatarBig"
-              class="w-14 h-14 rounded-2xl bg-violet-600 text-white text-lg font-extrabold flex items-center justify-center shadow-lg shadow-violet-600/35 border border-violet-300/30 shrink-0"
+              class="w-12 h-12 rounded-2xl bg-violet-600 text-white text-base font-extrabold flex items-center justify-center shadow-lg shadow-violet-600/35 border border-violet-300/30 shrink-0"
             >
               AG
             </div>
-            <div class="space-y-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="inline-flex items-center gap-1.5 bg-violet-500/20 border border-violet-400/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-violet-200">
-                  <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
-                  <span id="hubScopeBadgeText">Analítica Personal de Sesión</span>
+            <div class="min-w-0 space-y-1">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="inline-flex items-center gap-1 bg-violet-500/20 border border-violet-400/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-violet-200">
+                  <i data-lucide="bar-chart-2" class="w-3 h-3 text-violet-300" aria-hidden="true"></i>
+                  <span id="hubScopeBadgeText">Mi Rendimiento</span>
                 </span>
                 <span id="hubUserRankPill" class="inline-flex items-center gap-1 bg-violet-600/25 border border-violet-400/35 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-violet-200 tabular-nums">
-                  <i data-lucide="award" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+                  <i data-lucide="award" class="w-3 h-3 text-violet-300" aria-hidden="true"></i>
                   <span>Explorador · 0 XP</span>
                 </span>
               </div>
-              <h1 id="personalAnalyticsTitle" class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-                Rendimiento de <span id="hubWelcomeName" class="text-violet-300">Andrés Gómez</span>
+              <h1 id="personalAnalyticsTitle" class="text-lg sm:text-xl font-extrabold text-white tracking-tight truncate">
+                <span id="hubWelcomeName" class="text-white">Andrés Gómez</span>
               </h1>
-              <p id="hubAnalyticsSubtitle" class="text-xs sm:text-sm text-violet-200/75">
-                Así vas hoy en todas tus actividades planteadas. Revisa tu avance y selecciona abajo el módulo que quieres usar.
-              </p>
             </div>
           </div>
 
-          <!-- Segmented Control Tailwind: Mis Actividades vs Todo el Equipo -->
-          <div class="flex items-center gap-1.5 glass-panel p-1.5 rounded-2xl self-start lg:self-center shrink-0">
+          <!-- Toggle Compacto: Personal vs Equipo -->
+          <div class="flex items-center gap-1 glass-panel p-1 rounded-xl self-start sm:self-center shrink-0">
             <button
               type="button"
               id="btnScopePersonal"
               onclick="setHubAnalyticsScope('personal')"
-              class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow flex items-center gap-1.5 cursor-pointer transition-colors"
+              class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-extrabold bg-violet-600 text-white shadow flex items-center gap-1.5 cursor-pointer transition-colors"
             >
               <i data-lucide="user-check" class="w-3.5 h-3.5" aria-hidden="true"></i>
-              <span>Mis Actividades</span>
+              <span>Personal</span>
             </button>
             <button
               type="button"
               id="btnScopeTeam"
               onclick="setHubAnalyticsScope('team')"
-              class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold text-violet-200 hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors"
+              class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold text-violet-200 hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors"
             >
               <i data-lucide="users" class="w-3.5 h-3.5" aria-hidden="true"></i>
-              <span>Todo el Equipo</span>
+              <span>Equipo</span>
             </button>
           </div>
         </div>
 
-        <!-- Fila 2: Score General de Cumplimiento + 4 Tarjetas de Avance por Actividad -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+        <!-- Score Global + 4 Métricas Alineadas -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
 
-          <!-- Anillo General de Cumplimiento del Día (4 cols) -->
-          <div class="lg:col-span-4 glass-panel rounded-2xl p-5 flex items-center gap-4 justify-between">
-            <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
-              <svg class="w-24 h-24" viewBox="0 0 100 100" aria-hidden="true">
+          <!-- Anillo Global (4 cols) -->
+          <div class="lg:col-span-4 glass-panel rounded-2xl p-4 flex items-center gap-4">
+            <div class="relative w-20 h-20 shrink-0 flex items-center justify-center">
+              <svg class="w-20 h-20" viewBox="0 0 100 100" aria-hidden="true">
                 <circle cx="50" cy="50" r="42" stroke="rgba(139,92,246,0.16)" stroke-width="10" fill="transparent" />
                 <circle
                   id="hubOverallRadialCircle"
@@ -392,142 +389,135 @@
                 />
               </svg>
               <div class="absolute inset-0 flex flex-col items-center justify-center">
-                <span id="hubOverallPctText" class="text-xl font-extrabold text-white tabular-nums">0%</span>
+                <span id="hubOverallPctText" class="text-lg font-extrabold text-white tabular-nums">0%</span>
                 <span class="text-[10px] font-bold text-violet-300">Global</span>
               </div>
             </div>
 
-            <div class="space-y-1.5 flex-1 min-w-0">
-              <span id="hubOverallStatusBadge" class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">
-                Jornada en curso
+            <div class="space-y-1 min-w-0 flex-1">
+              <span id="hubOverallStatusBadge" class="inline-flex items-center text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">
+                En curso
               </span>
-              <h2 class="text-sm sm:text-base font-extrabold text-white">Avance Integral de Hoy</h2>
-              <p id="hubOverallSummaryText" class="text-xs text-violet-200/80 leading-relaxed">
-                Ponderación de tu meta de brigada, reporte Daily Chat y tareas completadas.
+              <h2 class="text-sm font-extrabold text-white truncate">Avance de Hoy</h2>
+              <p id="hubOverallSummaryText" class="text-xs text-violet-300/80 truncate tabular-nums">
+                0/12 visitas · 0 tareas
               </p>
             </div>
           </div>
 
-          <!-- 4 Tarjetas de Progreso de Actividades Planteadas (8 cols) -->
-          <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- 4 Tarjetas de Avance Uniformes (8 cols -> Grid 2x2 simétrico) -->
+          <div class="lg:col-span-8 grid grid-cols-2 gap-3 items-stretch">
 
-            <!-- 1. Avance en Brigadas Comerciales -->
+            <!-- 1. Brigadas -->
             <button
               type="button"
               onclick="switchModule('brigadas')"
-              class="glass-panel rounded-2xl p-4 text-left hover:border-violet-400/50 cursor-pointer space-y-2.5 transition-colors"
+              class="h-full glass-panel rounded-2xl p-3.5 text-left hover:border-violet-400/50 cursor-pointer flex flex-col justify-between gap-2 transition-colors"
             >
-              <div class="flex items-center justify-between gap-2">
-                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white">
-                  <i data-lucide="compass" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
-                  <span>Meta de Brigada</span>
+              <div class="flex items-center justify-between gap-2 w-full">
+                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white truncate">
+                  <i data-lucide="compass" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+                  <span class="truncate">Brigadas</span>
                 </span>
-                <span id="hubStatBrigadas" class="text-sm font-extrabold text-violet-200 tabular-nums">0 / 12</span>
+                <span id="hubStatBrigadas" class="text-xs sm:text-sm font-extrabold text-violet-200 tabular-nums shrink-0">0/12</span>
               </div>
-              <div class="w-full h-2 bg-[#09070f] rounded-full overflow-hidden">
+              <div class="w-full h-1.5 bg-[#09070f] rounded-full overflow-hidden">
                 <div id="hubBarBrigadas" class="h-full bg-violet-500 rounded-full transition-[width] duration-500" style="width: 0%"></div>
               </div>
-              <div class="flex items-center justify-between text-[11px] text-violet-300/80 tabular-nums">
-                <span id="hubSubBrigadasHot">0 muy interesados</span>
-                <span id="hubSubBrigadasKit">Kit: Activo</span>
+              <div class="flex items-center justify-between text-[11px] text-violet-300/80 tabular-nums gap-2">
+                <span id="hubSubBrigadasHot" class="truncate">0 interesados</span>
+                <span id="hubSubBrigadasKit" class="truncate hidden sm:inline">Kit activo</span>
               </div>
             </button>
 
-            <!-- 2. Avance en Daily Chat (Ayer / Hoy / Bloqueante) -->
+            <!-- 2. Daily Chat -->
             <button
               type="button"
               onclick="switchModule('daily')"
-              class="glass-panel rounded-2xl p-4 text-left hover:border-violet-400/50 cursor-pointer space-y-2.5 transition-colors"
+              class="h-full glass-panel rounded-2xl p-3.5 text-left hover:border-violet-400/50 cursor-pointer flex flex-col justify-between gap-2 transition-colors"
             >
-              <div class="flex items-center justify-between gap-2">
-                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white">
-                  <i data-lucide="sun" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
-                  <span>Daily Chat de Hoy</span>
+              <div class="flex items-center justify-between gap-2 w-full">
+                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white truncate">
+                  <i data-lucide="sun" class="w-4 h-4 text-violet-300 shrink-0" aria-hidden="true"></i>
+                  <span class="truncate">Daily Chat</span>
                 </span>
-                <span id="hubStatDaily" class="text-xs font-extrabold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-200 tabular-nums">Pendiente</span>
+                <span id="hubStatDaily" class="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-200 tabular-nums shrink-0">Pendiente</span>
               </div>
-              <div class="w-full h-2 bg-[#09070f] rounded-full overflow-hidden">
+              <div class="w-full h-1.5 bg-[#09070f] rounded-full overflow-hidden">
                 <div id="hubBarDaily" class="h-full bg-violet-400 rounded-full transition-[width] duration-500" style="width: 0%"></div>
               </div>
               <p id="hubSubDailyFocus" class="text-[11px] text-violet-300/80 truncate">
-                Sin enfoque publicado hoy
+                Sin reporte hoy
               </p>
             </button>
 
-            <!-- 3. Avance en Tareas Asignadas -->
+            <!-- 3. Tareas -->
             <button
               type="button"
               onclick="switchModule('tareas')"
-              class="glass-panel rounded-2xl p-4 text-left hover:border-violet-400/50 cursor-pointer space-y-2.5 transition-colors"
+              class="h-full glass-panel rounded-2xl p-3.5 text-left hover:border-violet-400/50 cursor-pointer flex flex-col justify-between gap-2 transition-colors"
             >
-              <div class="flex items-center justify-between gap-2">
-                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white">
-                  <i data-lucide="check-square" class="w-4 h-4 text-amber-300" aria-hidden="true"></i>
-                  <span>Tareas Planteadas</span>
+              <div class="flex items-center justify-between gap-2 w-full">
+                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white truncate">
+                  <i data-lucide="check-square" class="w-4 h-4 text-amber-300 shrink-0" aria-hidden="true"></i>
+                  <span class="truncate">Tareas</span>
                 </span>
-                <span id="hubStatTareas" class="text-sm font-extrabold text-amber-300 tabular-nums">0 / 0</span>
+                <span id="hubStatTareas" class="text-xs sm:text-sm font-extrabold text-amber-300 tabular-nums shrink-0">0/0</span>
               </div>
-              <div class="w-full h-2 bg-[#09070f] rounded-full overflow-hidden">
+              <div class="w-full h-1.5 bg-[#09070f] rounded-full overflow-hidden">
                 <div id="hubBarTareas" class="h-full bg-amber-400 rounded-full transition-[width] duration-500" style="width: 0%"></div>
               </div>
-              <div class="flex items-center justify-between text-[11px] text-violet-300/80 tabular-nums">
-                <span id="hubSubTareasPending">0 pendientes</span>
-                <span id="hubSubTareasHigh" class="text-amber-200 font-semibold">0 urgentes</span>
+              <div class="flex items-center justify-between text-[11px] text-violet-300/80 tabular-nums gap-2">
+                <span id="hubSubTareasPending" class="truncate">0 pendientes</span>
+                <span id="hubSubTareasHigh" class="text-amber-200 font-semibold truncate hidden sm:inline">0 alta</span>
               </div>
             </button>
 
-            <!-- 4. Estado en Bitácora / Llamados y Compromisos -->
+            <!-- 4. Bitácora -->
             <button
               type="button"
               onclick="switchModule('llamados')"
-              class="glass-panel rounded-2xl p-4 text-left hover:border-violet-400/50 cursor-pointer space-y-2.5 transition-colors"
+              class="h-full glass-panel rounded-2xl p-3.5 text-left hover:border-violet-400/50 cursor-pointer flex flex-col justify-between gap-2 transition-colors"
             >
-              <div class="flex items-center justify-between gap-2">
-                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white">
-                  <i data-lucide="shield-alert" class="w-4 h-4 text-rose-300" aria-hidden="true"></i>
-                  <span>Bitácora & Acuerdos</span>
+              <div class="flex items-center justify-between gap-2 w-full">
+                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white truncate">
+                  <i data-lucide="shield-alert" class="w-4 h-4 text-rose-300 shrink-0" aria-hidden="true"></i>
+                  <span class="truncate">Bitácora</span>
                 </span>
-                <span id="hubStatLlamados" class="text-sm font-extrabold text-rose-300 tabular-nums">0</span>
+                <span id="hubStatLlamados" class="text-xs sm:text-sm font-extrabold text-rose-300 tabular-nums shrink-0">0</span>
               </div>
-              <div class="w-full h-2 bg-[#09070f] rounded-full overflow-hidden">
+              <div class="w-full h-1.5 bg-[#09070f] rounded-full overflow-hidden">
                 <div id="hubBarLlamados" class="h-full bg-emerald-400 rounded-full transition-[width] duration-500" style="width: 100%"></div>
               </div>
               <p id="hubSubLlamadosText" class="text-[11px] text-violet-300/80 truncate">
-                Sin llamados activos · Cumplimiento óptimo
+                Óptimo
               </p>
             </button>
 
           </div>
         </div>
 
-        <!-- Fila 3: Gráfica Comparativa de tus Actividades + Siguientes Pasos Recomendados -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2">
-          <!-- Gráfica de Barras de Cumplimiento por Área (6 cols) -->
-          <div class="lg:col-span-6 glass-panel rounded-2xl p-4 sm:p-5 space-y-3">
+        <!-- Gráfica Compacta + Pendientes Directos -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
+          <div class="lg:col-span-6 glass-panel rounded-2xl p-4 flex flex-col justify-between gap-2">
             <div class="flex items-center justify-between">
-              <div>
-                <h3 class="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
-                  <i data-lucide="trending-up" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
-                  <span>Curva de Cumplimiento por Actividad (%)</span>
-                </h3>
-                <p class="text-[11px] text-violet-300/70">Porcentaje de avance en cada frente planteado</p>
-              </div>
+              <h3 class="text-xs font-extrabold text-white flex items-center gap-1.5">
+                <i data-lucide="trending-up" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+                <span>Cumplimiento por Área (%)</span>
+              </h3>
             </div>
-            <div class="h-44 flex items-center justify-center">
+            <div class="h-36 flex items-center justify-center">
               <canvas id="chartHubPersonal"></canvas>
             </div>
           </div>
 
-          <!-- Lista Interactiva: Tus Actividades Planteadas / Pendientes Ahora Mismo (6 cols) -->
-          <div class="lg:col-span-6 glass-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-3">
+          <div class="lg:col-span-6 glass-panel rounded-2xl p-4 flex flex-col justify-between gap-2">
             <div class="flex items-center justify-between">
-              <div>
-                <h3 class="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
-                  <i data-lucide="list-checks" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
-                  <span>Hoja de Ruta y Pendientes para Hoy</span>
-                </h3>
-                <p class="text-[11px] text-violet-300/70">Toca cualquier actividad para ir directo a completarla</p>
-              </div>
+              <h3 class="text-xs font-extrabold text-white flex items-center gap-1.5">
+                <i data-lucide="list-checks" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+                <span>Siguientes Acciones</span>
+              </h3>
+              <span class="text-[10px] font-bold text-violet-300/70">Acceso rápido</span>
             </div>
             <div id="hubPersonalActionList" class="space-y-2"></div>
           </div>
@@ -535,247 +525,195 @@
 
       </section>
 
-      <!-- SEGUNDO BLOQUE: SELECCIONA EL MÓDULO QUE QUIERES USAR -->
-      <section class="space-y-3.5" aria-labelledby="activeModulesHeading">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 id="activeModulesHeading" class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
-              <i data-lucide="layout-grid" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
-              <span>Selecciona el Módulo que Quieres Usar</span>
-            </h2>
-            <p class="text-xs text-violet-300/75">Entra al apartado que necesites para registrar o gestionar información</p>
-          </div>
-          <span class="text-xs text-violet-300/70 font-semibold hidden sm:inline">4 módulos activos</span>
+      <!-- 2. SELECTOR DE MÓDULOS (LIMPIO, SIMÉTRICO Y SIN TEXTO EXCESIVO) -->
+      <section class="space-y-3" aria-labelledby="activeModulesHeading">
+        <div class="flex items-center justify-between px-1">
+          <h2 id="activeModulesHeading" class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+            <i data-lucide="layout-grid" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+            <span>Módulos</span>
+          </h2>
+          <span class="text-[11px] text-violet-300/70 font-semibold">4 activos</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 items-stretch">
 
-          <!-- Módulo 1: Brigadas Comerciales -->
+          <!-- Módulo 1: Brigadas -->
           <button
             type="button"
             onclick="switchModule('brigadas')"
-            class="glass-card rounded-3xl p-5 sm:p-6 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-4"
+            class="h-full min-h-[128px] glass-card rounded-2xl p-4 sm:p-5 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-3"
           >
-            <div class="space-y-3 w-full">
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3.5">
-                  <div class="w-12 h-12 rounded-2xl bg-violet-600 text-white flex items-center justify-center shadow-lg shadow-violet-600/30 shrink-0">
-                    <i data-lucide="compass" class="w-6 h-6" aria-hidden="true"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition-colors">
-                      Brigadas Comerciales
-                    </h3>
-                    <span class="text-xs font-semibold text-violet-300">Meta: 12 acercamientos diarios</span>
-                  </div>
-                </div>
-                <span class="inline-flex items-center gap-1 text-xs font-extrabold bg-violet-500/20 text-violet-200 border border-violet-400/30 px-3 py-1.5 rounded-xl shrink-0">
-                  <span>Abrir</span>
-                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
-                </span>
+            <div class="flex items-center justify-between w-full">
+              <div class="w-11 h-11 rounded-2xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-600/30 shrink-0">
+                <i data-lucide="compass" class="w-5 h-5" aria-hidden="true"></i>
               </div>
-              <p class="text-xs sm:text-sm text-violet-200/75 leading-relaxed">
-                Check-in de carnet, tarjetas y folletos, captura de negocios con GPS en segundos, condiciones de clientes interesados y analítica.
-              </p>
+              <span class="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-400/25 text-violet-200 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-colors">
+                <i data-lucide="arrow-up-right" class="w-4 h-4" aria-hidden="true"></i>
+              </span>
             </div>
-            <div class="w-full flex items-center justify-between pt-3 border-t border-violet-400/15 text-xs font-bold text-violet-300 tabular-nums">
-              <span id="hubCardBrigadasInfo">0 visitas registradas · 0 muy interesados</span>
-              <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/70" aria-hidden="true"></i>
+            <div class="space-y-0.5 w-full min-w-0">
+              <h3 class="text-sm sm:text-base font-extrabold text-white group-hover:text-violet-300 transition-colors truncate">
+                Brigadas
+              </h3>
+              <p id="hubCardBrigadasInfo" class="text-xs font-semibold text-violet-300/85 truncate tabular-nums">
+                0 visitas · 0 interesados
+              </p>
             </div>
           </button>
 
-          <!-- Módulo 2: Daily Day -->
+          <!-- Módulo 2: Daily Chat -->
           <button
             type="button"
             onclick="switchModule('daily')"
-            class="glass-card rounded-3xl p-5 sm:p-6 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-4"
+            class="h-full min-h-[128px] glass-card rounded-2xl p-4 sm:p-5 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-3"
           >
-            <div class="space-y-3 w-full">
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3.5">
-                  <div class="w-12 h-12 rounded-2xl glass-panel text-violet-200 flex items-center justify-center shrink-0">
-                    <i data-lucide="sun" class="w-6 h-6" aria-hidden="true"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition-colors">
-                      Daily Day
-                    </h3>
-                    <span class="text-xs font-semibold text-violet-300">Foco diario, avances y bloqueos</span>
-                  </div>
-                </div>
-                <span class="inline-flex items-center gap-1 text-xs font-extrabold glass-panel text-violet-200 px-3 py-1.5 rounded-xl shrink-0">
-                  <span>Abrir</span>
-                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
-                </span>
+            <div class="flex items-center justify-between w-full">
+              <div class="w-11 h-11 rounded-2xl glass-panel text-violet-200 flex items-center justify-center shrink-0">
+                <i data-lucide="sun" class="w-5 h-5" aria-hidden="true"></i>
               </div>
-              <p class="text-xs sm:text-sm text-violet-200/75 leading-relaxed">
-                Sincroniza al equipo en segundos anotando tu enfoque principal de hoy, tus logros recientes y cualquier bloqueo operativo.
-              </p>
+              <span class="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-400/25 text-violet-200 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-colors">
+                <i data-lucide="arrow-up-right" class="w-4 h-4" aria-hidden="true"></i>
+              </span>
             </div>
-            <div class="w-full flex items-center justify-between pt-3 border-t border-violet-400/15 text-xs font-bold text-violet-300 tabular-nums">
-              <span id="hubCardDailyInfo">0 reportes diarios registrados</span>
-              <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/70" aria-hidden="true"></i>
+            <div class="space-y-0.5 w-full min-w-0">
+              <h3 class="text-sm sm:text-base font-extrabold text-white group-hover:text-violet-300 transition-colors truncate">
+                Daily Chat
+              </h3>
+              <p id="hubCardDailyInfo" class="text-xs font-semibold text-violet-300/85 truncate tabular-nums">
+                Ayer · Hoy · Bloqueante
+              </p>
             </div>
           </button>
 
-          <!-- Módulo 3: Tareas Pendientes -->
+          <!-- Módulo 3: Tareas -->
           <button
             type="button"
             onclick="switchModule('tareas')"
-            class="glass-card rounded-3xl p-5 sm:p-6 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-4"
+            class="h-full min-h-[128px] glass-card rounded-2xl p-4 sm:p-5 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-3"
           >
-            <div class="space-y-3 w-full">
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3.5">
-                  <div class="w-12 h-12 rounded-2xl glass-panel text-violet-200 flex items-center justify-center shrink-0">
-                    <i data-lucide="check-square" class="w-6 h-6" aria-hidden="true"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition-colors">
-                      Tareas Pendientes
-                    </h3>
-                    <span class="text-xs font-semibold text-violet-300">Seguimientos por responsable y prioridad</span>
-                  </div>
-                </div>
-                <span class="inline-flex items-center gap-1 text-xs font-extrabold glass-panel text-violet-200 px-3 py-1.5 rounded-xl shrink-0">
-                  <span>Abrir</span>
-                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
-                </span>
+            <div class="flex items-center justify-between w-full">
+              <div class="w-11 h-11 rounded-2xl glass-panel text-amber-300 flex items-center justify-center shrink-0">
+                <i data-lucide="check-square" class="w-5 h-5" aria-hidden="true"></i>
               </div>
-              <p class="text-xs sm:text-sm text-violet-200/75 leading-relaxed">
-                Crea compromisos rápidos de cotizaciones, llamadas o demos, asigna prioridad con controles Tailwind y márcalos listos con 1 toque.
-              </p>
+              <span class="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-400/25 text-violet-200 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-colors">
+                <i data-lucide="arrow-up-right" class="w-4 h-4" aria-hidden="true"></i>
+              </span>
             </div>
-            <div class="w-full flex items-center justify-between pt-3 border-t border-violet-400/15 text-xs font-bold text-violet-300 tabular-nums">
-              <span id="hubCardTareasInfo">0 tareas pendientes</span>
-              <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/70" aria-hidden="true"></i>
+            <div class="space-y-0.5 w-full min-w-0">
+              <h3 class="text-sm sm:text-base font-extrabold text-white group-hover:text-violet-300 transition-colors truncate">
+                Tareas
+              </h3>
+              <p id="hubCardTareasInfo" class="text-xs font-semibold text-violet-300/85 truncate tabular-nums">
+                0 pendientes
+              </p>
             </div>
           </button>
 
-          <!-- Módulo 4: Llamados de Atención -->
+          <!-- Módulo 4: Llamados -->
           <button
             type="button"
             onclick="switchModule('llamados')"
-            class="glass-card rounded-3xl p-5 sm:p-6 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-4"
+            class="h-full min-h-[128px] glass-card rounded-2xl p-4 sm:p-5 text-left hover:border-violet-400/50 cursor-pointer group flex flex-col justify-between gap-3"
           >
-            <div class="space-y-3 w-full">
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3.5">
-                  <div class="w-12 h-12 rounded-2xl glass-panel border-rose-400/30 text-rose-300 flex items-center justify-center shrink-0">
-                    <i data-lucide="shield-alert" class="w-6 h-6" aria-hidden="true"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-base sm:text-lg font-extrabold text-white group-hover:text-violet-300 transition-colors">
-                      Llamados de Atención
-                    </h3>
-                    <span class="text-xs font-semibold text-rose-300">Bitácora disciplinaria y compromisos</span>
-                  </div>
-                </div>
-                <span class="inline-flex items-center gap-1 text-xs font-extrabold glass-panel text-violet-200 px-3 py-1.5 rounded-xl shrink-0">
-                  <span>Abrir</span>
-                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
-                </span>
+            <div class="flex items-center justify-between w-full">
+              <div class="w-11 h-11 rounded-2xl glass-panel border-rose-400/30 text-rose-300 flex items-center justify-center shrink-0">
+                <i data-lucide="shield-alert" class="w-5 h-5" aria-hidden="true"></i>
               </div>
-              <p class="text-xs sm:text-sm text-violet-200/75 leading-relaxed">
-                Registra llamados de atención por carnet, puntualidad o bajo registro, dejando constancia del compromiso acordado.
+              <span class="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-400/25 text-violet-200 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-colors">
+                <i data-lucide="arrow-up-right" class="w-4 h-4" aria-hidden="true"></i>
+              </span>
+            </div>
+            <div class="space-y-0.5 w-full min-w-0">
+              <h3 class="text-sm sm:text-base font-extrabold text-white group-hover:text-violet-300 transition-colors truncate">
+                Llamados
+              </h3>
+              <p id="hubCardLlamadosInfo" class="text-xs font-semibold text-violet-300/85 truncate tabular-nums">
+                0 registros
               </p>
             </div>
-            <div class="w-full flex items-center justify-between pt-3 border-t border-violet-400/15 text-xs font-bold text-violet-300 tabular-nums">
-              <span id="hubCardLlamadosInfo">0 llamados registrados</span>
-              <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/70" aria-hidden="true"></i>
-            </div>
           </button>
 
         </div>
       </section>
 
-      <!-- PRÓXIMAS OPCIONES EN NOTAS QUICKSS (GRID 2x2 EN MÓVIL CON ICONOS SVG) -->
-      <section class="space-y-3" aria-labelledby="upcomingModulesHeading">
-        <div class="flex items-center justify-between">
-          <h2 id="upcomingModulesHeading" class="text-xs sm:text-sm font-bold text-violet-300 flex items-center gap-2">
-            <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
-            <span>Próximas Opciones en Notas Quickss</span>
+      <!-- 3. PRÓXIMOS MÓDULOS (PILLS COMPACTOS Y ALINEADOS) -->
+      <section class="space-y-2.5" aria-labelledby="upcomingModulesHeading">
+        <div class="flex items-center justify-between px-1">
+          <h2 id="upcomingModulesHeading" class="text-xs font-bold text-violet-300 flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
+            <span>Próximamente</span>
           </h2>
-          <span class="text-[11px] glass-panel text-violet-200 px-2.5 py-0.5 rounded-full font-semibold">
-            Toca para solicitar
-          </span>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 items-stretch">
           <button
             type="button"
-            onclick="showToast('Módulo de Minutas y Reuniones listo para activarse cuando lo indiques.')"
-            class="glass-card rounded-2xl p-4 text-left hover:border-violet-400/45 cursor-pointer space-y-2"
+            onclick="showToast('Minutas & Reuniones: próximamente disponible.')"
+            class="h-full glass-card rounded-2xl p-3.5 text-left hover:border-violet-400/45 cursor-pointer flex items-center justify-between gap-2.5"
           >
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-400/25 flex items-center justify-center text-violet-300">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-400/25 flex items-center justify-center text-violet-300 shrink-0">
                 <i data-lucide="mic" class="w-4 h-4" aria-hidden="true"></i>
               </div>
-              <span class="text-[10px] font-bold bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
+              <span class="font-extrabold text-xs text-white truncate">Minutas</span>
             </div>
-            <p class="font-extrabold text-xs sm:text-sm text-white">Minutas & Reuniones</p>
-            <p class="text-[11px] text-violet-300/70 leading-snug">Acuerdos rápidos por voz de reuniones del equipo</p>
+            <span class="text-[10px] font-bold bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full shrink-0">Pronto</span>
           </button>
 
           <button
             type="button"
-            onclick="showToast('Módulo de Cierres y Ventas: conectará prospectos interesados con cierres.')"
-            class="glass-card rounded-2xl p-4 text-left hover:border-violet-400/45 cursor-pointer space-y-2"
+            onclick="showToast('Cierres & Ventas: próximamente disponible.')"
+            class="h-full glass-card rounded-2xl p-3.5 text-left hover:border-violet-400/45 cursor-pointer flex items-center justify-between gap-2.5"
           >
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-400/25 flex items-center justify-center text-violet-300">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-400/25 flex items-center justify-center text-violet-300 shrink-0">
                 <i data-lucide="badge-dollar-sign" class="w-4 h-4" aria-hidden="true"></i>
               </div>
-              <span class="text-[10px] font-bold bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
+              <span class="font-extrabold text-xs text-white truncate">Cierres</span>
             </div>
-            <p class="font-extrabold text-xs sm:text-sm text-white">Cierres & Ventas</p>
-            <p class="text-[11px] text-violet-300/70 leading-snug">Seguimiento de negocios que concretaron compra</p>
+            <span class="text-[10px] font-bold bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full shrink-0">Pronto</span>
           </button>
 
           <button
             type="button"
-            onclick="showToast('Módulo de Stock Publicitario: control de entrega de carnets, folletos y tarjetas.')"
-            class="glass-card rounded-2xl p-4 text-left hover:border-violet-400/45 cursor-pointer space-y-2"
+            onclick="showToast('Stock Publicitario: próximamente disponible.')"
+            class="h-full glass-card rounded-2xl p-3.5 text-left hover:border-violet-400/45 cursor-pointer flex items-center justify-between gap-2.5"
           >
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-400/25 flex items-center justify-center text-violet-300">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-400/25 flex items-center justify-center text-violet-300 shrink-0">
                 <i data-lucide="package-check" class="w-4 h-4" aria-hidden="true"></i>
               </div>
-              <span class="text-[10px] font-bold bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full">Pronto</span>
+              <span class="font-extrabold text-xs text-white truncate">Stock Kit</span>
             </div>
-            <p class="font-extrabold text-xs sm:text-sm text-white">Stock Publicitario</p>
-            <p class="text-[11px] text-violet-300/70 leading-snug">Control de inventario de folletos y tarjetas</p>
+            <span class="text-[10px] font-bold bg-violet-500/20 text-violet-200 px-2 py-0.5 rounded-full shrink-0">Pronto</span>
           </button>
 
           <button
             type="button"
-            onclick="showToast('Indica qué otro apartado deseas sumar a Notas Quickss y lo activamos.')"
-            class="glass-card rounded-2xl p-4 text-left border-dashed border-violet-400/35 hover:border-violet-300 cursor-pointer space-y-2"
+            onclick="showToast('Cuéntanos qué nuevo módulo quieres sumar.')"
+            class="h-full glass-card rounded-2xl p-3.5 text-left border-dashed border-violet-400/35 hover:border-violet-300 cursor-pointer flex items-center justify-between gap-2.5"
           >
-            <div class="flex items-center justify-between">
-              <div class="w-9 h-9 rounded-xl bg-violet-600/25 border border-violet-400/35 flex items-center justify-center text-violet-200">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-violet-600/25 border border-violet-400/35 flex items-center justify-center text-violet-200 shrink-0">
                 <i data-lucide="plus" class="w-4 h-4" aria-hidden="true"></i>
               </div>
-              <span class="text-[10px] font-bold bg-violet-600 text-white px-2 py-0.5 rounded-full">Nuevo</span>
+              <span class="font-extrabold text-xs text-white truncate">Nuevo</span>
             </div>
-            <p class="font-extrabold text-xs sm:text-sm text-white">Otro Apartado</p>
-            <p class="text-[11px] text-violet-300/70 leading-snug">Personaliza un nuevo bloque operativo</p>
+            <span class="text-[10px] font-bold bg-violet-600 text-white px-2 py-0.5 rounded-full shrink-0">Crear</span>
           </button>
         </div>
       </section>
 
-      <!-- Feed Global Reciente de Todo Notas Quickss -->
-      <section class="glass-card rounded-3xl p-5 sm:p-6 space-y-4" aria-labelledby="recentActivityHeading">
+      <!-- 4. ACTIVIDAD RECIENTE COMPACTA -->
+      <section class="glass-card rounded-3xl p-4 sm:p-5 space-y-3" aria-labelledby="recentActivityHeading">
         <div class="flex items-center justify-between">
-          <div>
-            <h3 id="recentActivityHeading" class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
-              <i data-lucide="activity" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
-              <span>Actividad Reciente en Notas Quickss</span>
-            </h3>
-            <p class="text-xs text-violet-300/70">Últimos movimientos en Brigadas, Daily Day, Tareas y Llamados</p>
-          </div>
+          <h3 id="recentActivityHeading" class="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
+            <i data-lucide="activity" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+            <span>Actividad Reciente</span>
+          </h3>
+          <span class="text-[11px] text-violet-300/70 font-semibold">Últimos registros</span>
         </div>
-        <div id="hubUnifiedFeed" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        <div id="hubUnifiedFeed" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
       </section>
 
     </div>

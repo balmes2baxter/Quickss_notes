@@ -493,11 +493,11 @@ window.setHubAnalyticsScope = function(scope) {
   const btnTeam = document.getElementById('btnScopeTeam');
 
   if (scope === 'personal') {
-    if (btnPersonal) btnPersonal.className = 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow flex items-center gap-1.5 cursor-pointer transition-colors';
-    if (btnTeam) btnTeam.className = 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold text-violet-200 hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors';
+    if (btnPersonal) btnPersonal.className = 'min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-extrabold bg-violet-600 text-white shadow flex items-center gap-1.5 cursor-pointer transition-colors';
+    if (btnTeam) btnTeam.className = 'min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold text-violet-200 hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors';
   } else {
-    if (btnTeam) btnTeam.className = 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow flex items-center gap-1.5 cursor-pointer transition-colors';
-    if (btnPersonal) btnPersonal.className = 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold text-violet-200 hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors';
+    if (btnTeam) btnTeam.className = 'min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-extrabold bg-violet-600 text-white shadow flex items-center gap-1.5 cursor-pointer transition-colors';
+    if (btnPersonal) btnPersonal.className = 'min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold text-violet-200 hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors';
   }
 
   renderHubDashboard();
@@ -517,7 +517,7 @@ function renderHubDashboard() {
   // Identidad en el Panel de Analíticas
   setText('hubUserAvatarBig', scope === 'personal' ? getInitials(currentName) : 'EQ');
   setText('hubWelcomeName', scope === 'personal' ? currentName : 'Todo el Equipo');
-  setText('hubScopeBadgeText', scope === 'personal' ? 'Analítica Personal de Sesión' : 'Consolidado Global del Equipo');
+  setText('hubScopeBadgeText', scope === 'personal' ? 'Mi Rendimiento' : 'Vista Equipo');
 
   const userXP = scope === 'personal'
     ? calculateUserXP(currentName)
@@ -526,7 +526,7 @@ function renderHubDashboard() {
   const rankPill = document.getElementById('hubUserRankPill');
   if (rankPill) {
     rankPill.innerHTML = `
-      <i data-lucide="${rankObj.icon}" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+      <i data-lucide="${rankObj.icon}" class="w-3 h-3 text-violet-300" aria-hidden="true"></i>
       <span>${rankObj.title} · ${userXP} XP</span>
     `;
   }
@@ -552,11 +552,11 @@ function renderHubDashboard() {
   const pctBrigada = Math.min(100, Math.round((scopedVisits.length / Math.max(1, targetBrigada)) * 100));
   const hotScoped = scopedVisits.filter(v => v.resultado === 'interesado').length;
 
-  setText('hubStatBrigadas', `${scopedVisits.length} / ${targetBrigada}`);
+  setText('hubStatBrigadas', `${scopedVisits.length}/${targetBrigada}`);
   const barBrig = document.getElementById('hubBarBrigadas');
   if (barBrig) barBrig.style.width = `${pctBrigada}%`;
-  setText('hubSubBrigadasHot', `${hotScoped} muy interesados`);
-  setText('hubSubBrigadasKit', state.preCheckin?.completed ? `Zona: ${state.preCheckin.zona}` : 'Check-in pendiente');
+  setText('hubSubBrigadasHot', `${hotScoped} interesados`);
+  setText('hubSubBrigadasKit', state.preCheckin?.completed ? state.preCheckin.zona : 'Sin check-in');
 
   // 2. Métrica Daily Chat (Ayer / Hoy / Bloqueante)
   const todayDaily = scopedDailies.find(d => d.fecha === todayISO) || scopedDailies[0];
@@ -567,10 +567,10 @@ function renderHubDashboard() {
     ? (hasDailyToday ? 100 : 0)
     : Math.min(100, Math.round((scopedDailies.filter(d => d.fecha === todayISO).length / Math.max(1, state.users.length)) * 100));
 
-  setText('hubStatDaily', scope === 'personal' ? (hasDailyToday ? 'Completado' : 'Pendiente') : `${scopedDailies.length} hoy`);
+  setText('hubStatDaily', scope === 'personal' ? (hasDailyToday ? 'Listo' : 'Pendiente') : `${scopedDailies.length} hoy`);
   const barDaily = document.getElementById('hubBarDaily');
   if (barDaily) barDaily.style.width = `${pctDaily}%`;
-  setText('hubSubDailyFocus', todayDaily ? `Hoy: ${todayDaily.focus}` : 'Sin Daily Chat registrado hoy');
+  setText('hubSubDailyFocus', todayDaily ? todayDaily.focus : 'Sin reporte hoy');
 
   // 3. Métrica Tareas Planteadas
   const totalScopedTasks = scopedTasks.length;
@@ -579,11 +579,11 @@ function renderHubDashboard() {
   const highPendingTasks = scopedTasks.filter(t => !t.completed && t.priority === 'Alta').length;
   const pctTareas = totalScopedTasks > 0 ? Math.round((doneScopedTasks / totalScopedTasks) * 100) : 100;
 
-  setText('hubStatTareas', `${doneScopedTasks} / ${totalScopedTasks}`);
+  setText('hubStatTareas', `${doneScopedTasks}/${totalScopedTasks}`);
   const barTareas = document.getElementById('hubBarTareas');
   if (barTareas) barTareas.style.width = `${pctTareas}%`;
   setText('hubSubTareasPending', `${pendingScopedTasks} pendientes`);
-  setText('hubSubTareasHigh', `${highPendingTasks} prioridad alta`);
+  setText('hubSubTareasHigh', `${highPendingTasks} alta`);
 
   // 4. Métrica Bitácora / Llamados
   const pctDiscipline = scopedWarnings.length === 0 ? 100 : Math.max(40, 100 - scopedWarnings.length * 25);
@@ -596,11 +596,11 @@ function renderHubDashboard() {
   setText(
     'hubSubLlamadosText',
     scopedWarnings.length === 0
-      ? 'Sin llamados activos · Cumplimiento óptimo'
-      : `Compromiso: ${scopedWarnings[0].commitment || scopedWarnings[0].category}`
+      ? 'Cumplimiento óptimo'
+      : (scopedWarnings[0].commitment || scopedWarnings[0].category)
   );
 
-  // Anillo Global de Cumplimiento de Actividades Planteadas
+  // Anillo Global de Cumplimiento
   const overallPct = Math.round((pctBrigada * 0.45) + (pctDaily * 0.25) + (pctTareas * 0.30));
   const circumference = 263.89;
   const overallOffset = circumference - (overallPct / 100) * circumference;
@@ -610,14 +610,14 @@ function renderHubDashboard() {
 
   setText(
     'hubOverallStatusBadge',
-    overallPct >= 80 ? 'Excelente ritmo hoy' : (overallPct >= 45 ? 'Avance activo' : 'Actividades por iniciar')
+    overallPct >= 80 ? 'Óptimo' : (overallPct >= 45 ? 'En marcha' : 'Por iniciar')
   );
   setText(
     'hubOverallSummaryText',
-    `Llevas ${scopedVisits.length}/${targetBrigada} visitas en brigada, ${doneScopedTasks}/${totalScopedTasks} tareas listas y Daily Chat ${hasDailyToday ? 'al día' : 'pendiente'}.`
+    `${scopedVisits.length}/${targetBrigada} visitas · ${doneScopedTasks}/${totalScopedTasks} tareas`
   );
 
-  // Renderizar Gráfica Personal en el Hub y Hoja de Ruta Interactiva
+  // Renderizar Gráfica Personal y Acciones Rápidas
   renderHubPersonalChart(pctBrigada, pctDaily, pctTareas, pctDiscipline);
   renderHubActionableRoadmap(currentName, scopedVisits.length, targetBrigada, hasDailyToday, scopedTasks, scopedWarnings);
 
@@ -635,73 +635,62 @@ function renderHubDashboard() {
   setText('drawerBadgeTareas', allPendingTasks);
   setText('drawerBadgeLlamados', state.warnings.length);
 
-  setText('hubCardBrigadasInfo', `${state.visits.length} visitas · ${allHotVisits} muy interesados`);
-  setText('hubCardDailyInfo', `${state.dailies.length} reportes estructurados (Ayer · Hoy · Bloqueante)`);
-  setText('hubCardTareasInfo', `${allPendingTasks} pendientes · ${state.tasks.length - allPendingTasks} completadas`);
-  setText('hubCardLlamadosInfo', `${state.warnings.length} registros en bitácora`);
+  setText('hubCardBrigadasInfo', `${state.visits.length} visitas · ${allHotVisits} interesados`);
+  setText('hubCardDailyInfo', `${state.dailies.length} reportes · Ayer/Hoy`);
+  setText('hubCardTareasInfo', `${allPendingTasks} pendientes`);
+  setText('hubCardLlamadosInfo', `${state.warnings.length} registros`);
 
-  // Feed Unificado Reciente
+  // Feed Unificado Reciente (Compacto y Alineado)
   const feedEl = document.getElementById('hubUnifiedFeed');
   if (!feedEl) return;
 
   const combined = [
-    ...state.visits.slice(0, 3).map(v => ({
+    ...state.visits.slice(0, 2).map(v => ({
       icon: 'compass',
       mod: 'Brigada',
-      title: `${v.negocio_nombre} (${v.direccion})`,
-      desc: `${v.motivo_estado || ''}${v.condiciones_notas ? ' — “' + v.condiciones_notas + '”' : ''}`,
-      author: v.brigadista_nombre,
-      time: `${v.fecha} ${v.hora}`,
+      title: v.negocio_nombre,
+      meta: `${v.brigadista_nombre} · ${v.hora}`,
       clickMod: 'brigadas'
     })),
     ...state.dailies.slice(0, 2).map(d => ({
       icon: 'sun',
       mod: 'Daily Chat',
-      title: `Hoy: ${d.focus}`,
-      desc: `Ayer: ${d.done || 'Registrado'} · Bloqueante: ${d.blocker || 'Ninguno'}`,
-      author: d.author,
-      time: `${d.fecha} ${d.hora}`,
+      title: d.focus,
+      meta: `${d.author} · ${d.hora}`,
       clickMod: 'daily'
     })),
     ...state.tasks.slice(0, 2).map(t => ({
       icon: 'check-square',
       mod: 'Tarea',
       title: t.title,
-      desc: `Prioridad ${t.priority} · Estado: ${t.completed ? 'Completada' : 'Pendiente'}`,
-      author: t.assignee,
-      time: t.fecha,
+      meta: `${t.assignee} · ${t.priority}`,
       clickMod: 'tareas'
     })),
     ...state.warnings.slice(0, 2).map(w => ({
       icon: 'shield-alert',
       mod: 'Llamado',
-      title: `${w.member} — ${w.category}`,
-      desc: w.reason,
-      author: `Reg: ${w.author}`,
-      time: `${w.fecha} ${w.hora}`,
+      title: `${w.member} · ${w.category}`,
+      meta: w.hora,
       clickMod: 'llamados'
     }))
-  ].slice(0, 6);
+  ].slice(0, 4);
 
   feedEl.innerHTML = combined.map(item => `
     <button
       type="button"
       onclick="switchModule('${item.clickMod}')"
-      class="p-4 rounded-2xl glass-panel hover:border-violet-400/50 text-left cursor-pointer space-y-1.5 transition-colors"
+      class="h-full p-3.5 rounded-2xl glass-panel hover:border-violet-400/50 text-left cursor-pointer flex items-center justify-between gap-3 transition-colors"
     >
-      <div class="flex items-center justify-between text-[11px]">
-        <span class="inline-flex items-center gap-1.5 font-extrabold text-violet-200 bg-violet-500/20 border border-violet-400/25 px-2.5 py-0.5 rounded-full">
-          <i data-lucide="${item.icon}" class="w-3 h-3 text-violet-300" aria-hidden="true"></i>
-          <span>${escapeHtml(item.mod)}</span>
-        </span>
-        <span class="text-violet-300/60 tabular-nums">${escapeHtml(item.time)}</span>
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-400/25 flex items-center justify-center text-violet-300 shrink-0">
+          <i data-lucide="${item.icon}" class="w-4 h-4" aria-hidden="true"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="font-extrabold text-xs sm:text-sm text-white truncate">${escapeHtml(item.title)}</p>
+          <p class="text-[11px] text-violet-300/75 truncate">${escapeHtml(item.mod)} · ${escapeHtml(item.meta)}</p>
+        </div>
       </div>
-      <p class="font-extrabold text-sm text-white truncate">${escapeHtml(item.title)}</p>
-      <p class="text-xs text-violet-200/75 truncate">${escapeHtml(item.desc)}</p>
-      <p class="text-[11px] text-violet-300/70 pt-0.5 flex items-center gap-1.5">
-        <i data-lucide="user" class="w-3 h-3 text-violet-300" aria-hidden="true"></i>
-        <span>${escapeHtml(item.author)}</span>
-      </p>
+      <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/60 shrink-0" aria-hidden="true"></i>
     </button>
   `).join('');
 }
@@ -718,13 +707,13 @@ function renderHubPersonalChart(pctBrigada, pctDaily, pctTareas, pctDiscipline) 
   state.charts.hubPersonal = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Brigada (Meta 12)', 'Daily Chat Hoy', 'Tareas Listas', 'Protocolo & Kit'],
+      labels: ['Brigadas', 'Daily Chat', 'Tareas', 'Bitácora'],
       datasets: [{
-        label: '% Cumplimiento',
+        label: '% Avance',
         data: [pctBrigada, pctDaily, pctTareas, pctDiscipline],
         backgroundColor: ['#8b5cf6', '#a78bfa', '#f59e0b', '#34d399'],
-        borderRadius: 8,
-        barThickness: 18
+        borderRadius: 6,
+        barThickness: 14
       }]
     },
     options: {
@@ -763,19 +752,17 @@ function renderHubActionableRoadmap(userName, visitsDone, visitsTarget, hasDaily
   if (!hasDailyToday) {
     actions.push({
       icon: 'sun',
-      badge: 'Prioridad 1 · Daily Chat',
+      badge: 'Pendiente',
       badgeClass: 'bg-violet-500/25 text-violet-200 border-violet-400/35',
-      title: 'Publicar tu Daily Chat (Ayer · Hoy · Bloqueante)',
-      desc: 'Aún no has registrado tu enfoque y bloqueantes de hoy.',
+      title: 'Publicar Daily Chat',
       mod: 'daily'
     });
   } else {
     actions.push({
       icon: 'check-circle-2',
-      badge: 'Daily Chat al día',
+      badge: 'Al día',
       badgeClass: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/35',
-      title: 'Daily Chat publicado correctamente',
-      desc: 'Toca para ver el muro del equipo o copiar tu formato para chat.',
+      title: 'Daily Chat registrado',
       mod: 'daily'
     });
   }
@@ -784,19 +771,17 @@ function renderHubActionableRoadmap(userName, visitsDone, visitsTarget, hasDaily
   if (remainingVisits > 0) {
     actions.push({
       icon: 'compass',
-      badge: `Faltan ${remainingVisits} visitas`,
+      badge: `${visitsDone}/${visitsTarget}`,
       badgeClass: 'bg-violet-500/25 text-violet-200 border-violet-400/35',
-      title: `Avanzar meta de Brigada (${visitsDone}/${visitsTarget} hoy)`,
-      desc: 'Registra negocios abordados, dirección con GPS y clientes interesados.',
+      title: `Registrar visitas (${remainingVisits} restantes)`,
       mod: 'brigadas'
     });
   } else {
     actions.push({
       icon: 'trophy',
-      badge: 'Meta Lograda',
+      badge: '100%',
       badgeClass: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/35',
-      title: `Meta de ${visitsTarget} acercamientos completada`,
-      desc: 'Revisa el mapa de cobertura o exporta los resultados a Excel.',
+      title: 'Meta de brigada completada',
       mod: 'brigadas'
     });
   }
@@ -805,28 +790,25 @@ function renderHubActionableRoadmap(userName, visitsDone, visitsTarget, hasDaily
   if (pendingTask) {
     actions.push({
       icon: 'check-square',
-      badge: `Tarea ${pendingTask.priority}`,
+      badge: pendingTask.priority,
       badgeClass: 'bg-amber-500/20 text-amber-200 border-amber-400/35',
       title: pendingTask.title,
-      desc: pendingTask.notes || 'Toca para ir al tablero de tareas y marcarla completada.',
       mod: 'tareas'
     });
   } else if (userWarnings.length > 0) {
     actions.push({
       icon: 'shield-alert',
-      badge: 'Compromiso Activo',
+      badge: 'Acuerdo',
       badgeClass: 'bg-rose-500/20 text-rose-200 border-rose-400/35',
       title: userWarnings[0].commitment || userWarnings[0].category,
-      desc: 'Acuerdo registrado en bitácora del equipo.',
       mod: 'llamados'
     });
   } else {
     actions.push({
       icon: 'sparkles',
-      badge: 'Todo al día',
+      badge: 'Al día',
       badgeClass: 'bg-violet-500/20 text-violet-200 border-violet-400/35',
-      title: 'Sin tareas pendientes por cerrar',
-      desc: 'Toca para asignar un nuevo seguimiento comercial al equipo.',
+      title: 'Sin tareas pendientes',
       mod: 'tareas'
     });
   }
@@ -835,21 +817,18 @@ function renderHubActionableRoadmap(userName, visitsDone, visitsTarget, hasDaily
     <button
       type="button"
       onclick="switchModule('${a.mod}')"
-      class="w-full p-3 rounded-xl bg-[#130e22]/90 hover:bg-[#1b1430] border border-violet-400/20 hover:border-violet-400/50 text-left flex items-center justify-between gap-3 cursor-pointer transition-colors"
+      class="w-full p-2.5 rounded-xl bg-[#130e22]/90 hover:bg-[#1b1430] border border-violet-400/20 hover:border-violet-400/50 text-left flex items-center justify-between gap-2.5 cursor-pointer transition-colors"
     >
-      <div class="flex items-start gap-3 min-w-0">
-        <div class="w-8 h-8 rounded-lg bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-violet-200 shrink-0 mt-0.5">
-          <i data-lucide="${a.icon}" class="w-4 h-4" aria-hidden="true"></i>
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-7 h-7 rounded-lg bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-violet-200 shrink-0">
+          <i data-lucide="${a.icon}" class="w-3.5 h-3.5" aria-hidden="true"></i>
         </div>
-        <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] font-extrabold px-2 py-0.2 rounded-full border ${a.badgeClass}">${escapeHtml(a.badge)}</span>
-          </div>
-          <p class="text-xs font-extrabold text-white truncate mt-0.5">${escapeHtml(a.title)}</p>
-          <p class="text-[11px] text-violet-300/75 truncate">${escapeHtml(a.desc)}</p>
-        </div>
+        <p class="text-xs font-extrabold text-white truncate">${escapeHtml(a.title)}</p>
       </div>
-      <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/60 shrink-0" aria-hidden="true"></i>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full border tabular-nums ${a.badgeClass}">${escapeHtml(a.badge)}</span>
+        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-violet-300/60" aria-hidden="true"></i>
+      </div>
     </button>
   `).join('');
 }
