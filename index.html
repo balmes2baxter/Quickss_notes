@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BrigadaPro — Registro Rápido y Analítica de Terreno</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js para el análisis de datos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Supabase Client (Base de datos gratuita en la nube) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="min-h-screen pb-24">
+
+  <!-- ===================================================================== -->
+  <!-- PANTALLA 0: LOGIN / SELECCIÓN DE CUENTA DE BRIGADISTA                 -->
+  <!-- ===================================================================== -->
+  <div id="authScreen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white text-center">
+        <div class="w-14 h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center mx-auto mb-3 text-3xl">
+          🚀
+        </div>
+        <h1 class="text-2xl font-extrabold tracking-tight">BrigadaPro</h1>
+        <p class="text-blue-100 text-sm mt-1">Registro de acercamientos en segundos</p>
+      </div>
+
+      <div class="p-6 space-y-5">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+            Selecciona tu cuenta o crea la tuya
+          </label>
+          <div id="savedUsersList" class="grid grid-cols-1 gap-2 mb-4 max-h-48 overflow-y-auto">
+            <!-- Se llena dinámicamente con cuentas creadas -->
+          </div>
+        </div>
+
+        <div class="border-t border-slate-200 pt-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase mb-3">Ingresar con nuevo brigadista</p>
+          <form id="loginForm" class="space-y-3">
+            <div>
+              <input
+                type="text"
+                id="loginNameInput"
+                placeholder="Tu nombre y apellido (Ej: Carlos Pérez)"
+                required
+                class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none text-sm font-medium"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <select
+                id="loginRoleInput"
+                class="w-full px-3 py-3 rounded-xl border border-slate-300 bg-slate-50 text-sm font-medium outline-none"
+              >
+                <option value="Brigadista">👟 Brigadista</option>
+                <option value="Líder / Admin">📊 Líder / Admin</option>
+              </select>
+              <div class="flex items-center bg-slate-50 border border-slate-300 rounded-xl px-3 py-2">
+                <span class="text-xs text-slate-500 mr-2">Meta hoy:</span>
+                <input
+                  type="number"
+                  id="loginGoalInput"
+                  value="12"
+                  min="1"
+                  max="100"
+                  class="w-full bg-transparent font-bold text-slate-800 text-sm outline-none text-center"
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/25 transition"
+            >
+              Entrar a mi cuenta →
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- CABECERA FIJA: USUARIO + PROGRESO DE META (12 VISITAS) + POSITIVOS    -->
+  <!-- ===================================================================== -->
+  <header class="sticky top-0 z-30 bg-slate-900 text-white shadow-lg">
+    <div class="max-w-4xl mx-auto px-4 py-3">
+      <!-- Fila 1: Usuario y acciones rápidas -->
+      <div class="flex items-center justify-between gap-2 mb-2.5">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div id="userAvatarBadge" class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-extrabold text-sm shrink-0">
+            BP
+          </div>
+          <div class="truncate">
+            <div class="flex items-center gap-1.5">
+              <span id="headerUserName" class="font-bold text-sm truncate">Brigadista</span>
+              <span id="headerUserRole" class="text-[10px] bg-slate-700 text-slate-200 px-2 py-0.5 rounded-full font-semibold">Brigadista</span>
+            </div>
+            <p id="headerDateZone" class="text-[11px] text-slate-400 truncate">Cargando fecha...</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button
+            id="btnOpenCloudModal"
+            title="Configurar Base de Datos en la Nube (Supabase)"
+            class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold flex items-center gap-1.5 border border-slate-700"
+          >
+            <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span id="cloudStatusText" class="hidden sm:inline">Modo Local</span>
+          </button>
+          <button
+            id="btnSwitchUser"
+            class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700"
+          >
+            Cambiar cuenta
+          </button>
+        </div>
+      </div>
+
+      <!-- Fila 2: Barra de Meta de Brigada (Ej: 12 visitas) + Contador de Interesados -->
+      <div class="bg-slate-800/90 rounded-2xl p-2.5 border border-slate-700/80">
+        <div class="flex items-center justify-between text-xs mb-1.5">
+          <div class="flex items-center gap-1.5">
+            <span class="font-bold text-slate-200">🎯 Meta de Brigada Hoy:</span>
+            <span id="goalProgressCounter" class="font-extrabold text-blue-400 text-sm">0 / 12</span>
+            <span class="text-slate-400 text-[11px]">visitas</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold text-xs flex items-center gap-1">
+              🔥 <span id="hotProgressCounter">0</span> Interesados
+            </span>
+            <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold text-[11px] hidden sm:inline-flex items-center gap-1">
+              📄 <span id="infoProgressCounter">0</span> Solo Info
+            </span>
+          </div>
+        </div>
+        <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden">
+          <div id="goalProgressBar" class="progress-bar-fill h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- CONTENIDO PRINCIPAL                                                   -->
+  <!-- ===================================================================== -->
+  <main class="max-w-4xl mx-auto px-3 sm:px-4 pt-4">
+
+    <!-- =================================================================== -->
+    <!-- VISTA 1: MODO BRIGADA (CHECK-IN PREVIO + ANOTACIÓN SÚPER RÁPIDA)    -->
+    <!-- =================================================================== -->
+    <section id="tabCapture" class="space-y-4">
+
+      <!-- PASO A: CHECK-IN ANTES DE INICIAR LA BRIGADA -->
+      <div id="preBrigadaCard" class="bg-white rounded-3xl shadow-md border-2 border-blue-600 overflow-hidden fade-slide-in">
+        <div class="bg-blue-600 px-5 py-4 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[11px] uppercase tracking-wider font-extrabold bg-white/20 px-2.5 py-0.5 rounded-full">
+                Paso 1 · Antes de iniciar
+              </span>
+              <h2 class="text-lg font-extrabold mt-1">¿Cómo sales equipado a la brigada?</h2>
+            </div>
+            <span class="text-3xl">🎒</span>
+          </div>
+          <p class="text-xs text-blue-100 mt-1">
+            Confirma tu equipamiento una sola vez para arrancar a anotar negocios enseguida.
+          </p>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <!-- 1. Carnet -->
+            <div id="checkCardCarnet" onclick="togglePreCheck('carnet')" class="equip-card equipped border-2 rounded-2xl p-3.5 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">🪪</span>
+                <div>
+                  <p class="font-bold text-sm text-slate-800">¿Carnet puesto?</p>
+                  <p id="labelCarnetState" class="text-xs font-semibold text-blue-700">Sí, lo tengo puesto</p>
+                </div>
+              </div>
+              <input type="checkbox" id="chkCarnet" checked class="w-5 h-5 accent-blue-600 pointer-events-none" />
+            </div>
+
+            <!-- 2. Tarjetas -->
+            <div id="checkCardTarjetas" onclick="togglePreCheck('tarjetas')" class="equip-card equipped border-2 rounded-2xl p-3.5 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📇</span>
+                <div>
+                  <p class="font-bold text-sm text-slate-800">¿Tienes tarjetas?</p>
+                  <p id="labelTarjetasState" class="text-xs font-semibold text-blue-700">Sí, llevo tarjetas</p>
+                </div>
+              </div>
+              <input type="checkbox" id="chkTarjetas" checked class="w-5 h-5 accent-blue-600 pointer-events-none" />
+            </div>
+
+            <!-- 3. Folletos -->
+            <div id="checkCardFolletos" onclick="togglePreCheck('folletos')" class="equip-card equipped border-2 rounded-2xl p-3.5 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📄</span>
+                <div>
+                  <p class="font-bold text-sm text-slate-800">¿Tienes folletos?</p>
+                  <p id="labelFolletosState" class="text-xs font-semibold text-blue-700">Sí, llevo folletos</p>
+                </div>
+              </div>
+              <input type="checkbox" id="chkFolletos" checked class="w-5 h-5 accent-blue-600 pointer-events-none" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">📍 Zona / Barrio / Sector de hoy</label>
+              <input
+                type="text"
+                id="inputZonaBrigada"
+                placeholder="Ej: Centro, Calle 72, Zona Industrial..."
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium focus:border-blue-600 outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">🎯 Meta de visitas para hoy</label>
+              <input
+                type="number"
+                id="inputMetaDiaria"
+                value="12"
+                min="1"
+                max="100"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold focus:border-blue-600 outline-none"
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onclick="confirmPreBrigada()"
+            class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-blue-600/30 text-base transition flex items-center justify-center gap-2"
+          >
+            <span>✅ Listo, comenzar a anotar visitas</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- RESUMEN COMPACTO DEL EQUIPAMIENTO (CUANDO YA INICIÓ LA BRIGADA) -->
+      <div id="activeBrigadaBanner" class="hidden bg-white rounded-2xl p-3 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-1.5 text-xs">
+          <span class="font-bold text-slate-700 mr-1">Equipo hoy:</span>
+          <span id="badgeCarnet" class="px-2.5 py-1 rounded-full font-semibold bg-blue-50 text-blue-700 border border-blue-200">🪪 Carnet: Sí</span>
+          <span id="badgeTarjetas" class="px-2.5 py-1 rounded-full font-semibold bg-blue-50 text-blue-700 border border-blue-200">📇 Tarjetas: Sí</span>
+          <span id="badgeFolletos" class="px-2.5 py-1 rounded-full font-semibold bg-blue-50 text-blue-700 border border-blue-200">📄 Folletos: Sí</span>
+          <span id="badgeZona" class="px-2.5 py-1 rounded-full font-semibold bg-slate-100 text-slate-700">📍 General</span>
+        </div>
+        <button
+          type="button"
+          onclick="reopenPreBrigada()"
+          class="text-xs font-bold text-blue-600 hover:text-blue-800 underline px-2 py-1"
+        >
+          Cambiar equipo
+        </button>
+      </div>
+
+      <!-- PASO B: FORMULARIO SÚPER RÁPIDO DE ACERCAMIENTO -->
+      <form id="visitForm" class="hidden space-y-4 fade-slide-in">
+
+        <!-- BLOQUE 1: NEGOCIO Y DIRECCIÓN -->
+        <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-3.5">
+          <div class="flex items-center justify-between">
+            <h3 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+              Negocio y Dirección abordada
+            </h3>
+            <span id="visitTimestampPreview" class="text-xs font-semibold text-slate-400">Hora automática</span>
+          </div>
+
+          <!-- Nombre del negocio -->
+          <div>
+            <input
+              type="text"
+              id="negocioNombre"
+              required
+              placeholder="🏪 Nombre del negocio / local (Ej: Ferretería El Sol)"
+              class="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-blue-600 outline-none text-base font-semibold text-slate-900 placeholder:font-normal"
+            />
+          </div>
+
+          <!-- Dirección + Botón GPS 1-clic -->
+          <div class="flex gap-2">
+            <input
+              type="text"
+              id="negocioDireccion"
+              required
+              placeholder="📍 Dirección o referencia (Ej: Cra 15 # 45-12 / Local 3)"
+              class="flex-1 px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-blue-600 outline-none text-sm font-medium text-slate-800"
+            />
+            <button
+              type="button"
+              id="btnDetectGps"
+              onclick="detectAddressByGps()"
+              title="Capturar ubicación y dirección actual por GPS"
+              class="px-3.5 py-3 rounded-2xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-300 font-bold text-xs shrink-0 flex items-center gap-1.5 transition"
+            >
+              <span>📡</span>
+              <span id="gpsBtnLabel">GPS</span>
+            </button>
+          </div>
+
+          <!-- Alerta inteligente si ese negocio o dirección ya fue visitado -->
+          <div id="duplicateWarning" class="hidden bg-amber-50 border border-amber-300 text-amber-900 rounded-xl p-2.5 text-xs font-medium"></div>
+
+          <!-- Rubro rápido (1 toque) -->
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Tipo de comercio (1 toque):</label>
+            <div id="rubroChips" class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="selectRubro('Comercio / Tienda')" class="chip-btn active-blue px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">🛍️ Comercio / Tienda</button>
+              <button type="button" onclick="selectRubro('Restaurante / Gastronomía')" class="chip-btn px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">🍔 Restaurante / Café</button>
+              <button type="button" onclick="selectRubro('Salud / Farmacia / Belleza')" class="chip-btn px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">💊 Salud / Belleza</button>
+              <button type="button" onclick="selectRubro('Ferretería / Repuestos')" class="chip-btn px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">🔧 Ferretería / Autos</button>
+              <button type="button" onclick="selectRubro('Servicios / Oficina')" class="chip-btn px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">💼 Servicios / Oficina</button>
+              <button type="button" onclick="selectRubro('Supermercado / Minimarket')" class="chip-btn px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">🛒 Minimarket</button>
+            </div>
+          </div>
+
+          <!-- ¿Con quién habló? y ¿Qué entregó? -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100">
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">🗣️ ¿Con quién hablaste?</label>
+              <div id="interlocutorChips" class="flex flex-wrap gap-1.5">
+                <button type="button" onclick="selectInterlocutor('Dueño / Decisor')" class="chip-btn active-indigo px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">👑 Dueño / Decisor</button>
+                <button type="button" onclick="selectInterlocutor('Administrador / Encargado')" class="chip-btn px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">👔 Encargado</button>
+                <button type="button" onclick="selectInterlocutor('Empleado / Mostrador')" class="chip-btn px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">🙋 Empleado</button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">📦 ¿Qué entregaste en el local?</label>
+              <div id="materialChips" class="flex flex-wrap gap-1.5">
+                <button type="button" data-mat="Folleto" onclick="toggleMaterial('Folleto')" class="chip-btn active-indigo px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">📄 Folleto</button>
+                <button type="button" data-mat="Tarjeta" onclick="toggleMaterial('Tarjeta')" class="chip-btn active-indigo px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">📇 Tarjeta</button>
+                <button type="button" data-mat="Explicación verbal" onclick="toggleMaterial('Explicación verbal')" class="chip-btn active-indigo px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">💬 Pitch verbal</button>
+                <button type="button" data-mat="Demo / Muestra" onclick="toggleMaterial('Demo / Muestra')" class="chip-btn px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">📱 Demo rápida</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BLOQUE 2: ¿QUÉ RESPONDIÓ EL CLIENTE? (1 TOQUE) -->
+        <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-4">
+          <h3 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+            ¿Cuál fue la respuesta del negocio?
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <!-- Opción 1: INTERESADO -->
+            <div
+              id="cardResultHot"
+              onclick="selectVisitResult('interesado')"
+              class="result-card selected-hot rounded-2xl p-3.5 border-2 border-slate-200 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-1.5"
+            >
+              <span class="text-2xl">🔥</span>
+              <div>
+                <p class="font-extrabold text-sm text-emerald-950">¡Muy Interesado!</p>
+                <p class="text-[11px] text-emerald-800 leading-tight">Quiere cotización, demo o puso condiciones para comprar</p>
+              </div>
+            </div>
+
+            <!-- Opción 2: SOLO SE DEJÓ INFO / YA TIENE SISTEMA -->
+            <div
+              id="cardResultWarm"
+              onclick="selectVisitResult('solo_info')"
+              class="result-card rounded-2xl p-3.5 border-2 border-slate-200 bg-slate-50/70 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-1.5"
+            >
+              <span class="text-2xl">🌤️</span>
+              <div>
+                <p class="font-extrabold text-sm text-slate-800">Solo Info / Ya tiene</p>
+                <p class="text-[11px] text-slate-600 leading-tight">"Ya tengo sistema" o solo recibió la información en el local</p>
+              </div>
+            </div>
+
+            <!-- Opción 3: NO INTERESADO -->
+            <div
+              id="cardResultCold"
+              onclick="selectVisitResult('no_interesado')"
+              class="result-card rounded-2xl p-3.5 border-2 border-slate-200 bg-slate-50/70 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-1.5"
+            >
+              <span class="text-2xl">❄️</span>
+              <div>
+                <p class="font-extrabold text-sm text-slate-800">No interesado</p>
+                <p class="text-[11px] text-slate-600 leading-tight">No desea el servicio o no permitió dejar información</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-PANEL DINÁMICO SEGÚN LA RESPUESTA -->
+          <div id="dynamicOutcomeBox" class="pt-2 space-y-3 border-t border-slate-100 fade-slide-in">
+            <div>
+              <label id="outcomeChipsLabel" class="block text-xs font-bold text-slate-600 mb-2">
+                ⚡ Toque rápido del caso:
+              </label>
+              <div id="outcomeQuickChips" class="flex flex-wrap gap-1.5">
+                <!-- Se inyectan los chips según si es Interesado, Solo Info o No Interesado -->
+              </div>
+            </div>
+
+            <!-- Condiciones específicas o nota rápida -->
+            <div id="conditionsWrapper" class="space-y-2">
+              <label id="conditionsLabel" class="block text-xs font-bold text-emerald-800">
+                ✍️ ¿Tiene alguna condición específica o comentario clave? (Opcional, puedes dictar por voz)
+              </label>
+              <textarea
+                id="condicionesNotas"
+                rows="2"
+                placeholder="Ej: Me interesa pero si incluye facturación e inventario / Pasar el jueves a las 3pm..."
+                class="w-full px-3.5 py-2.5 rounded-2xl border-2 border-slate-200 focus:border-blue-600 outline-none text-sm text-slate-800"
+              ></textarea>
+            </div>
+
+            <!-- Datos de contacto (Destacado cuando está interesado, opcional en los demás) -->
+            <div id="contactFieldsBox" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              <input
+                type="text"
+                id="contactoNombre"
+                placeholder="👤 Nombre de la persona (Opcional)"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-blue-600 outline-none"
+              />
+              <input
+                type="tel"
+                id="contactoTelefono"
+                placeholder="📱 WhatsApp / Teléfono (Para seguimiento)"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-blue-600 outline-none"
+              />
+            </div>
+          </div>
+
+          <!-- BOTÓN GIGANTE DE GUARDADO INSTANTÁNEO -->
+          <button
+            type="submit"
+            id="btnSubmitVisit"
+            class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] text-white font-extrabold py-4 rounded-2xl shadow-xl shadow-blue-600/25 text-base transition flex items-center justify-center gap-2"
+          >
+            <span>⚡ Guardar Acercamiento y Seguir</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- ÚLTIMOS 3 REGISTROS DE HOY (CONFIRMACIÓN VISUAL RÁPIDA) -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-2.5">
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+            Últimos negocios anotados hoy
+          </h4>
+          <button onclick="switchTab('history')" class="text-xs font-bold text-blue-600 hover:underline">
+            Ver todos →
+          </button>
+        </div>
+        <div id="recentVisitsMiniList" class="space-y-2">
+          <!-- Se llena dinámicamente -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VISTA 2: HISTORIAL DE NEGOCIOS Y BUSCADOR DE DIRECCIONES            -->
+    <!-- =================================================================== -->
+    <section id="tabHistory" class="hidden space-y-4 fade-slide-in">
+      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="text-lg font-extrabold text-slate-800">Directorio de Negocios Abordados</h2>
+            <p class="text-xs text-slate-500">Consulta a qué negocios y direcciones ya se les dio información o quiénes están interesados</p>
+          </div>
+          <button
+            onclick="exportToExcelCSV()"
+            class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm flex items-center gap-1.5"
+          >
+            📥 Descargar Excel (.CSV)
+          </button>
+        </div>
+
+        <!-- Buscador por negocio, dirección o condición -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input
+            type="search"
+            id="searchHistoryInput"
+            oninput="renderHistoryList()"
+            placeholder="🔍 Buscar por negocio, dirección, condición..."
+            class="sm:col-span-2 w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm outline-none focus:border-blue-600"
+          />
+          <select
+            id="filterHistoryResult"
+            onchange="renderHistoryList()"
+            class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-slate-50 outline-none"
+          >
+            <option value="all">📋 Todos los resultados</option>
+            <option value="interesado">🔥 Solo Muy Interesados</option>
+            <option value="solo_info">🌤️ Solo Info / Ya tiene sistema</option>
+            <option value="no_interesado">❄️ No interesados</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="fullHistoryList" class="space-y-2.5">
+        <!-- Lista completa de visitas -->
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VISTA 3: PANEL DE ANÁLISIS DE DATOS (GERENCIAL)                     -->
+    <!-- =================================================================== -->
+    <section id="tabAnalytics" class="hidden space-y-4 fade-slide-in">
+      <!-- Barra superior de filtros y datos de demostración -->
+      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <span class="text-[11px] font-extrabold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+            Inteligencia Comercial
+          </span>
+          <h2 class="text-xl font-extrabold text-slate-900 mt-1">Análisis de Brigadas y Conversión</h2>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            onclick="loadSampleBrigadaData()"
+            class="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition"
+          >
+            ✨ Cargar simulación de brigada (Demo)
+          </button>
+          <button
+            onclick="exportToExcelCSV()"
+            class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm"
+          >
+            📥 Exportar todo a Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- KPIs Principales -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-bold text-slate-400 uppercase">Total Acercamientos</p>
+          <p id="kpiTotalVisits" class="text-3xl font-extrabold text-slate-900 mt-1">0</p>
+          <p id="kpiGoalAvg" class="text-[11px] text-slate-500 mt-1">Meta base: 12 por persona</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm bg-gradient-to-br from-white to-emerald-50/50">
+          <p class="text-xs font-bold text-emerald-700 uppercase">🔥 Muy Interesados</p>
+          <p id="kpiHotLeads" class="text-3xl font-extrabold text-emerald-600 mt-1">0</p>
+          <p id="kpiConversionRate" class="text-[11px] font-semibold text-emerald-700 mt-1">0% tasa de interés</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-amber-200 shadow-sm">
+          <p class="text-xs font-bold text-amber-700 uppercase">🌤️ Info Entregada / Ya tienen</p>
+          <p id="kpiWarmInfo" class="text-3xl font-extrabold text-amber-600 mt-1">0</p>
+          <p id="kpiAlreadyHasSystem" class="text-[11px] text-slate-500 mt-1">0 ya tenían sistema</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-blue-200 shadow-sm">
+          <p class="text-xs font-bold text-blue-700 uppercase">🪪 Uso de Carnet + Kit</p>
+          <p id="kpiCarnetRate" class="text-3xl font-extrabold text-blue-600 mt-1">100%</p>
+          <p id="kpiDecisionMakerRate" class="text-[11px] text-slate-500 mt-1">0% hablaron con dueño</p>
+        </div>
+      </div>
+
+      <!-- INSIGHTS AUTOMÁTICOS DE LOS DATOS -->
+      <div class="bg-slate-900 text-white rounded-3xl p-5 shadow-lg space-y-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🧠</span>
+          <h3 class="font-extrabold text-base">Conclusiones Automáticas de la Brigada</h3>
+        </div>
+        <div id="aiInsightsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <!-- Se genera automáticamente analizando carnet, interlocutor, objeciones y horarios -->
+        </div>
+      </div>
+
+      <!-- RENDIMIENTO POR BRIGADISTA VS META DE 12 VISITAS -->
+      <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
+        <h3 class="font-extrabold text-slate-800 text-base mb-1">
+          🎯 Cumplimiento del Objetivo por Brigadista (Meta: 12 acercamientos)
+        </h3>
+        <p class="text-xs text-slate-500 mb-4">
+          Compara el volumen total de negocios abordados frente a cuántos quedaron muy interesados (🔥).
+        </p>
+        <div id="brigadistasRankingList" class="space-y-3">
+          <!-- Ranking dinámico -->
+        </div>
+      </div>
+
+      <!-- GRÁFICOS DE ANÁLISIS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
+          <h3 class="font-extrabold text-slate-800 text-sm mb-3">Distribución de Respuestas en Calle</h3>
+          <div class="h-56 flex items-center justify-center">
+            <canvas id="chartOutcomes"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
+          <h3 class="font-extrabold text-slate-800 text-sm mb-3">Motivos y Condiciones Más Frecuentes</h3>
+          <div class="h-56 flex items-center justify-center">
+            <canvas id="chartReasons"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLA DE CLIENTES INTERESADOS Y SUS CONDICIONES ESPECÍFICAS -->
+      <div class="bg-white rounded-3xl p-5 shadow-sm border border-emerald-200">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-extrabold text-emerald-900 text-base flex items-center gap-1.5">
+              🔥 Clientes Interesados y Condiciones Específicas
+            </h3>
+            <p class="text-xs text-slate-500">
+              Prioridad de cierre comercial: qué pidió cada cliente y contacto directo por WhatsApp
+            </p>
+          </div>
+        </div>
+        <div id="hotLeadsTableContainer" class="overflow-x-auto">
+          <!-- Tabla dinámica de prospectos calientes -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: CONFIGURACIÓN GRATUITA DE SUPABASE (NUBE)                      -->
+  <!-- ===================================================================== -->
+  <div id="cloudModal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-extrabold text-slate-900">☁️ Base de Datos en la Nube ($0 Gratis)</h3>
+        <button onclick="closeCloudModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        La aplicación guarda todo de inmediato en el dispositivo y además puede sincronizar en tiempo real con **Supabase** (100% gratuito, sin tarjeta de crédito) para que todos los brigadistas envíen sus visitas a un mismo tablero central.
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Supabase Project URL</label>
+          <input
+            type="url"
+            id="supaUrlInput"
+            placeholder="https://xyzcompany.supabase.co"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Supabase Anon Public Key</label>
+          <input
+            type="text"
+            id="supaKeyInput"
+            placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono"
+          />
+        </div>
+      </div>
+
+      <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200 text-[11px] text-slate-600 space-y-1">
+        <p class="font-bold text-slate-800">¿Cómo activarlo en 3 minutos?</p>
+        <p>1. Crea un proyecto gratis en <a href="https://supabase.com" target="_blank" class="text-blue-600 underline font-semibold">supabase.com</a>.</p>
+        <p>2. En <b>SQL Editor</b>, pega el contenido del archivo <code>supabase_schema.sql</code> incluido en este proyecto.</p>
+        <p>3. En <b>Project Settings → API</b>, copia la URL y la llave <code>anon public</code> y pégalas aquí.</p>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button
+          type="button"
+          onclick="disconnectSupabase()"
+          class="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-600 hover:bg-slate-100"
+        >
+          Usar solo Memoria Local
+        </button>
+        <button
+          type="button"
+          onclick="saveSupabaseConfig()"
+          class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md"
+        >
+          Guardar y Conectar Nube
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- TOAST DE CONFIRMACIÓN RÁPIDA                                          -->
+  <!-- ===================================================================== -->
+  <div id="toastNotification" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 text-xs font-bold flex items-center gap-2">
+    <span id="toastIcon">✅</span>
+    <span id="toastMessage">Guardado correctamente</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- BARRA DE NAVEGACIÓN INFERIOR (ESTILO APP MÓVIL)                       -->
+  <!-- ===================================================================== -->
+  <nav class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 shadow-lg">
+    <div class="max-w-lg mx-auto grid grid-cols-3 p-1.5 gap-1">
+      <button
+        id="navBtnCapture"
+        onclick="switchTab('capture')"
+        class="py-2 px-3 rounded-2xl font-extrabold text-xs flex flex-col items-center gap-0.5 bg-blue-50 text-blue-600"
+      >
+        <span class="text-lg">⚡</span>
+        <span>Anotar Visita</span>
+      </button>
+
+      <button
+        id="navBtnHistory"
+        onclick="switchTab('history')"
+        class="py-2 px-3 rounded-2xl font-bold text-xs flex flex-col items-center gap-0.5 text-slate-500 hover:bg-slate-50"
+      >
+        <span class="text-lg">🏪</span>
+        <span>Negocios (<span id="navHistoryCount">0</span>)</span>
+      </button>
+
+      <button
+        id="navBtnAnalytics"
+        onclick="switchTab('analytics')"
+        class="py-2 px-3 rounded-2xl font-bold text-xs flex flex-col items-center gap-0.5 text-slate-500 hover:bg-slate-50"
+      >
+        <span class="text-lg">📊</span>
+        <span>Análisis y Metas</span>
+      </button>
+    </div>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
