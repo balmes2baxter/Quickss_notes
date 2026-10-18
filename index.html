@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Notas Quickss — Apartado de Brigadas</title>
+  <title>Notas Quickss — Hub de Módulos (Brigadas, Daily Day, Tareas y Llamados)</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js -->
@@ -17,171 +17,312 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="min-h-screen pb-24 lg:pb-10 text-violet-50 selection:bg-violet-600 selection:text-white">
+<body class="min-h-screen pb-24 lg:pb-12 text-violet-50 selection:bg-violet-600 selection:text-white">
 
   <!-- ===================================================================== -->
-  <!-- PANTALLA DE ACCESO / SELECCIÓN DE CUENTA EN NOTAS QUICKSS             -->
+  <!-- TOP HEADER: NOTAS QUICKSS + SELECTOR DE USUARIO SIN PANTALLA BLOQUEO  -->
   <!-- ===================================================================== -->
-  <div id="authScreen" class="fixed inset-0 z-50 bg-[#0c0914]/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-    <div class="glass-card w-full max-w-lg rounded-3xl overflow-hidden border border-violet-500/25 shadow-2xl my-auto">
-      <div class="bg-[#23193c] border-b border-violet-500/20 p-7 text-white">
-        <div class="flex items-center gap-4">
-          <div class="w-15 h-15 p-3.5 rounded-2xl bg-violet-600 flex items-center justify-center text-2xl shadow-lg shadow-violet-600/30 font-extrabold">
-            📝
-          </div>
-          <div>
-            <span class="text-[11px] font-bold uppercase tracking-widest bg-violet-500/20 text-violet-200 border border-violet-400/30 px-2.5 py-0.5 rounded-full">
-              Apartado: Brigadas
-            </span>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 text-white">Notas Quickss</h1>
-            <p class="text-violet-200/80 text-xs sm:text-sm mt-0.5">Anotaciones rápidas en terreno y control de objetivos</p>
-          </div>
-        </div>
-      </div>
+  <header class="sticky top-0 z-30 bg-[#0e0b16]/95 backdrop-blur-xl border-b border-violet-500/20">
+    <div class="max-w-7xl mx-auto px-4 py-3 space-y-3">
 
-      <div class="p-6 sm:p-7 space-y-6">
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <label class="text-xs font-extrabold uppercase tracking-wider text-violet-300/80">
-              👥 Cuentas Activas (1 clic para entrar)
-            </label>
-            <span class="text-[11px] text-violet-300 font-semibold">Fecha y hora automáticas</span>
-          </div>
-          <div id="savedUsersList" class="grid grid-cols-1 gap-2.5 max-h-56 overflow-y-auto pr-1">
-            <!-- Dinámico -->
-          </div>
-        </div>
-
-        <div class="border-t border-violet-500/15 pt-5">
-          <p class="text-xs font-extrabold text-violet-300 uppercase tracking-wider mb-3">
-            ➕ Crear nueva cuenta en Notas Quickss
-          </p>
-          <form id="loginForm" class="space-y-3">
-            <input
-              type="text"
-              id="loginNameInput"
-              placeholder="Tu nombre y apellido (Ej: Camilo Restrepo)"
-              required
-              class="w-full px-4 py-3.5 rounded-2xl border outline-none text-sm font-semibold placeholder:text-violet-300/40"
-            />
-            <div class="grid grid-cols-2 gap-3">
-              <select
-                id="loginRoleInput"
-                class="w-full px-3.5 py-3 rounded-2xl border text-sm font-semibold outline-none"
-              >
-                <option value="Brigadista">👟 Brigadista de Calle</option>
-                <option value="Líder / Admin">👑 Líder / Analista</option>
-              </select>
-              <div class="flex items-center justify-between bg-[#110d1d] border border-[#2f254b] rounded-2xl px-3.5 py-2">
-                <span class="text-xs font-semibold text-violet-300/70">Meta hoy:</span>
-                <input
-                  type="number"
-                  id="loginGoalInput"
-                  value="12"
-                  min="1"
-                  max="100"
-                  class="w-16 bg-transparent border-0 font-extrabold text-violet-300 text-base outline-none text-right"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              class="btn-purple-primary w-full font-extrabold py-4 rounded-2xl text-sm"
-            >
-              Entrar a Notas Quickss →
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================================== -->
-  <!-- TOP COMMAND BAR: NOTAS QUICKSS + SELECTOR DE APARTADO (BRIGADAS)      -->
-  <!-- ===================================================================== -->
-  <header class="sticky top-0 z-30 bg-[#0e0b16]/95 backdrop-blur-xl border-b border-violet-500/15">
-    <div class="max-w-7xl mx-auto px-4 py-3">
-      <!-- Barra Superior de Marca y Selector de Módulos/Apartados -->
-      <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-violet-500/10">
-        <div class="flex items-center gap-2.5">
-          <div class="flex items-center gap-2 bg-violet-600 text-white px-3 py-1 rounded-xl shadow-sm">
-            <span class="text-sm">📝</span>
-            <span class="font-extrabold text-xs tracking-tight">Notas Quickss</span>
-          </div>
-          <span class="text-violet-400/50 font-bold">/</span>
-          <select
-            id="moduleSelector"
-            onchange="handleModuleChange(this.value)"
-            class="rounded-xl px-3 py-1 text-xs font-extrabold text-violet-200 border border-violet-500/30 outline-none cursor-pointer transition"
+      <!-- Fila 1: Identidad de Notas Quickss + Selector Rápido de Usuario + Nube -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <button
+            onclick="switchModule('hub')"
+            class="flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-2 rounded-2xl shadow-md shadow-violet-600/25 transition"
           >
-            <option value="brigadas">🚀 Apartado: Brigadas Comerciales</option>
-            <option value="soon">➕ Próximos Apartados (Notas / Tareas / Ideas)...</option>
-          </select>
+            <span class="text-lg">📝</span>
+            <div class="text-left">
+              <span class="font-extrabold text-sm tracking-tight block leading-none">Notas Quickss</span>
+              <span class="text-[10px] text-violet-200 font-semibold">Workspace del Equipo</span>
+            </div>
+          </button>
+
+          <!-- Navegación Principal de Módulos -->
+          <div class="hidden md:flex items-center gap-1.5 bg-[#151024] p-1.5 rounded-2xl border border-violet-500/20">
+            <button id="modBtn_hub" onclick="switchModule('hub')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white transition">
+              🏠 Módulos
+            </button>
+            <button id="modBtn_brigadas" onclick="switchModule('brigadas')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
+              🚀 Brigadas (<span id="badgeCountBrigadas">0</span>)
+            </button>
+            <button id="modBtn_daily" onclick="switchModule('daily')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
+              ☀️ Daily Day (<span id="badgeCountDaily">0</span>)
+            </button>
+            <button id="modBtn_tareas" onclick="switchModule('tareas')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
+              ✅ Tareas (<span id="badgeCountTareas">0</span>)
+            </button>
+            <button id="modBtn_llamados" onclick="switchModule('llamados')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-violet-200/80 hover:text-white transition">
+              ⚠️ Llamados de Atención (<span id="badgeCountLlamados">0</span>)
+            </button>
+          </div>
         </div>
 
-        <!-- Botones de Nube y Cambio de Cuenta -->
-        <div class="flex items-center gap-2 shrink-0">
+        <!-- Selector Rápido de Responsable / Cuenta Activa (Sin modal bloqueante) -->
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 bg-[#161224] border border-violet-500/30 rounded-2xl px-3 py-1.5">
+            <span class="text-xs text-violet-300 font-bold">👤 Quién anota:</span>
+            <select
+              id="quickUserSelect"
+              onchange="handleQuickUserChange(this.value)"
+              class="bg-transparent text-xs font-extrabold text-white outline-none cursor-pointer border-0"
+            >
+              <!-- Se llena con los miembros del equipo -->
+            </select>
+            <button
+              type="button"
+              onclick="promptNewTeamMember()"
+              title="Agregar nueva persona al equipo"
+              class="text-xs font-extrabold bg-violet-600/30 hover:bg-violet-600 text-violet-200 hover:text-white px-2 py-0.5 rounded-lg transition"
+            >
+              + Nuevo
+            </button>
+          </div>
+
           <button
             id="btnOpenCloudModal"
-            class="px-3 py-1.5 rounded-xl bg-[#1d1730] hover:bg-[#271f40] text-xs font-bold flex items-center gap-2 border border-violet-500/25 transition"
+            class="px-3 py-2 rounded-2xl bg-[#161224] hover:bg-[#221b38] text-xs font-bold flex items-center gap-2 border border-violet-500/25 transition"
           >
             <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
-            <span id="cloudStatusText" class="hidden sm:inline text-violet-100">Modo Local</span>
-          </button>
-          <button
-            id="btnSwitchUser"
-            class="px-3 py-1.5 rounded-xl bg-[#1d1730] hover:bg-[#271f40] text-xs font-bold text-violet-200 border border-violet-500/25 transition"
-          >
-            👤 Cambiar cuenta
+            <span id="cloudStatusText" class="hidden sm:inline text-violet-100">Local</span>
           </button>
         </div>
       </div>
 
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <!-- Selector de Módulos en Móvil -->
+      <div class="flex md:hidden items-center gap-1.5 overflow-x-auto pb-1">
+        <button id="mobModBtn_hub" onclick="switchModule('hub')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-violet-600 text-white shrink-0">
+          🏠 Inicio
+        </button>
+        <button id="mobModBtn_brigadas" onclick="switchModule('brigadas')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#161224] text-violet-200 shrink-0">
+          🚀 Brigadas
+        </button>
+        <button id="mobModBtn_daily" onclick="switchModule('daily')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#161224] text-violet-200 shrink-0">
+          ☀️ Daily Day
+        </button>
+        <button id="mobModBtn_tareas" onclick="switchModule('tareas')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#161224] text-violet-200 shrink-0">
+          ✅ Tareas
+        </button>
+        <button id="mobModBtn_llamados" onclick="switchModule('llamados')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#161224] text-violet-200 shrink-0">
+          ⚠️ Llamados
+        </button>
+      </div>
 
-        <!-- Identidad del Usuario Activo + Nivel XP -->
-        <div class="flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0">
-            <div id="userAvatarBadge" class="w-10 h-10 rounded-2xl bg-violet-600 flex items-center justify-center font-extrabold text-sm text-white shadow-md shadow-violet-600/25 shrink-0">
-              NQ
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- CONTENEDOR PRINCIPAL DE NOTAS QUICKSS                                 -->
+  <!-- ===================================================================== -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 pt-6">
+
+    <!-- =================================================================== -->
+    <!-- MÓDULO 0: DASHBOARD PRINCIPAL DE NOTAS QUICKSS (TODOS LOS MÓDULOS)  -->
+    <!-- =================================================================== -->
+    <div id="module_hub" class="space-y-6 fade-slide-in">
+
+      <!-- Banner de Bienvenida -->
+      <div class="glass-card rounded-3xl p-6 sm:p-8 border border-violet-500/35 relative overflow-hidden">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-2 bg-violet-500/20 border border-violet-400/30 px-3 py-1 rounded-full text-xs font-extrabold text-violet-200">
+              <span>⚡ Centro Operativo Unificado</span>
+              <span>·</span>
+              <span id="hubTodayDate">Hoy</span>
             </div>
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <span id="headerUserName" class="font-extrabold text-base text-white truncate">Usuario</span>
-                <span id="headerUserRole" class="text-[10px] uppercase tracking-wider bg-violet-500/20 text-violet-200 border border-violet-400/30 px-2 py-0.5 rounded-full font-bold">
-                  Brigadista
-                </span>
-                <span id="headerXpBadge" class="text-[11px] bg-[#241b3b] text-violet-200 border border-violet-400/30 px-2.5 py-0.5 rounded-full font-extrabold">
-                  ⚡ 0 XP · Explorador
-                </span>
-              </div>
-              <p id="headerDateZone" class="text-xs text-violet-300/70 truncate mt-0.5">Cargando jornada...</p>
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Bienvenido a Notas Quickss, <span id="hubWelcomeName" class="text-violet-400">Equipo</span>
+            </h1>
+            <p class="text-sm text-violet-200/80 leading-relaxed">
+              Selecciona qué quieres anotar o revisar hoy. Todo queda registrado con fecha, hora y responsable automático en segundos.
+            </p>
+          </div>
+
+          <!-- Resumen global rápido -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
+            <div class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-3.5 text-center">
+              <p class="text-[10px] font-bold uppercase text-violet-300/70">Visitas Brigada</p>
+              <p id="hubStatBrigadas" class="text-2xl font-extrabold text-white mt-0.5">0</p>
+            </div>
+            <div class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-3.5 text-center">
+              <p class="text-[10px] font-bold uppercase text-violet-300/70">Daily Day Hoy</p>
+              <p id="hubStatDaily" class="text-2xl font-extrabold text-violet-300 mt-0.5">0</p>
+            </div>
+            <div class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-3.5 text-center">
+              <p class="text-[10px] font-bold uppercase text-violet-300/70">Tareas Activas</p>
+              <p id="hubStatTareas" class="text-2xl font-extrabold text-amber-300 mt-0.5">0</p>
+            </div>
+            <div class="bg-[#1d1630] border border-violet-500/25 rounded-2xl p-3.5 text-center">
+              <p class="text-[10px] font-bold uppercase text-violet-300/70">Llamados</p>
+              <p id="hubStatLlamados" class="text-2xl font-extrabold text-rose-300 mt-0.5">0</p>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Navegación Desktop -->
-        <div class="hidden lg:flex items-center bg-[#141022] p-1 rounded-2xl border border-violet-500/20">
+      <!-- TARJETAS DE LOS 4 MÓDULOS DE NOTAS QUICKSS -->
+      <div>
+        <h2 class="text-sm font-extrabold uppercase tracking-wider text-violet-300/80 mb-3">
+          📦 Módulos de Notas Quickss (Haz clic para entrar)
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- Tarjeta Módulo 1: Brigadas Comerciales -->
+          <div
+            onclick="switchModule('brigadas')"
+            class="glass-card rounded-3xl p-6 border border-violet-500/35 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-4"
+          >
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-violet-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-violet-600/30">
+                  🚀
+                </div>
+                <span class="text-xs font-extrabold bg-violet-500/20 text-violet-200 border border-violet-400/30 px-3 py-1 rounded-full">
+                  Meta: 12 acercamientos
+                </span>
+              </div>
+              <h3 class="text-xl font-extrabold text-white group-hover:text-violet-300 transition">
+                1. Brigadas Comerciales & Terreno
+              </h3>
+              <p class="text-xs text-violet-200/75 leading-relaxed">
+                Check-in de equipamiento (carnet, tarjetas, folletos), registro de negocios en menos de 10 segundos, condiciones de clientes interesados, mapa de direcciones y análisis comercial.
+              </p>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-violet-500/15 text-xs font-extrabold text-violet-300">
+              <span id="hubCardBrigadasInfo">0 visitas registradas · 0 muy interesados</span>
+              <span class="group-hover:translate-x-1 transition">Abrir Brigadas →</span>
+            </div>
+          </div>
+
+          <!-- Tarjeta Módulo 2: Daily Day -->
+          <div
+            onclick="switchModule('daily')"
+            class="glass-card rounded-3xl p-6 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-4"
+          >
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-[#271d42] border border-violet-400/30 text-white flex items-center justify-center text-2xl">
+                  ☀️
+                </div>
+                <span class="text-xs font-extrabold bg-violet-500/15 text-violet-200 border border-violet-400/25 px-3 py-1 rounded-full">
+                  Sincronización Diaria
+                </span>
+              </div>
+              <h3 class="text-xl font-extrabold text-white group-hover:text-violet-300 transition">
+                2. Daily Day (Reporte & Enfoque del Día)
+              </h3>
+              <p class="text-xs text-violet-200/75 leading-relaxed">
+                Registra en segundos qué lograste, cuál es tu foco principal de hoy, si tienes algún bloqueo o necesitas apoyo del equipo, y revisa el pulso diario de todos.
+              </p>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-violet-500/15 text-xs font-extrabold text-violet-300">
+              <span id="hubCardDailyInfo">0 reportes diarios registrados</span>
+              <span class="group-hover:translate-x-1 transition">Abrir Daily Day →</span>
+            </div>
+          </div>
+
+          <!-- Tarjeta Módulo 3: Tareas Pendientes -->
+          <div
+            onclick="switchModule('tareas')"
+            class="glass-card rounded-3xl p-6 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-4"
+          >
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-[#271d42] border border-violet-400/30 text-white flex items-center justify-center text-2xl">
+                  ✅
+                </div>
+                <span class="text-xs font-extrabold bg-violet-500/15 text-violet-200 border border-violet-400/25 px-3 py-1 rounded-full">
+                  To-Do & Compromisos
+                </span>
+              </div>
+              <h3 class="text-xl font-extrabold text-white group-hover:text-violet-300 transition">
+                3. Tareas Pendientes & Seguimientos
+              </h3>
+              <p class="text-xs text-violet-200/75 leading-relaxed">
+                Anota pendientes rápidos personales o asignados a un compañero, clasifícalos por prioridad (Urgente, Normal, Idea) y márcalos como completados con un toque.
+              </p>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-violet-500/15 text-xs font-extrabold text-violet-300">
+              <span id="hubCardTareasInfo">0 tareas pendientes</span>
+              <span class="group-hover:translate-x-1 transition">Abrir Tareas →</span>
+            </div>
+          </div>
+
+          <!-- Tarjeta Módulo 4: Llamados de Atención & Feedback -->
+          <div
+            onclick="switchModule('llamados')"
+            class="glass-card rounded-3xl p-6 border border-violet-500/25 hover:border-violet-400 cursor-pointer transition group flex flex-col justify-between gap-4"
+          >
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-[#271d42] border border-violet-400/30 text-white flex items-center justify-center text-2xl">
+                  ⚠️
+                </div>
+                <span class="text-xs font-extrabold bg-rose-500/20 text-rose-200 border border-rose-400/30 px-3 py-1 rounded-full">
+                  Control & Disciplina
+                </span>
+              </div>
+              <h3 class="text-xl font-extrabold text-white group-hover:text-violet-300 transition">
+                4. Llamados de Atención & Bitácora
+              </h3>
+              <p class="text-xs text-violet-200/75 leading-relaxed">
+                Deja constancia clara de llamados de atención, novedades de puntualidad, no uso de carnet o incumplimiento de metas, junto con el compromiso acordado.
+              </p>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-violet-500/15 text-xs font-extrabold text-violet-300">
+              <span id="hubCardLlamadosInfo">0 llamados registrados</span>
+              <span class="group-hover:translate-x-1 transition">Abrir Llamados →</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Feed Global Reciente de Todo Notas Quickss -->
+      <div class="glass-card rounded-3xl p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-extrabold text-white">⚡ Actividad Reciente en Notas Quickss</h3>
+            <p class="text-xs text-violet-300/70">Últimos movimientos en Brigadas, Daily Day, Tareas y Llamados</p>
+          </div>
+        </div>
+        <div id="hubUnifiedFeed" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- Dinámico -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MÓDULO 1: APARTADO DE BRIGADAS COMERCIALES                          -->
+    <!-- =================================================================== -->
+    <div id="module_brigadas" class="hidden space-y-5 fade-slide-in">
+
+      <!-- Sub-Barra del Módulo de Brigadas: Meta de 12 visitas + Sub-pestañas -->
+      <div class="glass-card rounded-3xl p-4 sm:p-5 border border-violet-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-2">
           <button id="deskNavCapture" onclick="switchTab('capture')" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow">
-            ⚡ Terreno & Registro
+            ⚡ Anotar en Terreno
           </button>
-          <button id="deskNavHistory" onclick="switchTab('history')" class="px-4 py-2 rounded-xl text-xs font-bold text-violet-300/70 hover:text-white">
+          <button id="deskNavHistory" onclick="switchTab('history')" class="px-4 py-2 rounded-xl text-xs font-bold text-violet-300/80 hover:text-white">
             🗺️ Mapa & Negocios (<span id="deskHistoryCount">0</span>)
           </button>
-          <button id="deskNavLeaderboard" onclick="switchTab('leaderboard')" class="px-4 py-2 rounded-xl text-xs font-bold text-violet-300/70 hover:text-white">
-            🏆 Podio & Logros
+          <button id="deskNavLeaderboard" onclick="switchTab('leaderboard')" class="px-4 py-2 rounded-xl text-xs font-bold text-violet-300/80 hover:text-white">
+            🏆 Podio & XP
           </button>
-          <button id="deskNavAnalytics" onclick="switchTab('analytics')" class="px-4 py-2 rounded-xl text-xs font-bold text-violet-300/70 hover:text-white">
-            📊 Inteligencia & Datos
+          <button id="deskNavAnalytics" onclick="switchTab('analytics')" class="px-4 py-2 rounded-xl text-xs font-bold text-violet-300/80 hover:text-white">
+            📊 Análisis de Datos
           </button>
         </div>
 
         <!-- Barra de Progreso del Objetivo Diario (12 Acercamientos + 🔥 Positivos) -->
-        <div class="glass-panel rounded-2xl px-4 py-2.5 flex items-center gap-4 min-w-[290px] sm:min-w-[360px]">
+        <div class="glass-panel rounded-2xl px-4 py-2.5 flex items-center gap-4 min-w-[280px] sm:min-w-[360px]">
           <div class="flex-1">
             <div class="flex items-center justify-between text-xs mb-1.5">
               <div class="flex items-center gap-1.5">
-                <span class="font-bold text-violet-200">🎯 Objetivo Hoy:</span>
+                <span class="font-bold text-violet-200">🎯 Meta Hoy:</span>
                 <span id="goalProgressCounter" class="font-extrabold text-white text-sm">0 / 12</span>
               </div>
               <div class="flex items-center gap-1.5">
@@ -198,166 +339,136 @@
             </div>
           </div>
         </div>
-
-      </div>
-    </div>
-  </header>
-
-  <!-- ===================================================================== -->
-  <!-- CONTENEDOR PRINCIPAL                                                  -->
-  <!-- ===================================================================== -->
-  <main class="max-w-7xl mx-auto px-3 sm:px-6 pt-5">
-
-    <!-- =================================================================== -->
-    <!-- PESTAÑA 1: CENTRO DE MISIÓN EN TERRENO                              -->
-    <!-- =================================================================== -->
-    <section id="tabCapture" class="space-y-6">
-
-      <!-- PASO 1: CHECK-IN DE SALIDA ANTES DE INICIAR LA BRIGADA -->
-      <div id="preBrigadaCard" class="glass-card rounded-3xl overflow-hidden border border-violet-500/40 shadow-2xl fade-slide-in">
-        <div class="bg-[#211838] p-6 sm:p-7 border-b border-violet-500/20">
-          <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <span class="text-[11px] uppercase tracking-widest font-extrabold bg-violet-500/25 text-violet-200 border border-violet-400/30 px-3 py-1 rounded-full">
-                Paso 1 · Check-in Previo de Brigada
-              </span>
-              <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-2">
-                ¿Cómo sales equipado hoy a la calle?
-              </h2>
-              <p class="text-xs sm:text-sm text-violet-200/80 mt-1">
-                Confirma tu kit una sola vez antes de empezar. Luego anotarás cada negocio en menos de 10 segundos.
-              </p>
-            </div>
-            <div class="bg-[#140f23] border border-violet-500/30 rounded-2xl px-4 py-3 text-center">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-violet-300">Nivel de Preparación</p>
-              <p id="readinessScoreText" class="text-2xl font-extrabold text-violet-300">100% Equipado</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="p-6 sm:p-7 space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- 1. Carnet -->
-            <div id="checkCardCarnet" onclick="togglePreCheck('carnet')" class="equip-card equipped border-2 rounded-2xl p-4 flex items-center justify-between">
-              <div class="flex items-center gap-3.5">
-                <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-2xl">
-                  🪪
-                </div>
-                <div>
-                  <p class="font-extrabold text-base text-white">¿Tienes el carnet puesto?</p>
-                  <p id="labelCarnetState" class="text-xs font-bold text-violet-300 mt-0.5">✅ Sí, visible y puesto</p>
-                </div>
-              </div>
-              <input type="checkbox" id="chkCarnet" checked class="w-5 h-5 accent-violet-600 pointer-events-none" />
-            </div>
-
-            <!-- 2. Tarjetas -->
-            <div id="checkCardTarjetas" onclick="togglePreCheck('tarjetas')" class="equip-card equipped border-2 rounded-2xl p-4 flex items-center justify-between">
-              <div class="flex items-center gap-3.5">
-                <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-2xl">
-                  📇
-                </div>
-                <div>
-                  <p class="font-extrabold text-base text-white">¿Tienes tarjetas?</p>
-                  <p id="labelTarjetasState" class="text-xs font-bold text-violet-300 mt-0.5">✅ Sí, llevo tarjetas</p>
-                </div>
-              </div>
-              <input type="checkbox" id="chkTarjetas" checked class="w-5 h-5 accent-violet-600 pointer-events-none" />
-            </div>
-
-            <!-- 3. Folletos -->
-            <div id="checkCardFolletos" onclick="togglePreCheck('folletos')" class="equip-card equipped border-2 rounded-2xl p-4 flex items-center justify-between">
-              <div class="flex items-center gap-3.5">
-                <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-2xl">
-                  📄
-                </div>
-                <div>
-                  <p class="font-extrabold text-base text-white">¿Tienes folletos?</p>
-                  <p id="labelFolletosState" class="text-xs font-bold text-violet-300 mt-0.5">✅ Sí, llevo folletos</p>
-                </div>
-              </div>
-              <input type="checkbox" id="chkFolletos" checked class="w-5 h-5 accent-violet-600 pointer-events-none" />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-extrabold text-violet-200 uppercase tracking-wider mb-2">
-                📍 Zona / Barrio / Sector a recorrer hoy
-              </label>
-              <input
-                type="text"
-                id="inputZonaBrigada"
-                placeholder="Ej: Zona Comercial Centro, Calle 80, Galerías..."
-                class="w-full px-4 py-3.5 rounded-2xl border text-sm font-semibold outline-none placeholder:text-violet-300/40"
-              />
-            </div>
-            <div>
-              <label class="block text-xs font-extrabold text-violet-200 uppercase tracking-wider mb-2">
-                🎯 Tu objetivo de acercamientos para hoy
-              </label>
-              <input
-                type="number"
-                id="inputMetaDiaria"
-                value="12"
-                min="1"
-                max="100"
-                class="w-full px-4 py-3.5 rounded-2xl border text-base font-extrabold text-violet-300 outline-none"
-              />
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onclick="confirmPreBrigada()"
-            class="btn-purple-primary w-full font-extrabold py-4 rounded-2xl text-base flex items-center justify-center gap-2"
-          >
-            <span>🚀 Iniciar Brigada y Activar Modo Ráfaga</span>
-          </button>
-        </div>
       </div>
 
-      <!-- PASO 2: WORKSPACE DIVIDIDO -->
-      <div id="brigadaWorkspaceGrid" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start fade-slide-in">
+      <!-- SUB-VISTA 1.1: CAPTURA DE BRIGADA -->
+      <section id="tabCapture" class="space-y-6">
 
-        <!-- COLUMNA IZQUIERDA (7 cols): CONSOLA DE REGISTRO RELÁMPAGO -->
-        <div class="lg:col-span-7 space-y-4">
-
-          <!-- Cinta de Equipamiento Confirmado -->
-          <div id="activeBrigadaBanner" class="glass-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-            <div class="flex flex-wrap items-center gap-2 text-xs">
-              <span class="font-extrabold text-violet-300 uppercase tracking-wider text-[11px]">Kit Activo:</span>
-              <span id="badgeCarnet" class="px-2.5 py-1 rounded-full font-bold">🪪 Carnet</span>
-              <span id="badgeTarjetas" class="px-2.5 py-1 rounded-full font-bold">📇 Tarjetas</span>
-              <span id="badgeFolletos" class="px-2.5 py-1 rounded-full font-bold">📄 Folletos</span>
-              <span id="badgeZona" class="px-2.5 py-1 rounded-full font-bold bg-[#211936] text-violet-200 border border-violet-500/25">📍 Sector</span>
+        <!-- PASO 1: CHECK-IN DE SALIDA ANTES DE INICIAR LA BRIGADA -->
+        <div id="preBrigadaCard" class="glass-card rounded-3xl overflow-hidden border border-violet-500/40 shadow-2xl fade-slide-in">
+          <div class="bg-[#211838] p-6 sm:p-7 border-b border-violet-500/20">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <span class="text-[11px] uppercase tracking-widest font-extrabold bg-violet-500/25 text-violet-200 border border-violet-400/30 px-3 py-1 rounded-full">
+                  Paso 1 · Check-in Previo de Brigada
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-2">
+                  ¿Cómo sales equipado hoy a la brigada?
+                </h2>
+                <p class="text-xs sm:text-sm text-violet-200/80 mt-1">
+                  Confirma si llevas carnet, tarjetas y folletos para habilitar el registro rápido de locales.
+                </p>
+              </div>
+              <div class="bg-[#140f23] border border-violet-500/30 rounded-2xl px-4 py-3 text-center">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-violet-300">Nivel de Preparación</p>
+                <p id="readinessScoreText" class="text-2xl font-extrabold text-violet-300">100% Equipado</p>
+              </div>
             </div>
+          </div>
+
+          <div class="p-6 sm:p-7 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div id="checkCardCarnet" onclick="togglePreCheck('carnet')" class="equip-card equipped border-2 rounded-2xl p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3.5">
+                  <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-2xl">🪪</div>
+                  <div>
+                    <p class="font-extrabold text-base text-white">¿Tienes el carnet puesto?</p>
+                    <p id="labelCarnetState" class="text-xs font-bold text-violet-300 mt-0.5">✅ Sí, visible y puesto</p>
+                  </div>
+                </div>
+                <input type="checkbox" id="chkCarnet" checked class="w-5 h-5 accent-violet-600 pointer-events-none" />
+              </div>
+
+              <div id="checkCardTarjetas" onclick="togglePreCheck('tarjetas')" class="equip-card equipped border-2 rounded-2xl p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3.5">
+                  <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-2xl">📇</div>
+                  <div>
+                    <p class="font-extrabold text-base text-white">¿Tienes tarjetas?</p>
+                    <p id="labelTarjetasState" class="text-xs font-bold text-violet-300 mt-0.5">✅ Sí, llevo tarjetas</p>
+                  </div>
+                </div>
+                <input type="checkbox" id="chkTarjetas" checked class="w-5 h-5 accent-violet-600 pointer-events-none" />
+              </div>
+
+              <div id="checkCardFolletos" onclick="togglePreCheck('folletos')" class="equip-card equipped border-2 rounded-2xl p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3.5">
+                  <div class="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-2xl">📄</div>
+                  <div>
+                    <p class="font-extrabold text-base text-white">¿Tienes folletos?</p>
+                    <p id="labelFolletosState" class="text-xs font-bold text-violet-300 mt-0.5">✅ Sí, llevo folletos</p>
+                  </div>
+                </div>
+                <input type="checkbox" id="chkFolletos" checked class="w-5 h-5 accent-violet-600 pointer-events-none" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-extrabold text-violet-200 uppercase tracking-wider mb-2">
+                  📍 Zona / Barrio / Sector a recorrer hoy
+                </label>
+                <input
+                  type="text"
+                  id="inputZonaBrigada"
+                  placeholder="Ej: Zona Comercial Centro, Calle 80, Galerías..."
+                  class="w-full px-4 py-3.5 rounded-2xl border text-sm font-semibold outline-none placeholder:text-violet-300/40"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold text-violet-200 uppercase tracking-wider mb-2">
+                  🎯 Tu objetivo de acercamientos para hoy
+                </label>
+                <input
+                  type="number"
+                  id="inputMetaDiaria"
+                  value="12"
+                  min="1"
+                  max="100"
+                  class="w-full px-4 py-3.5 rounded-2xl border text-base font-extrabold text-violet-300 outline-none"
+                />
+              </div>
+            </div>
+
             <button
               type="button"
-              onclick="reopenPreBrigada()"
-              class="text-xs font-extrabold text-violet-300 hover:text-white underline"
+              onclick="confirmPreBrigada()"
+              class="btn-purple-primary w-full font-extrabold py-4 rounded-2xl text-base flex items-center justify-center gap-2"
             >
-              Editar Kit
+              <span>🚀 Confirmar Equipamiento y Empezar a Anotar</span>
             </button>
           </div>
+        </div>
 
-          <!-- FORMULARIO DE CAPTURA EN SEGUNDOS -->
-          <form id="visitForm" class="space-y-4">
+        <!-- PASO 2: WORKSPACE DIVIDIDO DE BRIGADA -->
+        <div id="brigadaWorkspaceGrid" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start fade-slide-in">
 
-            <!-- TARJETA 1: NEGOCIO Y DIRECCIÓN -->
-            <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-7 h-7 rounded-xl bg-violet-600 text-white text-xs flex items-center justify-center font-extrabold shadow">1</span>
-                  <h3 class="font-extrabold text-white text-base sm:text-lg">¿Qué negocio abordaste?</h3>
-                </div>
-                <span id="visitTimestampPreview" class="text-xs font-bold text-violet-200 bg-violet-500/15 border border-violet-500/30 px-3 py-1 rounded-full">
-                  🕒 Hora automática
-                </span>
+          <!-- COLUMNA IZQUIERDA (7 cols): FORMULARIO RÁPIDO -->
+          <div class="lg:col-span-7 space-y-4">
+            <div id="activeBrigadaBanner" class="glass-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2 text-xs">
+                <span class="font-extrabold text-violet-300 uppercase tracking-wider text-[11px]">Kit Activo:</span>
+                <span id="badgeCarnet" class="px-2.5 py-1 rounded-full font-bold">🪪 Carnet</span>
+                <span id="badgeTarjetas" class="px-2.5 py-1 rounded-full font-bold">📇 Tarjetas</span>
+                <span id="badgeFolletos" class="px-2.5 py-1 rounded-full font-bold">📄 Folletos</span>
+                <span id="badgeZona" class="px-2.5 py-1 rounded-full font-bold bg-[#211936] text-violet-200 border border-violet-500/25">📍 Sector</span>
               </div>
+              <button type="button" onclick="reopenPreBrigada()" class="text-xs font-extrabold text-violet-300 hover:text-white underline">
+                Cambiar Kit
+              </button>
+            </div>
 
-              <!-- Nombre del negocio -->
-              <div>
+            <form id="visitForm" class="space-y-4">
+              <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-xl bg-violet-600 text-white text-xs flex items-center justify-center font-extrabold shadow">1</span>
+                    <h3 class="font-extrabold text-white text-base sm:text-lg">Negocio y Dirección abordada</h3>
+                  </div>
+                  <span id="visitTimestampPreview" class="text-xs font-bold text-violet-200 bg-violet-500/15 border border-violet-500/30 px-3 py-1 rounded-full">
+                    🕒 Hora automática
+                  </span>
+                </div>
+
                 <input
                   type="text"
                   id="negocioNombre"
@@ -365,481 +476,575 @@
                   placeholder="🏪 Nombre del negocio o cliente (Ej: Ferretería El Sol)"
                   class="w-full px-4 py-3.5 rounded-2xl border-2 outline-none text-base font-bold placeholder:text-violet-300/40 placeholder:font-normal transition"
                 />
-              </div>
 
-              <!-- Dirección + GPS Automático -->
-              <div class="flex gap-2">
-                <input
-                  type="text"
-                  id="negocioDireccion"
-                  required
-                  placeholder="📍 Dirección o punto de referencia (Ej: Cra 15 # 72-10)"
-                  class="flex-1 px-4 py-3.5 rounded-2xl border-2 outline-none text-sm font-semibold placeholder:text-violet-300/40 transition"
-                />
-                <button
-                  type="button"
-                  id="btnDetectGps"
-                  onclick="detectAddressByGps()"
-                  title="Detectar calle y coordenadas por GPS"
-                  class="px-4 py-3 rounded-2xl bg-violet-600/20 hover:bg-violet-600/35 text-violet-200 border border-violet-500/40 font-extrabold text-xs shrink-0 flex items-center gap-1.5 transition"
-                >
-                  <span>📡</span>
-                  <span id="gpsBtnLabel">GPS</span>
-                </button>
-              </div>
-
-              <!-- Alerta de Negocio / Dirección Repetida -->
-              <div id="duplicateWarning" class="hidden bg-amber-500/15 border border-amber-500/40 text-amber-200 rounded-2xl p-3 text-xs font-medium"></div>
-
-              <!-- Rubro con 1 toque -->
-              <div>
-                <label class="block text-[11px] font-extrabold uppercase tracking-wider text-violet-300/70 mb-2">
-                  Categoría del negocio (1 toque):
-                </label>
-                <div id="rubroChips" class="flex flex-wrap gap-2">
-                  <button type="button" onclick="selectRubro('Comercio / Tienda')" class="chip-btn active-blue px-3.5 py-2 rounded-xl text-xs font-bold">🛍️ Comercio / Tienda</button>
-                  <button type="button" onclick="selectRubro('Restaurante / Gastronomía')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">🍔 Restaurante / Café</button>
-                  <button type="button" onclick="selectRubro('Salud / Farmacia / Belleza')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">💊 Salud / Belleza</button>
-                  <button type="button" onclick="selectRubro('Ferretería / Repuestos')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">🔧 Ferretería / Autos</button>
-                  <button type="button" onclick="selectRubro('Servicios / Oficina')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">💼 Servicios / Oficina</button>
-                  <button type="button" onclick="selectRubro('Supermercado / Minimarket')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">🛒 Minimarket</button>
-                </div>
-              </div>
-
-              <!-- Interlocutor + Material Entregado -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-violet-500/15">
-                <div>
-                  <label class="block text-[11px] font-extrabold uppercase tracking-wider text-violet-300/70 mb-2">
-                    🗣️ ¿Con quién hablaste?
-                  </label>
-                  <div id="interlocutorChips" class="flex flex-wrap gap-1.5">
-                    <button type="button" onclick="selectInterlocutor('Dueño / Decisor')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">👑 Dueño (+15 XP)</button>
-                    <button type="button" onclick="selectInterlocutor('Administrador / Encargado')" class="chip-btn px-3 py-2 rounded-xl text-xs font-bold">👔 Encargado</button>
-                    <button type="button" onclick="selectInterlocutor('Empleado / Mostrador')" class="chip-btn px-3 py-2 rounded-xl text-xs font-bold">🙋 Empleado</button>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-[11px] font-extrabold uppercase tracking-wider text-violet-300/70 mb-2">
-                    📦 ¿Qué dejaste en el negocio?
-                  </label>
-                  <div id="materialChips" class="flex flex-wrap gap-1.5">
-                    <button type="button" data-mat="Folleto" onclick="toggleMaterial('Folleto')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">📄 Folleto</button>
-                    <button type="button" data-mat="Tarjeta" onclick="toggleMaterial('Tarjeta')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">📇 Tarjeta</button>
-                    <button type="button" data-mat="Explicación verbal" onclick="toggleMaterial('Explicación verbal')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">💬 Pitch</button>
-                    <button type="button" data-mat="Demo / Muestra" onclick="toggleMaterial('Demo / Muestra')" class="chip-btn px-3 py-2 rounded-xl text-xs font-bold">📱 Demo</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- TARJETA 2: RESPUESTA DEL CLIENTE Y CONDICIONES -->
-            <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-7 h-7 rounded-xl bg-violet-600 text-white text-xs flex items-center justify-center font-extrabold shadow">2</span>
-                  <h3 class="font-extrabold text-white text-base sm:text-lg">¿Qué respondió el cliente?</h3>
-                </div>
-                <span class="text-[11px] text-violet-300/70 font-semibold">1 toque</span>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <!-- 1. MUY INTERESADO -->
-                <div
-                  id="cardResultHot"
-                  onclick="selectVisitResult('interesado')"
-                  class="result-card selected-hot rounded-2xl p-4 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2"
-                >
-                  <div class="flex items-center justify-between w-full">
-                    <span class="text-3xl">🔥</span>
-                    <span class="text-[10px] font-extrabold uppercase bg-violet-500/30 text-violet-200 px-2 py-0.5 rounded-full">+50 XP</span>
-                  </div>
-                  <div>
-                    <p class="font-extrabold text-sm text-white">¡Muy Interesado!</p>
-                    <p class="text-[11px] text-violet-200/80 leading-snug mt-0.5">
-                      Me interesa (con o sin condiciones), quiere cotización o demo
-                    </p>
-                  </div>
-                </div>
-
-                <!-- 2. SOLO INFO / YA TIENE SISTEMA -->
-                <div
-                  id="cardResultWarm"
-                  onclick="selectVisitResult('solo_info')"
-                  class="result-card rounded-2xl p-4 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2"
-                >
-                  <div class="flex items-center justify-between w-full">
-                    <span class="text-3xl">🌤️</span>
-                    <span class="text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full">+20 XP</span>
-                  </div>
-                  <div>
-                    <p class="font-extrabold text-sm text-white">Solo Info / Ya tiene</p>
-                    <p class="text-[11px] text-violet-200/70 leading-snug mt-0.5">
-                      "Ya tengo sistema" o se dejó la información en esa dirección
-                    </p>
-                  </div>
-                </div>
-
-                <!-- 3. NO INTERESADO -->
-                <div
-                  id="cardResultCold"
-                  onclick="selectVisitResult('no_interesado')"
-                  class="result-card rounded-2xl p-4 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2"
-                >
-                  <div class="flex items-center justify-between w-full">
-                    <span class="text-3xl">❄️</span>
-                    <span class="text-[10px] font-extrabold uppercase bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">+10 XP</span>
-                  </div>
-                  <div>
-                    <p class="font-extrabold text-sm text-white">No interesado</p>
-                    <p class="text-[11px] text-violet-200/60 leading-snug mt-0.5">
-                      Rechazo directo o no aplica para el servicio
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- SUB-PANEL DINÁMICO DE CONDICIONES Y MOTIVOS -->
-              <div id="dynamicOutcomeBox" class="pt-3 space-y-4 border-t border-violet-500/15">
-                <div>
-                  <label id="outcomeChipsLabel" class="block text-xs font-extrabold text-violet-200 mb-2">
-                    ⚡ Selecciona el caso con 1 toque:
-                  </label>
-                  <div id="outcomeQuickChips" class="flex flex-wrap gap-2">
-                    <!-- Dinámico -->
-                  </div>
-                </div>
-
-                <!-- Caja de Condiciones con Botón de Dictado por Voz en Vivo -->
-                <div class="space-y-2">
-                  <div class="flex items-center justify-between gap-2">
-                    <label id="conditionsLabel" class="text-xs font-extrabold text-violet-200">
-                      ✍️ Condiciones específicas o nota rápida:
-                    </label>
-                    <button
-                      type="button"
-                      id="btnVoiceDictation"
-                      onclick="toggleVoiceDictation()"
-                      class="px-3 py-1.5 rounded-xl bg-violet-600/25 hover:bg-violet-600/40 border border-violet-400/40 text-violet-200 text-xs font-extrabold flex items-center gap-1.5 transition"
-                    >
-                      <span>🎙️</span>
-                      <span id="voiceBtnText">Dictar con voz</span>
-                    </button>
-                  </div>
-                  <textarea
-                    id="condicionesNotas"
-                    rows="2"
-                    placeholder="Ej: 'Oye muchachos, me interesa pero si tienen estas condiciones...' o 'Ya tiene sistema Siigo, se dejó folleto'"
-                    class="w-full px-4 py-3 rounded-2xl border-2 outline-none text-sm font-medium placeholder:text-violet-300/40"
-                  ></textarea>
-                </div>
-
-                <!-- Contacto rápido -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="flex gap-2">
                   <input
                     type="text"
-                    id="contactoNombre"
-                    placeholder="👤 Nombre del encargado/dueño (Opcional)"
-                    class="w-full px-4 py-3 rounded-2xl border text-sm font-semibold placeholder:text-violet-300/40 outline-none"
+                    id="negocioDireccion"
+                    required
+                    placeholder="📍 Dirección o referencia (Ej: Cra 15 # 72-10)"
+                    class="flex-1 px-4 py-3.5 rounded-2xl border-2 outline-none text-sm font-semibold placeholder:text-violet-300/40 transition"
                   />
-                  <input
-                    type="tel"
-                    id="contactoTelefono"
-                    placeholder="📱 WhatsApp / Celular (Ej: 3001234567)"
-                    class="w-full px-4 py-3 rounded-2xl border text-sm font-semibold placeholder:text-violet-300/40 outline-none"
-                  />
+                  <button
+                    type="button"
+                    id="btnDetectGps"
+                    onclick="detectAddressByGps()"
+                    class="px-4 py-3 rounded-2xl bg-violet-600/20 hover:bg-violet-600/35 text-violet-200 border border-violet-500/40 font-extrabold text-xs shrink-0 flex items-center gap-1.5 transition"
+                  >
+                    <span>📡</span>
+                    <span id="gpsBtnLabel">GPS</span>
+                  </button>
+                </div>
+
+                <div id="duplicateWarning" class="hidden bg-amber-500/15 border border-amber-500/40 text-amber-200 rounded-2xl p-3 text-xs font-medium"></div>
+
+                <div>
+                  <label class="block text-[11px] font-extrabold uppercase tracking-wider text-violet-300/70 mb-2">
+                    Categoría del negocio (1 toque):
+                  </label>
+                  <div id="rubroChips" class="flex flex-wrap gap-2">
+                    <button type="button" onclick="selectRubro('Comercio / Tienda')" class="chip-btn active-blue px-3.5 py-2 rounded-xl text-xs font-bold">🛍️ Comercio / Tienda</button>
+                    <button type="button" onclick="selectRubro('Restaurante / Gastronomía')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">🍔 Restaurante / Café</button>
+                    <button type="button" onclick="selectRubro('Salud / Farmacia / Belleza')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">💊 Salud / Belleza</button>
+                    <button type="button" onclick="selectRubro('Ferretería / Repuestos')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">🔧 Ferretería / Autos</button>
+                    <button type="button" onclick="selectRubro('Servicios / Oficina')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">💼 Servicios / Oficina</button>
+                    <button type="button" onclick="selectRubro('Supermercado / Minimarket')" class="chip-btn px-3.5 py-2 rounded-xl text-xs font-bold">🛒 Minimarket</button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-violet-500/15">
+                  <div>
+                    <label class="block text-[11px] font-extrabold uppercase tracking-wider text-violet-300/70 mb-2">🗣️ ¿Con quién hablaste?</label>
+                    <div id="interlocutorChips" class="flex flex-wrap gap-1.5">
+                      <button type="button" onclick="selectInterlocutor('Dueño / Decisor')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">👑 Dueño (+15 XP)</button>
+                      <button type="button" onclick="selectInterlocutor('Administrador / Encargado')" class="chip-btn px-3 py-2 rounded-xl text-xs font-bold">👔 Encargado</button>
+                      <button type="button" onclick="selectInterlocutor('Empleado / Mostrador')" class="chip-btn px-3 py-2 rounded-xl text-xs font-bold">🙋 Empleado</button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-extrabold uppercase tracking-wider text-violet-300/70 mb-2">📦 ¿Qué entregaste?</label>
+                    <div id="materialChips" class="flex flex-wrap gap-1.5">
+                      <button type="button" data-mat="Folleto" onclick="toggleMaterial('Folleto')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">📄 Folleto</button>
+                      <button type="button" data-mat="Tarjeta" onclick="toggleMaterial('Tarjeta')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">📇 Tarjeta</button>
+                      <button type="button" data-mat="Explicación verbal" onclick="toggleMaterial('Explicación verbal')" class="chip-btn active-indigo px-3 py-2 rounded-xl text-xs font-bold">💬 Pitch</button>
+                      <button type="button" data-mat="Demo / Muestra" onclick="toggleMaterial('Demo / Muestra')" class="chip-btn px-3 py-2 rounded-xl text-xs font-bold">📱 Demo</button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- BOTÓN PRINCIPAL DE GUARDADO (MORADO LIMPIO) -->
-              <button
-                type="submit"
-                id="btnSubmitVisit"
-                class="btn-purple-primary w-full font-extrabold py-4 rounded-2xl text-base flex items-center justify-center gap-2"
-              >
-                <span>⚡ Registrar Visita y Sumar al Objetivo</span>
-              </button>
-            </div>
-          </form>
-        </div>
+              <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-xl bg-violet-600 text-white text-xs flex items-center justify-center font-extrabold shadow">2</span>
+                    <h3 class="font-extrabold text-white text-base sm:text-lg">¿Qué respondió el cliente?</h3>
+                  </div>
+                  <span class="text-[11px] text-violet-300/70 font-semibold">1 toque</span>
+                </div>
 
-        <!-- COLUMNA DERECHA (5 cols): ANILLO DE OBJETIVO + WHATSAPP EXPRESS + FEED EN VIVO -->
-        <div class="lg:col-span-5 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div id="cardResultHot" onclick="selectVisitResult('interesado')" class="result-card selected-hot rounded-2xl p-4 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
+                    <div class="flex items-center justify-between w-full">
+                      <span class="text-3xl">🔥</span>
+                      <span class="text-[10px] font-extrabold uppercase bg-violet-500/30 text-violet-200 px-2 py-0.5 rounded-full">+50 XP</span>
+                    </div>
+                    <div>
+                      <p class="font-extrabold text-sm text-white">¡Muy Interesado!</p>
+                      <p class="text-[11px] text-violet-200/80 leading-snug mt-0.5">Con o sin condiciones, pide cotización o demo</p>
+                    </div>
+                  </div>
 
-          <!-- Tarjeta de Misión del Día con Anillo Radial Morado -->
-          <div class="glass-card rounded-3xl p-5">
-            <div class="flex items-center gap-5">
-              <!-- SVG Radial Ring -->
-              <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
-                <svg class="w-24 h-24" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="42" stroke="rgba(139,92,246,0.15)" stroke-width="10" fill="transparent" />
-                  <circle
-                    id="radialGoalCircle"
-                    class="radial-ring-circle"
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    stroke="#8b5cf6"
-                    stroke-width="10"
-                    stroke-linecap="round"
-                    fill="transparent"
-                    stroke-dasharray="263.89"
-                    stroke-dashoffset="263.89"
-                  />
-                </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <span id="radialPctText" class="text-xl font-extrabold text-white">0%</span>
-                  <span class="text-[9px] uppercase font-bold text-violet-300">Meta</span>
+                  <div id="cardResultWarm" onclick="selectVisitResult('solo_info')" class="result-card rounded-2xl p-4 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
+                    <div class="flex items-center justify-between w-full">
+                      <span class="text-3xl">🌤️</span>
+                      <span class="text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full">+20 XP</span>
+                    </div>
+                    <div>
+                      <p class="font-extrabold text-sm text-white">Solo Info / Ya tiene</p>
+                      <p class="text-[11px] text-violet-200/70 leading-snug mt-0.5">"Ya tengo sistema" o se dejó info en esa dirección</p>
+                    </div>
+                  </div>
+
+                  <div id="cardResultCold" onclick="selectVisitResult('no_interesado')" class="result-card rounded-2xl p-4 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
+                    <div class="flex items-center justify-between w-full">
+                      <span class="text-3xl">❄️</span>
+                      <span class="text-[10px] font-extrabold uppercase bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">+10 XP</span>
+                    </div>
+                    <div>
+                      <p class="font-extrabold text-sm text-white">No interesado</p>
+                      <p class="text-[11px] text-violet-200/60 leading-snug mt-0.5">Rechazo directo o no aplica</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="dynamicOutcomeBox" class="pt-3 space-y-4 border-t border-violet-500/15">
+                  <div>
+                    <label id="outcomeChipsLabel" class="block text-xs font-extrabold text-violet-200 mb-2">⚡ Selecciona el caso con 1 toque:</label>
+                    <div id="outcomeQuickChips" class="flex flex-wrap gap-2"></div>
+                  </div>
+
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                      <label id="conditionsLabel" class="text-xs font-extrabold text-violet-200">✍️ Condiciones específicas o nota rápida:</label>
+                      <button
+                        type="button"
+                        id="btnVoiceDictation"
+                        onclick="toggleVoiceDictation()"
+                        class="px-3 py-1.5 rounded-xl bg-violet-600/25 hover:bg-violet-600/40 border border-violet-400/40 text-violet-200 text-xs font-extrabold flex items-center gap-1.5 transition"
+                      >
+                        <span>🎙️</span>
+                        <span id="voiceBtnText">Dictar con voz</span>
+                      </button>
+                    </div>
+                    <textarea
+                      id="condicionesNotas"
+                      rows="2"
+                      placeholder="Ej: 'Oye muchachos, me interesa pero si tienen estas condiciones...' o 'Ya tiene sistema Siigo, se dejó folleto'"
+                      class="w-full px-4 py-3 rounded-2xl border-2 outline-none text-sm font-medium placeholder:text-violet-300/40"
+                    ></textarea>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      id="contactoNombre"
+                      placeholder="👤 Nombre del encargado/dueño (Opcional)"
+                      class="w-full px-4 py-3 rounded-2xl border text-sm font-semibold placeholder:text-violet-300/40 outline-none"
+                    />
+                    <input
+                      type="tel"
+                      id="contactoTelefono"
+                      placeholder="📱 WhatsApp / Celular (Ej: 3001234567)"
+                      class="w-full px-4 py-3 rounded-2xl border text-sm font-semibold placeholder:text-violet-300/40 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" id="btnSubmitVisit" class="btn-purple-primary w-full font-extrabold py-4 rounded-2xl text-base flex items-center justify-center gap-2">
+                  <span>⚡ Registrar Visita y Sumar al Objetivo</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- COLUMNA DERECHA (5 cols) -->
+          <div class="lg:col-span-5 space-y-4">
+            <div class="glass-card rounded-3xl p-5">
+              <div class="flex items-center gap-5">
+                <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                  <svg class="w-24 h-24" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" stroke="rgba(139,92,246,0.15)" stroke-width="10" fill="transparent" />
+                    <circle
+                      id="radialGoalCircle"
+                      class="radial-ring-circle"
+                      cx="50"
+                      cy="50"
+                      r="42"
+                      stroke="#8b5cf6"
+                      stroke-width="10"
+                      stroke-linecap="round"
+                      fill="transparent"
+                      stroke-dasharray="263.89"
+                      stroke-dashoffset="263.89"
+                    />
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="radialPctText" class="text-xl font-extrabold text-white">0%</span>
+                    <span class="text-[9px] uppercase font-bold text-violet-300">Meta</span>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5 flex-1">
+                  <span id="missionStatusPill" class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">
+                    En progreso
+                  </span>
+                  <h4 class="font-extrabold text-white text-base">Tu Ritmo de Brigada Hoy</h4>
+                  <p id="missionHelperText" class="text-xs text-violet-200/80 leading-relaxed">
+                    Cada visita cuenta para tus 12 acercamientos.
+                  </p>
                 </div>
               </div>
+            </div>
 
-              <div class="space-y-1.5 flex-1">
-                <span id="missionStatusPill" class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">
-                  En progreso
-                </span>
-                <h4 class="font-extrabold text-white text-base">Tu Ritmo de Brigada Hoy</h4>
-                <p id="missionHelperText" class="text-xs text-violet-200/80 leading-relaxed">
-                  Cada visita cuenta para tus 12 acercamientos. ¡Busca a los dueños y anota sus condiciones!
-                </p>
+            <div id="lastSavedHighlightBox" class="hidden glass-card rounded-3xl p-5 border-2 border-violet-500/50 bg-[#211838] space-y-3 fade-slide-in"></div>
+
+            <div class="glass-card rounded-3xl p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
+                    Últimos Negocios Abordados
+                  </h4>
+                  <p class="text-[11px] text-violet-300/70">Trazabilidad de direcciones e interesados</p>
+                </div>
+                <button onclick="switchTab('history')" class="text-xs font-extrabold text-violet-300 hover:text-white">
+                  Ver mapa →
+                </button>
               </div>
+              <div id="recentVisitsMiniList" class="space-y-2.5"></div>
             </div>
           </div>
 
-          <!-- Tarjeta de Último Prospecto / Botón de WhatsApp Instantáneo -->
-          <div id="lastSavedHighlightBox" class="hidden glass-card rounded-3xl p-5 border-2 border-violet-500/50 bg-[#211838] space-y-3 fade-slide-in">
-            <!-- Dinámico -->
-          </div>
-
-          <!-- Feed en Vivo de los Últimos Negocios Abordados -->
-          <div class="glass-card rounded-3xl p-5 space-y-3">
-            <div class="flex items-center justify-between">
-              <div>
-                <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
-                  Radar de Actividad Reciente
-                </h4>
-                <p class="text-[11px] text-violet-300/70">Negocios y direcciones donde ya pasamos</p>
-              </div>
-              <button onclick="switchTab('history')" class="text-xs font-extrabold text-violet-300 hover:text-white">
-                Ver mapa y todos →
-              </button>
-            </div>
-
-            <div id="recentVisitsMiniList" class="space-y-2.5">
-              <!-- Dinámico -->
-            </div>
-          </div>
         </div>
+      </section>
 
-      </div>
-    </section>
-
-    <!-- =================================================================== -->
-    <!-- PESTAÑA 2: MAPA EN VIVO Y DIRECTORIO DE NEGOCIOS ABORDADOS          -->
-    <!-- =================================================================== -->
-    <section id="tabHistory" class="hidden space-y-5 fade-slide-in">
-
-      <div class="glass-card rounded-3xl p-5 space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <span class="text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/20 text-violet-200 border border-violet-400/30 px-2.5 py-1 rounded-full">
-              Georreferenciación Gratuita
-            </span>
-            <h2 class="text-xl font-extrabold text-white mt-1">🗺️ Mapa de Cobertura y Direcciones</h2>
-            <p class="text-xs text-violet-200/70">
-              Visualiza los negocios 🔥 Muy Interesados (Morado), 🌤️ Solo Info / Ya tiene sistema (Ámbar) o ❄️ No interesados.
-            </p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button
-              onclick="exportToExcelCSV()"
-              class="btn-purple-primary px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center gap-1.5"
-            >
+      <!-- SUB-VISTA 1.2: MAPA Y DIRECTORIO DE NEGOCIOS -->
+      <section id="tabHistory" class="hidden space-y-5 fade-slide-in">
+        <div class="glass-card rounded-3xl p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-xl font-extrabold text-white">🗺️ Mapa de Cobertura y Direcciones</h2>
+              <p class="text-xs text-violet-200/70">Negocios 🔥 Muy Interesados (Morado), 🌤️ Solo Info / Ya tiene sistema (Ámbar) o ❄️ No interesados.</p>
+            </div>
+            <button onclick="exportToExcelCSV()" class="btn-purple-primary px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center gap-1.5">
               📥 Descargar Excel (.CSV)
+            </button>
+          </div>
+          <div id="brigadaMap" class="border border-violet-500/25 shadow-inner"></div>
+        </div>
+
+        <div class="glass-card rounded-3xl p-5 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input
+              type="search"
+              id="searchHistoryInput"
+              oninput="renderHistoryList()"
+              placeholder="🔍 Buscar por negocio, dirección, condición o brigadista..."
+              class="md:col-span-2 w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+            />
+            <select id="filterHistoryResult" onchange="renderHistoryList()" class="w-full px-3.5 py-3 rounded-2xl border text-sm font-bold outline-none">
+              <option value="all">📋 Todos los estados</option>
+              <option value="interesado">🔥 Solo Muy Interesados</option>
+              <option value="solo_info">🌤️ Solo Info / Ya tiene sistema</option>
+              <option value="no_interesado">❄️ No interesados</option>
+            </select>
+            <select id="filterHistoryBrigadista" onchange="renderHistoryList()" class="w-full px-3.5 py-3 rounded-2xl border text-sm font-bold outline-none">
+              <option value="all">👥 Todos los brigadistas</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="fullHistoryList" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+      </section>
+
+      <!-- SUB-VISTA 1.3: PODIO DE BRIGADA -->
+      <section id="tabLeaderboard" class="hidden space-y-6 fade-slide-in">
+        <div class="glass-card rounded-3xl p-6 space-y-4">
+          <h3 class="font-extrabold text-lg text-white">🏆 Podio hacia los 12 Acercamientos y Prospectos Calientes</h3>
+          <div id="brigadistasRankingList" class="space-y-3.5"></div>
+        </div>
+        <div class="glass-card rounded-3xl p-6 space-y-4">
+          <h3 class="font-extrabold text-lg text-white">🎖️ Insignias Desbloqueadas</h3>
+          <div id="badgesGridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
+        </div>
+      </section>
+
+      <!-- SUB-VISTA 1.4: ANALÍTICA COMERCIAL -->
+      <section id="tabAnalytics" class="hidden space-y-6 fade-slide-in">
+        <div class="glass-card rounded-3xl p-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-extrabold text-white">📊 Radiografía de la Brigada Comercial</h2>
+            <p class="text-xs text-violet-200/70">Análisis de efectividad de protocolo, objeciones y condiciones de clientes interesados.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button onclick="loadSampleBrigadaData()" class="px-4 py-2.5 rounded-2xl bg-[#241b3d] hover:bg-[#2f234f] text-violet-200 border border-violet-500/40 text-xs font-extrabold transition">
+              ✨ Simular +Visitas
+            </button>
+            <button onclick="exportToExcelCSV()" class="btn-purple-primary px-4 py-2.5 rounded-2xl text-xs font-extrabold">
+              📥 Exportar a Excel
             </button>
           </div>
         </div>
 
-        <div id="brigadaMap" class="border border-violet-500/25 shadow-inner"></div>
-      </div>
-
-      <!-- Buscador y Filtros del Directorio -->
-      <div class="glass-card rounded-3xl p-5 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <input
-            type="search"
-            id="searchHistoryInput"
-            oninput="renderHistoryList()"
-            placeholder="🔍 Buscar por nombre del negocio, dirección, condición o brigadista..."
-            class="md:col-span-2 w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
-          />
-          <select
-            id="filterHistoryResult"
-            onchange="renderHistoryList()"
-            class="w-full px-3.5 py-3 rounded-2xl border text-sm font-bold outline-none"
-          >
-            <option value="all">📋 Todos los estados</option>
-            <option value="interesado">🔥 Solo Muy Interesados</option>
-            <option value="solo_info">🌤️ Solo Info / Ya tiene sistema</option>
-            <option value="no_interesado">❄️ No interesados</option>
-          </select>
-          <select
-            id="filterHistoryBrigadista"
-            onchange="renderHistoryList()"
-            class="w-full px-3.5 py-3 rounded-2xl border text-sm font-bold outline-none"
-          >
-            <option value="all">👥 Todos los brigadistas</option>
-          </select>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="glass-card p-5 rounded-3xl">
+            <p class="text-xs font-extrabold text-violet-300/70 uppercase">Total Abordados</p>
+            <p id="kpiTotalVisits" class="text-4xl font-extrabold text-white mt-2">0</p>
+            <p id="kpiGoalAvg" class="text-xs text-violet-300 font-semibold mt-1">Meta: 12 por brigadista</p>
+          </div>
+          <div class="glass-card p-5 rounded-3xl border border-violet-500/40 bg-violet-600/10">
+            <p class="text-xs font-extrabold text-violet-200 uppercase">🔥 Muy Interesados</p>
+            <p id="kpiHotLeads" class="text-4xl font-extrabold text-violet-300 mt-2">0</p>
+            <p id="kpiConversionRate" class="text-xs font-bold text-violet-200 mt-1">0% conversión</p>
+          </div>
+          <div class="glass-card p-5 rounded-3xl border border-amber-500/30">
+            <p class="text-xs font-extrabold text-amber-300 uppercase">🌤️ Solo Info / Ya Tienen</p>
+            <p id="kpiWarmInfo" class="text-4xl font-extrabold text-amber-300 mt-2">0</p>
+            <p id="kpiAlreadyHasSystem" class="text-xs font-bold text-amber-200/80 mt-1">0 ya tienen sistema</p>
+          </div>
+          <div class="glass-card p-5 rounded-3xl">
+            <p class="text-xs font-extrabold text-violet-300/70 uppercase">🪪 Uso de Carnet + Kit</p>
+            <p id="kpiCarnetRate" class="text-4xl font-extrabold text-white mt-2">100%</p>
+            <p id="kpiDecisionMakerRate" class="text-xs font-bold text-violet-300 mt-1">0% hablaron con dueño</p>
+          </div>
         </div>
-      </div>
 
-      <div id="fullHistoryList" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        <!-- Tarjetas de cada negocio -->
-      </div>
-    </section>
+        <div class="glass-card rounded-3xl p-6 border border-violet-500/30 space-y-4">
+          <h3 class="font-extrabold text-lg text-white">🧠 Hallazgos Automáticos del Comportamiento en Calle</h3>
+          <div id="aiInsightsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="glass-card rounded-3xl p-6">
+            <h3 class="font-extrabold text-white text-base mb-4">Embudo de Respuestas en Terreno</h3>
+            <div class="h-64 flex items-center justify-center"><canvas id="chartOutcomes"></canvas></div>
+          </div>
+          <div class="glass-card rounded-3xl p-6">
+            <h3 class="font-extrabold text-white text-base mb-4">Radiografía de Casos y Objeciones</h3>
+            <div class="h-64 flex items-center justify-center"><canvas id="chartReasons"></canvas></div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-3xl p-6 border border-violet-500/35">
+          <h3 class="font-extrabold text-violet-200 text-lg mb-3">🔥 Oportunidades Calientes y Condiciones para Cerrar Venta</h3>
+          <div id="hotLeadsTableContainer" class="overflow-x-auto"></div>
+        </div>
+      </section>
+    </div>
 
     <!-- =================================================================== -->
-    <!-- PESTAÑA 3: PODIO DE BRIGADA, GAMIFICACIÓN Y LOGROS                  -->
+    <!-- MÓDULO 2: DAILY DAY (SEGUIMIENTO DIARIO & STANDUP DEL EQUIPO)       -->
     <!-- =================================================================== -->
-    <section id="tabLeaderboard" class="hidden space-y-6 fade-slide-in">
-      <div class="glass-card rounded-3xl p-6 bg-[#1f1635] border border-violet-500/30">
-        <div class="flex flex-wrap items-center justify-between gap-4">
+    <div id="module_daily" class="hidden space-y-6 fade-slide-in">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Formulario Rápido de Daily Day -->
+        <form id="dailyForm" class="lg:col-span-5 glass-card rounded-3xl p-6 space-y-4 border border-violet-500/35">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/20 text-violet-200 px-2.5 py-0.5 rounded-full">
+                Módulo Daily Day
+              </span>
+              <h2 class="text-xl font-extrabold text-white mt-1">☀️ Registrar mi Daily de Hoy</h2>
+            </div>
+            <span class="text-2xl">⚡</span>
+          </div>
+
           <div>
-            <span class="text-[11px] font-extrabold uppercase tracking-widest bg-violet-500/25 text-violet-200 border border-violet-400/30 px-3 py-1 rounded-full">
-              Competencia Sana en Vivo
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">🎯 ¿Cuál es tu foco / meta principal de hoy?</label>
+            <textarea
+              id="dailyFocusInput"
+              required
+              rows="2"
+              placeholder="Ej: Cerrar las 3 cotizaciones pendientes de la brigada y avanzar módulo de facturación..."
+              class="w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">✅ ¿Qué lograste o avanzaste recientemente?</label>
+            <textarea
+              id="dailyDoneInput"
+              rows="2"
+              placeholder="Ej: Visité 12 locales en Calle 80, dejé 3 demos agendadas..."
+              class="w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">🚧 ¿Tienes algún bloqueo o necesitas apoyo?</label>
+            <input
+              type="text"
+              id="dailyBlockerInput"
+              placeholder="Ej: Ninguno / Necesito material impreso o apoyo técnico..."
+              class="w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">🔋 Nivel de energía / ritmo hoy:</label>
+            <div id="dailyMoodChips" class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="selectDailyMood('🔥 A tope')" class="chip-btn active-blue py-2 rounded-xl text-xs font-bold">🔥 A tope</button>
+              <button type="button" onclick="selectDailyMood('⚡ Enfocad@')" class="chip-btn py-2 rounded-xl text-xs font-bold">⚡ Enfocad@</button>
+              <button type="button" onclick="selectDailyMood('🆘 Con bloqueos')" class="chip-btn py-2 rounded-xl text-xs font-bold">🆘 Con bloqueos</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-purple-primary w-full py-3.5 rounded-2xl font-extrabold text-sm">
+            ☀️ Publicar mi Daily Day
+          </button>
+        </form>
+
+        <!-- Muro de Daily Day del Equipo -->
+        <div class="lg:col-span-7 glass-card rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-extrabold text-white">📋 Tablero Daily Day del Equipo</h3>
+              <p class="text-xs text-violet-300/70">En qué está trabajando cada persona hoy y qué bloqueos hay que resolver</p>
+            </div>
+          </div>
+          <div id="dailyListContainer" class="space-y-3">
+            <!-- Dinámico -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MÓDULO 3: TAREAS PENDIENTES & COMPROMISOS                           -->
+    <!-- =================================================================== -->
+    <div id="module_tareas" class="hidden space-y-6 fade-slide-in">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Crear Tarea Rápida -->
+        <form id="taskForm" class="lg:col-span-4 glass-card rounded-3xl p-6 space-y-4 border border-violet-500/35">
+          <div>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/20 text-violet-200 px-2.5 py-0.5 rounded-full">
+              Gestión Ágil
             </span>
-            <h2 class="text-2xl font-extrabold text-white mt-2">🏆 Podio de la Brigada & Medallas</h2>
-            <p class="text-xs sm:text-sm text-violet-200/80 mt-1">
-              Cada acercamiento suma +10 XP, hablar con el dueño +15 XP y cada cliente 🔥 Muy Interesado suma +50 XP.
-            </p>
+            <h2 class="text-xl font-extrabold text-white mt-1">✅ Nueva Tarea Pendiente</h2>
+          </div>
+
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Descripción de la tarea</label>
+            <input
+              type="text"
+              id="taskTitleInput"
+              required
+              placeholder="Ej: Enviar cotización a Ferretería El Tornillo..."
+              class="w-full px-4 py-3 rounded-2xl border text-sm font-semibold outline-none placeholder:text-violet-300/40"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Responsable</label>
+              <select id="taskAssigneeSelect" class="w-full px-3 py-3 rounded-2xl border text-xs font-bold outline-none"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Prioridad</label>
+              <select id="taskPriorityInput" class="w-full px-3 py-3 rounded-2xl border text-xs font-bold outline-none">
+                <option value="Alta">🔥 Alta / Urgente</option>
+                <option value="Media" selected>⚡ Media</option>
+                <option value="Baja">📌 Baja / Idea</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Notas o detalles adicionales (Opcional)</label>
+            <textarea
+              id="taskNotesInput"
+              rows="2"
+              placeholder="Detalles, teléfono o enlace..."
+              class="w-full px-4 py-2.5 rounded-2xl border text-xs outline-none placeholder:text-violet-300/40"
+            ></textarea>
+          </div>
+
+          <button type="submit" class="btn-purple-primary w-full py-3.5 rounded-2xl font-extrabold text-sm">
+            ➕ Agregar Tarea Pendiente
+          </button>
+        </form>
+
+        <!-- Lista de Tareas -->
+        <div class="lg:col-span-8 glass-card rounded-3xl p-6 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-lg font-extrabold text-white">📌 Tablero de Tareas Pendientes</h3>
+              <p class="text-xs text-violet-300/70">Marca con un clic las tareas completadas</p>
+            </div>
+            <div class="flex gap-1.5">
+              <button onclick="filterTasksView('all')" class="px-3 py-1.5 rounded-xl bg-[#221a38] text-xs font-bold text-violet-200">Todas</button>
+              <button onclick="filterTasksView('pending')" class="px-3 py-1.5 rounded-xl bg-[#221a38] text-xs font-bold text-amber-300">Pendientes</button>
+              <button onclick="filterTasksView('done')" class="px-3 py-1.5 rounded-xl bg-[#221a38] text-xs font-bold text-emerald-300">Completadas</button>
+            </div>
+          </div>
+
+          <div id="tasksListContainer" class="space-y-2.5">
+            <!-- Dinámico -->
           </div>
         </div>
-      </div>
 
-      <div class="glass-card rounded-3xl p-6 space-y-4">
-        <h3 class="font-extrabold text-lg text-white">🎯 Carrera hacia los 12 Acercamientos y Prospectos Calientes</h3>
-        <div id="brigadistasRankingList" class="space-y-3.5">
-          <!-- Dinámico -->
-        </div>
       </div>
-
-      <div class="glass-card rounded-3xl p-6 space-y-4">
-        <h3 class="font-extrabold text-lg text-white">🎖️ Insignias Desbloqueadas Hoy</h3>
-        <div id="badgesGridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <!-- Dinámico -->
-        </div>
-      </div>
-    </section>
+    </div>
 
     <!-- =================================================================== -->
-    <!-- PESTAÑA 4: INTELIGENCIA COMERCIAL Y ANALÍTICA DE DATOS              -->
+    <!-- MÓDULO 4: LLAMADOS DE ATENCIÓN & BITÁCORA DISCIPLINARIA             -->
     <!-- =================================================================== -->
-    <section id="tabAnalytics" class="hidden space-y-6 fade-slide-in">
+    <div id="module_llamados" class="hidden space-y-6 fade-slide-in">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-      <div class="glass-card rounded-3xl p-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <span class="text-[11px] font-extrabold uppercase tracking-widest text-violet-200 bg-violet-500/20 border border-violet-400/30 px-3 py-1 rounded-full">
-            Data Analytics & Insights
-          </span>
-          <h2 class="text-2xl font-extrabold text-white mt-2">📊 Radiografía de la Brigada Comercial</h2>
-          <p class="text-xs text-violet-200/70 mt-0.5">
-            Analiza qué funciona en la calle, por qué dicen que no, y qué condiciones piden los clientes interesados.
-          </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2.5">
-          <button
-            onclick="loadSampleBrigadaData()"
-            class="px-4 py-2.5 rounded-2xl bg-[#241b3d] hover:bg-[#2f234f] text-violet-200 border border-violet-500/40 text-xs font-extrabold transition"
-          >
-            ✨ Simular +Visitas de Brigada
-          </button>
-          <button
-            onclick="exportToExcelCSV()"
-            class="btn-purple-primary px-4 py-2.5 rounded-2xl text-xs font-extrabold"
-          >
-            📥 Exportar Base Completa a Excel
-          </button>
-        </div>
-      </div>
-
-      <!-- KPIs Bento Grid -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="glass-card p-5 rounded-3xl">
-          <p class="text-xs font-extrabold text-violet-300/70 uppercase tracking-wider">Total Abordados</p>
-          <p id="kpiTotalVisits" class="text-4xl font-extrabold text-white mt-2">0</p>
-          <p id="kpiGoalAvg" class="text-xs text-violet-300 font-semibold mt-1">Meta: 12 por brigadista</p>
-        </div>
-
-        <div class="glass-card p-5 rounded-3xl border border-violet-500/40 bg-violet-600/10">
-          <p class="text-xs font-extrabold text-violet-200 uppercase tracking-wider">🔥 Muy Interesados</p>
-          <p id="kpiHotLeads" class="text-4xl font-extrabold text-violet-300 mt-2">0</p>
-          <p id="kpiConversionRate" class="text-xs font-bold text-violet-200 mt-1">0% conversión</p>
-        </div>
-
-        <div class="glass-card p-5 rounded-3xl border border-amber-500/30">
-          <p class="text-xs font-extrabold text-amber-300 uppercase tracking-wider">🌤️ Solo Info / Ya Tienen</p>
-          <p id="kpiWarmInfo" class="text-4xl font-extrabold text-amber-300 mt-2">0</p>
-          <p id="kpiAlreadyHasSystem" class="text-xs font-bold text-amber-200/80 mt-1">0 ya tienen sistema</p>
-        </div>
-
-        <div class="glass-card p-5 rounded-3xl">
-          <p class="text-xs font-extrabold text-violet-300/70 uppercase tracking-wider">🪪 Uso de Carnet + Kit</p>
-          <p id="kpiCarnetRate" class="text-4xl font-extrabold text-white mt-2">100%</p>
-          <p id="kpiDecisionMakerRate" class="text-xs font-bold text-violet-300 mt-1">0% hablaron con dueño</p>
-        </div>
-      </div>
-
-      <!-- CONCLUSIONES INTELIGENTES AUTOMÁTICAS -->
-      <div class="glass-card rounded-3xl p-6 border border-violet-500/30 space-y-4">
-        <div class="flex items-center gap-2.5">
-          <span class="text-2xl">🧠</span>
+        <!-- Formulario de Llamado de Atención -->
+        <form id="warningForm" class="lg:col-span-5 glass-card rounded-3xl p-6 space-y-4 border border-rose-500/35">
           <div>
-            <h3 class="font-extrabold text-lg text-white">Hallazgos Automáticos del Comportamiento en Calle</h3>
-            <p class="text-xs text-violet-300/70">Cruce estadístico en tiempo real sobre los datos recolectados</p>
-          </div>
-        </div>
-        <div id="aiInsightsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-          <!-- Dinámico -->
-        </div>
-      </div>
-
-      <!-- GRÁFICOS INTERACTIVOS -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="glass-card rounded-3xl p-6">
-          <h3 class="font-extrabold text-white text-base mb-1">Embudo de Respuestas en Terreno</h3>
-          <p class="text-xs text-violet-300/70 mb-4">Proporción entre prospectos calientes, entrega de información y descartes</p>
-          <div class="h-64 flex items-center justify-center">
-            <canvas id="chartOutcomes"></canvas>
-          </div>
-        </div>
-
-        <div class="glass-card rounded-3xl p-6">
-          <h3 class="font-extrabold text-white text-base mb-1">Radiografía de Casos y Objeciones</h3>
-          <p class="text-xs text-violet-300/70 mb-4">Cuántos piden condiciones específicas vs cuántos ya tienen sistema</p>
-          <div class="h-64 flex items-center justify-center">
-            <canvas id="chartReasons"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- TABLA EJECUTIVA DE PROSPECTOS INTERESADOS Y CONDICIONES -->
-      <div class="glass-card rounded-3xl p-6 border border-violet-500/35">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <div>
-            <h3 class="font-extrabold text-violet-200 text-lg flex items-center gap-2">
-              🔥 Oportunidades Calientes y Condiciones para Cerrar Venta
-            </h3>
-            <p class="text-xs text-violet-300/70">
-              Clientes que dijeron "Sí me interesa" junto con las condiciones exactas que pidieron y botón directo a su WhatsApp
+            <span class="text-[10px] font-extrabold uppercase tracking-wider bg-rose-500/20 text-rose-200 border border-rose-400/30 px-2.5 py-0.5 rounded-full">
+              Bitácora de Equipo
+            </span>
+            <h2 class="text-xl font-extrabold text-white mt-1">⚠️ Registrar Llamado de Atención / Novedad</h2>
+            <p class="text-xs text-violet-200/70 mt-0.5">
+              Registra novedades de disciplina, puntualidad, uso de carnet o compromisos de mejora.
             </p>
           </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-extrabold text-violet-200 mb-1.5">👤 Colaborador involucrado</label>
+              <select id="warnMemberSelect" class="w-full px-3.5 py-3 rounded-2xl border text-xs font-bold outline-none"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-violet-200 mb-1.5">📌 Nivel / Tipo</label>
+              <select id="warnSeverityInput" class="w-full px-3.5 py-3 rounded-2xl border text-xs font-bold outline-none">
+                <option value="Observación Preventiva">🔔 Observación Preventiva</option>
+                <option value="Llamado de Atención Verbal" selected>⚠️ Llamado de Atención Verbal</option>
+                <option value="Llamado de Atención Formal">🚨 Llamado de Atención Formal</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">Categoría rápida (1 toque):</label>
+            <div id="warnCategoryChips" class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="selectWarnCategory('No portar carnet / Kit incompleto')" class="chip-btn active-blue px-3 py-1.5 rounded-xl text-xs font-bold">🪪 Sin carnet / Kit</button>
+              <button type="button" onclick="selectWarnCategory('Puntualidad / Horario')" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-bold">⏰ Puntualidad</button>
+              <button type="button" onclick="selectWarnCategory('Bajo registro en brigada')" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-bold">📉 Bajo registro</button>
+              <button type="button" onclick="selectWarnCategory('Incumplimiento de tarea / acuerdo')" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-bold">📋 Incumplimiento</button>
+              <button type="button" onclick="selectWarnCategory('Actitud / Servicio al cliente')" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-bold">🗣️ Actitud / Trato</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">📝 ¿Qué ocurrió? (Motivo detallado)</label>
+            <textarea
+              id="warnReasonInput"
+              required
+              rows="2"
+              placeholder="Ej: Salió a la brigada sin el carnet puesto y no registró las visitas a tiempo..."
+              class="w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-extrabold text-violet-200 mb-1.5">🤝 Compromiso acordado con la persona</label>
+            <input
+              type="text"
+              id="warnCommitmentInput"
+              placeholder="Ej: Portar siempre el kit completo y cumplir los 12 acercamientos diarios."
+              class="w-full px-4 py-3 rounded-2xl border text-sm outline-none placeholder:text-violet-300/40"
+            />
+          </div>
+
+          <button type="submit" class="btn-purple-primary w-full py-3.5 rounded-2xl font-extrabold text-sm">
+            ⚠️ Guardar Llamado de Atención
+          </button>
+        </form>
+
+        <!-- Historial de Llamados de Atención -->
+        <div class="lg:col-span-7 glass-card rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-extrabold text-white">📂 Historial de Llamados de Atención y Compromisos</h3>
+              <p class="text-xs text-violet-300/70">Trazabilidad por fecha, colaborador, motivo y quién lo registró</p>
+            </div>
+          </div>
+          <div id="warningsListContainer" class="space-y-3">
+            <!-- Dinámico -->
+          </div>
         </div>
-        <div id="hotLeadsTableContainer" class="overflow-x-auto">
-          <!-- Tabla dinámica -->
-        </div>
+
       </div>
-    </section>
+    </div>
 
   </main>
 
@@ -853,43 +1058,25 @@
         <button onclick="closeCloudModal()" class="text-violet-300 hover:text-white font-bold text-lg">✕</button>
       </div>
       <p class="text-xs text-violet-200/80 leading-relaxed">
-        Conecta tu proyecto gratuito de <b>Supabase</b> para que todas las visitas que anoten los brigadistas desde sus teléfonos caigan en tiempo real a un mismo tablero.
+        Conecta tu proyecto gratuito de <b>Supabase</b> para sincronizar en tiempo real todos los módulos de Notas Quickss.
       </p>
 
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-bold text-violet-200 mb-1">Supabase Project URL</label>
-          <input
-            type="url"
-            id="supaUrlInput"
-            placeholder="https://xyzcompany.supabase.co"
-            class="w-full px-4 py-3 rounded-xl border text-xs font-mono outline-none"
-          />
+          <input type="url" id="supaUrlInput" placeholder="https://xyzcompany.supabase.co" class="w-full px-4 py-3 rounded-xl border text-xs font-mono outline-none" />
         </div>
         <div>
           <label class="block text-xs font-bold text-violet-200 mb-1">Supabase Anon Public Key</label>
-          <input
-            type="text"
-            id="supaKeyInput"
-            placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            class="w-full px-4 py-3 rounded-xl border text-xs font-mono outline-none"
-          />
+          <input type="text" id="supaKeyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full px-4 py-3 rounded-xl border text-xs font-mono outline-none" />
         </div>
       </div>
 
       <div class="flex justify-end gap-2 pt-2">
-        <button
-          type="button"
-          onclick="disconnectSupabase()"
-          class="px-4 py-2.5 rounded-xl border border-violet-500/30 text-xs font-bold text-violet-200 hover:bg-violet-950/50"
-        >
+        <button type="button" onclick="disconnectSupabase()" class="px-4 py-2.5 rounded-xl border border-violet-500/30 text-xs font-bold text-violet-200 hover:bg-violet-950/50">
           Modo Local
         </button>
-        <button
-          type="button"
-          onclick="saveSupabaseConfig()"
-          class="btn-purple-primary px-5 py-2.5 rounded-xl text-xs font-extrabold"
-        >
+        <button type="button" onclick="saveSupabaseConfig()" class="btn-purple-primary px-5 py-2.5 rounded-xl text-xs font-extrabold">
           Guardar y Conectar
         </button>
       </div>
@@ -899,34 +1086,10 @@
   <!-- ===================================================================== -->
   <!-- TOAST FLOTANTE                                                        -->
   <!-- ===================================================================== -->
-  <div id="toastNotification" class="hidden fixed bottom-24 lg:bottom-8 right-4 left-4 sm:left-auto sm:w-96 z-50 bg-[#1a132c] text-white px-5 py-4 rounded-2xl shadow-2xl border border-violet-500/50 text-xs font-bold flex items-center gap-3">
+  <div id="toastNotification" class="hidden fixed bottom-20 lg:bottom-8 right-4 left-4 sm:left-auto sm:w-96 z-50 bg-[#1a132c] text-white px-5 py-4 rounded-2xl shadow-2xl border border-violet-500/50 text-xs font-bold flex items-center gap-3">
     <span id="toastIcon" class="text-xl">✅</span>
     <span id="toastMessage" class="leading-snug">Guardado correctamente</span>
   </div>
-
-  <!-- ===================================================================== -->
-  <!-- BARRA INFERIOR MÓVIL                                                  -->
-  <!-- ===================================================================== -->
-  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0e0b16]/95 backdrop-blur-xl border-t border-violet-500/20">
-    <div class="grid grid-cols-4 p-1.5 gap-1">
-      <button id="navBtnCapture" onclick="switchTab('capture')" class="py-2 px-2 rounded-2xl font-extrabold text-[11px] flex flex-col items-center gap-0.5 bg-violet-600 text-white">
-        <span class="text-base">⚡</span>
-        <span>Terreno</span>
-      </button>
-      <button id="navBtnHistory" onclick="switchTab('history')" class="py-2 px-2 rounded-2xl font-bold text-[11px] flex flex-col items-center gap-0.5 text-violet-300/70">
-        <span class="text-base">🗺️</span>
-        <span>Mapa (<span id="navHistoryCount">0</span>)</span>
-      </button>
-      <button id="navBtnLeaderboard" onclick="switchTab('leaderboard')" class="py-2 px-2 rounded-2xl font-bold text-[11px] flex flex-col items-center gap-0.5 text-violet-300/70">
-        <span class="text-base">🏆</span>
-        <span>Podio</span>
-      </button>
-      <button id="navBtnAnalytics" onclick="switchTab('analytics')" class="py-2 px-2 rounded-2xl font-bold text-[11px] flex flex-col items-center gap-0.5 text-violet-300/70">
-        <span class="text-base">📊</span>
-        <span>Datos</span>
-      </button>
-    </div>
-  </nav>
 
   <script src="app.js"></script>
 </body>
