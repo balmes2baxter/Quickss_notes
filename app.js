@@ -485,44 +485,162 @@ window.selectWarnSeverity = function(severity) {
 };
 
 // ============================================================================
-// 5. RENDER DEL HUB PRINCIPAL DE NOTAS QUICKSS
+// 5. RENDER DEL HUB PRINCIPAL: PANEL DE ANALÍTICAS PERSONALES + MÓDULOS
 // ============================================================================
+window.setHubAnalyticsScope = function(scope) {
+  state.hubAnalyticsScope = scope;
+  const btnPersonal = document.getElementById('btnScopePersonal');
+  const btnTeam = document.getElementById('btnScopeTeam');
+
+  if (scope === 'personal') {
+    if (btnPersonal) btnPersonal.className = 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow flex items-center gap-1.5 cursor-pointer transition-colors';
+    if (btnTeam) btnTeam.className = 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold text-violet-200 hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors';
+  } else {
+    if (btnTeam) btnTeam.className = 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow flex items-center gap-1.5 cursor-pointer transition-colors';
+    if (btnPersonal) btnPersonal.className = 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold text-violet-200 hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors';
+  }
+
+  renderHubDashboard();
+  refreshLucideIcons();
+};
+
 function renderHubDashboard() {
   const todayFormatted = new Date().toLocaleDateString('es-CO', {
     weekday: 'long', day: 'numeric', month: 'long'
   });
   setText('hubTodayDate', todayFormatted);
 
-  const welcomeEl = document.getElementById('hubWelcomeName');
-  if (welcomeEl && state.currentUser) {
-    welcomeEl.textContent = state.currentUser.nombre.split(' ')[0];
+  const scope = state.hubAnalyticsScope || 'personal';
+  const currentName = state.currentUser?.nombre || 'Equipo';
+  const todayISO = getTodayISO();
+
+  // Identidad en el Panel de Analíticas
+  setText('hubUserAvatarBig', scope === 'personal' ? getInitials(currentName) : 'EQ');
+  setText('hubWelcomeName', scope === 'personal' ? currentName : 'Todo el Equipo');
+  setText('hubScopeBadgeText', scope === 'personal' ? 'Analítica Personal de Sesión' : 'Consolidado Global del Equipo');
+
+  const userXP = scope === 'personal'
+    ? calculateUserXP(currentName)
+    : state.users.reduce((acc, u) => acc + calculateUserXP(u.nombre), 0);
+  const rankObj = getRankFromXP(scope === 'personal' ? userXP : Math.round(userXP / Math.max(1, state.users.length)));
+  const rankPill = document.getElementById('hubUserRankPill');
+  if (rankPill) {
+    rankPill.innerHTML = `
+      <i data-lucide="${rankObj.icon}" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+      <span>${rankObj.title} · ${userXP} XP</span>
+    `;
   }
 
-  const hotVisits = state.visits.filter(v => v.resultado === 'interesado').length;
-  const pendingTasks = state.tasks.filter(t => !t.completed).length;
+  // Filtrar datos según alcance (Personal al iniciar sesión vs Equipo)
+  const scopedVisits = scope === 'personal'
+    ? state.visits.filter(v => v.brigadista_nombre === currentName)
+    : state.visits;
+  const scopedDailies = scope === 'personal'
+    ? state.dailies.filter(d => d.author === currentName)
+    : state.dailies;
+  const scopedTasks = scope === 'personal'
+    ? state.tasks.filter(t => t.assignee === currentName)
+    : state.tasks;
+  const scopedWarnings = scope === 'personal'
+    ? state.warnings.filter(w => w.member === currentName)
+    : state.warnings;
 
-  // Contadores de Navbar Inferior, Drawer y Hub
+  // 1. Métrica Brigada
+  const targetBrigada = scope === 'personal'
+    ? (state.preCheckin?.meta_diaria || state.currentUser?.meta || 12)
+    : state.users.length * 12;
+  const pctBrigada = Math.min(100, Math.round((scopedVisits.length / Math.max(1, targetBrigada)) * 100));
+  const hotScoped = scopedVisits.filter(v => v.resultado === 'interesado').length;
+
+  setText('hubStatBrigadas', `${scopedVisits.length} / ${targetBrigada}`);
+  const barBrig = document.getElementById('hubBarBrigadas');
+  if (barBrig) barBrig.style.width = `${pctBrigada}%`;
+  setText('hubSubBrigadasHot', `${hotScoped} muy interesados`);
+  setText('hubSubBrigadasKit', state.preCheckin?.completed ? `Zona: ${state.preCheckin.zona}` : 'Check-in pendiente');
+
+  // 2. Métrica Daily Chat (Ayer / Hoy / Bloqueante)
+  const todayDaily = scopedDailies.find(d => d.fecha === todayISO) || scopedDailies[0];
+  const hasDailyToday = scope === 'personal'
+    ? scopedDailies.some(d => d.fecha === todayISO)
+    : scopedDailies.length >= state.users.length;
+  const pctDaily = scope === 'personal'
+    ? (hasDailyToday ? 100 : 0)
+    : Math.min(100, Math.round((scopedDailies.filter(d => d.fecha === todayISO).length / Math.max(1, state.users.length)) * 100));
+
+  setText('hubStatDaily', scope === 'personal' ? (hasDailyToday ? 'Completado' : 'Pendiente') : `${scopedDailies.length} hoy`);
+  const barDaily = document.getElementById('hubBarDaily');
+  if (barDaily) barDaily.style.width = `${pctDaily}%`;
+  setText('hubSubDailyFocus', todayDaily ? `Hoy: ${todayDaily.focus}` : 'Sin Daily Chat registrado hoy');
+
+  // 3. Métrica Tareas Planteadas
+  const totalScopedTasks = scopedTasks.length;
+  const doneScopedTasks = scopedTasks.filter(t => t.completed).length;
+  const pendingScopedTasks = totalScopedTasks - doneScopedTasks;
+  const highPendingTasks = scopedTasks.filter(t => !t.completed && t.priority === 'Alta').length;
+  const pctTareas = totalScopedTasks > 0 ? Math.round((doneScopedTasks / totalScopedTasks) * 100) : 100;
+
+  setText('hubStatTareas', `${doneScopedTasks} / ${totalScopedTasks}`);
+  const barTareas = document.getElementById('hubBarTareas');
+  if (barTareas) barTareas.style.width = `${pctTareas}%`;
+  setText('hubSubTareasPending', `${pendingScopedTasks} pendientes`);
+  setText('hubSubTareasHigh', `${highPendingTasks} prioridad alta`);
+
+  // 4. Métrica Bitácora / Llamados
+  const pctDiscipline = scopedWarnings.length === 0 ? 100 : Math.max(40, 100 - scopedWarnings.length * 25);
+  setText('hubStatLlamados', `${scopedWarnings.length}`);
+  const barLlamados = document.getElementById('hubBarLlamados');
+  if (barLlamados) {
+    barLlamados.style.width = `${pctDiscipline}%`;
+    barLlamados.className = `h-full rounded-full transition-[width] duration-500 ${scopedWarnings.length === 0 ? 'bg-emerald-400' : 'bg-rose-400'}`;
+  }
+  setText(
+    'hubSubLlamadosText',
+    scopedWarnings.length === 0
+      ? 'Sin llamados activos · Cumplimiento óptimo'
+      : `Compromiso: ${scopedWarnings[0].commitment || scopedWarnings[0].category}`
+  );
+
+  // Anillo Global de Cumplimiento de Actividades Planteadas
+  const overallPct = Math.round((pctBrigada * 0.45) + (pctDaily * 0.25) + (pctTareas * 0.30));
+  const circumference = 263.89;
+  const overallOffset = circumference - (overallPct / 100) * circumference;
+  const overallCircle = document.getElementById('hubOverallRadialCircle');
+  if (overallCircle) overallCircle.style.strokeDashoffset = overallOffset;
+  setText('hubOverallPctText', `${overallPct}%`);
+
+  setText(
+    'hubOverallStatusBadge',
+    overallPct >= 80 ? 'Excelente ritmo hoy' : (overallPct >= 45 ? 'Avance activo' : 'Actividades por iniciar')
+  );
+  setText(
+    'hubOverallSummaryText',
+    `Llevas ${scopedVisits.length}/${targetBrigada} visitas en brigada, ${doneScopedTasks}/${totalScopedTasks} tareas listas y Daily Chat ${hasDailyToday ? 'al día' : 'pendiente'}.`
+  );
+
+  // Renderizar Gráfica Personal en el Hub y Hoja de Ruta Interactiva
+  renderHubPersonalChart(pctBrigada, pctDaily, pctTareas, pctDiscipline);
+  renderHubActionableRoadmap(currentName, scopedVisits.length, targetBrigada, hasDailyToday, scopedTasks, scopedWarnings);
+
+  // Contadores Globales de Navbar Inferior, Drawer y Tarjetas de Módulos
+  const allHotVisits = state.visits.filter(v => v.resultado === 'interesado').length;
+  const allPendingTasks = state.tasks.filter(t => !t.completed).length;
+
   setText('badgeCountBrigadas', state.visits.length);
   setText('badgeCountDaily', state.dailies.length);
-  setText('badgeCountTareas', pendingTasks);
+  setText('badgeCountTareas', allPendingTasks);
   setText('badgeCountLlamados', state.warnings.length);
 
   setText('drawerBadgeBrigadas', state.visits.length);
   setText('drawerBadgeDaily', state.dailies.length);
-  setText('drawerBadgeTareas', pendingTasks);
+  setText('drawerBadgeTareas', allPendingTasks);
   setText('drawerBadgeLlamados', state.warnings.length);
 
-  setText('hubStatBrigadas', state.visits.length);
-  setText('hubStatDaily', state.dailies.length);
-  setText('hubStatTareas', pendingTasks);
-  setText('hubStatLlamados', state.warnings.length);
-
-  setText('hubCardBrigadasInfo', `${state.visits.length} visitas · ${hotVisits} muy interesados`);
-  setText('hubCardDailyInfo', `${state.dailies.length} reportes en el muro del equipo`);
-  setText('hubCardTareasInfo', `${pendingTasks} pendientes · ${state.tasks.length - pendingTasks} completadas`);
+  setText('hubCardBrigadasInfo', `${state.visits.length} visitas · ${allHotVisits} muy interesados`);
+  setText('hubCardDailyInfo', `${state.dailies.length} reportes estructurados (Ayer · Hoy · Bloqueante)`);
+  setText('hubCardTareasInfo', `${allPendingTasks} pendientes · ${state.tasks.length - allPendingTasks} completadas`);
   setText('hubCardLlamadosInfo', `${state.warnings.length} registros en bitácora`);
 
-  // Feed Unificado Reciente (100% Iconos SVG)
+  // Feed Unificado Reciente
   const feedEl = document.getElementById('hubUnifiedFeed');
   if (!feedEl) return;
 
@@ -538,9 +656,9 @@ function renderHubDashboard() {
     })),
     ...state.dailies.slice(0, 2).map(d => ({
       icon: 'sun',
-      mod: 'Daily Day',
-      title: `Foco hoy: ${d.focus}`,
-      desc: d.blocker ? `Bloqueo: ${d.blocker}` : `Avance: ${d.done || 'En progreso'}`,
+      mod: 'Daily Chat',
+      title: `Hoy: ${d.focus}`,
+      desc: `Ayer: ${d.done || 'Registrado'} · Bloqueante: ${d.blocker || 'Ninguno'}`,
       author: d.author,
       time: `${d.fecha} ${d.hora}`,
       clickMod: 'daily'
@@ -588,13 +706,161 @@ function renderHubDashboard() {
   `).join('');
 }
 
+function renderHubPersonalChart(pctBrigada, pctDaily, pctTareas, pctDiscipline) {
+  const canvas = document.getElementById('chartHubPersonal');
+  if (!canvas || typeof Chart === 'undefined') return;
+  const ctx = canvas.getContext('2d');
+
+  if (state.charts.hubPersonal) {
+    state.charts.hubPersonal.destroy();
+  }
+
+  state.charts.hubPersonal = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Brigada (Meta 12)', 'Daily Chat Hoy', 'Tareas Listas', 'Protocolo & Kit'],
+      datasets: [{
+        label: '% Cumplimiento',
+        data: [pctBrigada, pctDaily, pctTareas, pctDiscipline],
+        backgroundColor: ['#8b5cf6', '#a78bfa', '#f59e0b', '#34d399'],
+        borderRadius: 8,
+        barThickness: 18
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          min: 0,
+          max: 100,
+          ticks: {
+            callback: (val) => `${val}%`,
+            color: '#c4b5fd',
+            font: { size: 10 }
+          },
+          grid: { color: 'rgba(139,92,246,0.1)' }
+        },
+        y: {
+          ticks: { color: '#f5f3ff', font: { size: 11, weight: 'bold' } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function renderHubActionableRoadmap(userName, visitsDone, visitsTarget, hasDailyToday, userTasks, userWarnings) {
+  const container = document.getElementById('hubPersonalActionList');
+  if (!container) return;
+
+  const actions = [];
+
+  if (!hasDailyToday) {
+    actions.push({
+      icon: 'sun',
+      badge: 'Prioridad 1 · Daily Chat',
+      badgeClass: 'bg-violet-500/25 text-violet-200 border-violet-400/35',
+      title: 'Publicar tu Daily Chat (Ayer · Hoy · Bloqueante)',
+      desc: 'Aún no has registrado tu enfoque y bloqueantes de hoy.',
+      mod: 'daily'
+    });
+  } else {
+    actions.push({
+      icon: 'check-circle-2',
+      badge: 'Daily Chat al día',
+      badgeClass: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/35',
+      title: 'Daily Chat publicado correctamente',
+      desc: 'Toca para ver el muro del equipo o copiar tu formato para chat.',
+      mod: 'daily'
+    });
+  }
+
+  const remainingVisits = Math.max(0, visitsTarget - visitsDone);
+  if (remainingVisits > 0) {
+    actions.push({
+      icon: 'compass',
+      badge: `Faltan ${remainingVisits} visitas`,
+      badgeClass: 'bg-violet-500/25 text-violet-200 border-violet-400/35',
+      title: `Avanzar meta de Brigada (${visitsDone}/${visitsTarget} hoy)`,
+      desc: 'Registra negocios abordados, dirección con GPS y clientes interesados.',
+      mod: 'brigadas'
+    });
+  } else {
+    actions.push({
+      icon: 'trophy',
+      badge: 'Meta Lograda',
+      badgeClass: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/35',
+      title: `Meta de ${visitsTarget} acercamientos completada`,
+      desc: 'Revisa el mapa de cobertura o exporta los resultados a Excel.',
+      mod: 'brigadas'
+    });
+  }
+
+  const pendingTask = userTasks.find(t => !t.completed);
+  if (pendingTask) {
+    actions.push({
+      icon: 'check-square',
+      badge: `Tarea ${pendingTask.priority}`,
+      badgeClass: 'bg-amber-500/20 text-amber-200 border-amber-400/35',
+      title: pendingTask.title,
+      desc: pendingTask.notes || 'Toca para ir al tablero de tareas y marcarla completada.',
+      mod: 'tareas'
+    });
+  } else if (userWarnings.length > 0) {
+    actions.push({
+      icon: 'shield-alert',
+      badge: 'Compromiso Activo',
+      badgeClass: 'bg-rose-500/20 text-rose-200 border-rose-400/35',
+      title: userWarnings[0].commitment || userWarnings[0].category,
+      desc: 'Acuerdo registrado en bitácora del equipo.',
+      mod: 'llamados'
+    });
+  } else {
+    actions.push({
+      icon: 'sparkles',
+      badge: 'Todo al día',
+      badgeClass: 'bg-violet-500/20 text-violet-200 border-violet-400/35',
+      title: 'Sin tareas pendientes por cerrar',
+      desc: 'Toca para asignar un nuevo seguimiento comercial al equipo.',
+      mod: 'tareas'
+    });
+  }
+
+  container.innerHTML = actions.slice(0, 3).map(a => `
+    <button
+      type="button"
+      onclick="switchModule('${a.mod}')"
+      class="w-full p-3 rounded-xl bg-[#130e22]/90 hover:bg-[#1b1430] border border-violet-400/20 hover:border-violet-400/50 text-left flex items-center justify-between gap-3 cursor-pointer transition-colors"
+    >
+      <div class="flex items-start gap-3 min-w-0">
+        <div class="w-8 h-8 rounded-lg bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-violet-200 shrink-0 mt-0.5">
+          <i data-lucide="${a.icon}" class="w-4 h-4" aria-hidden="true"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-extrabold px-2 py-0.2 rounded-full border ${a.badgeClass}">${escapeHtml(a.badge)}</span>
+          </div>
+          <p class="text-xs font-extrabold text-white truncate mt-0.5">${escapeHtml(a.title)}</p>
+          <p class="text-[11px] text-violet-300/75 truncate">${escapeHtml(a.desc)}</p>
+        </div>
+      </div>
+      <i data-lucide="chevron-right" class="w-4 h-4 text-violet-300/60 shrink-0" aria-hidden="true"></i>
+    </button>
+  `).join('');
+}
+
 function setText(id, val) {
   const el = document.getElementById(id);
   if (el) el.textContent = val;
 }
 
 // ============================================================================
-// 6. MÓDULO DAILY DAY (SEGUIMIENTO DIARIO DEL EQUIPO)
+// 6. MÓDULO DAILY DAY / DAILY CHAT (ESTRUCTURA: AYER · HOY · BLOQUEANTE)
 // ============================================================================
 window.selectDailyMood = function(mood) {
   state.dailyMood = mood;
@@ -604,20 +870,53 @@ window.selectDailyMood = function(mood) {
   });
 };
 
+function formatDailyChatBlock(done, focus, blocker, author) {
+  const ayerText = (done || '').trim() || 'Sin novedades registradas';
+  const hoyText = (focus || '').trim() || 'Por definir';
+  const bloqText = (blocker || '').trim() || 'Ninguno';
+  const header = author ? `Daily — ${author}\n` : '';
+  return `${header}✅ Ayer: ${ayerText}\n🎯 Hoy: ${hoyText}\n🚧 Bloqueante: ${bloqText}`;
+}
+
+window.copyDraftDailyChat = async function() {
+  const done = document.getElementById('dailyDoneInput')?.value || '';
+  const focus = document.getElementById('dailyFocusInput')?.value || '';
+  const blocker = document.getElementById('dailyBlockerInput')?.value || 'Ninguno';
+  const text = formatDailyChatBlock(done, focus, blocker, state.currentUser?.nombre);
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Formato Daily Chat (Ayer / Hoy / Bloqueante) copiado al portapapeles');
+  } catch {
+    showToast('Listo: publica tu Daily para copiarlo con 1 toque');
+  }
+};
+
+window.copyDailyEntryText = async function(id) {
+  const d = state.dailies.find(item => item.id === id);
+  if (!d) return;
+  const text = formatDailyChatBlock(d.done, d.focus, d.blocker, d.author);
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(`Daily Chat de ${d.author} copiado al portapapeles`);
+  } catch {
+    showToast('No se pudo acceder al portapapeles');
+  }
+};
+
 function handleDailySubmit(e) {
   e.preventDefault();
-  const focus = document.getElementById('dailyFocusInput').value.trim();
   const done = document.getElementById('dailyDoneInput').value.trim();
-  const blocker = document.getElementById('dailyBlockerInput').value.trim();
-  if (!focus) return;
+  const focus = document.getElementById('dailyFocusInput').value.trim();
+  const blocker = document.getElementById('dailyBlockerInput').value.trim() || 'Ninguno';
+  if (!focus && !done) return;
 
   const entry = {
     id: 'dly_' + Date.now(),
     fecha: getTodayISO(),
     hora: getCurrentTimeFormatted(),
     author: state.currentUser?.nombre || 'Equipo',
-    focus,
     done,
+    focus,
     blocker,
     mood: state.dailyMood
   };
@@ -625,13 +924,13 @@ function handleDailySubmit(e) {
   state.dailies.unshift(entry);
   localStorage.setItem(STORAGE_KEYS.DAILIES, JSON.stringify(state.dailies));
 
-  document.getElementById('dailyFocusInput').value = '';
   document.getElementById('dailyDoneInput').value = '';
+  document.getElementById('dailyFocusInput').value = '';
   document.getElementById('dailyBlockerInput').value = '';
 
   refreshAllUI();
   fireCelebrationConfetti(false);
-  showToast('Daily Day publicado en el tablero del equipo');
+  showToast('Daily Chat (Ayer · Hoy · Bloqueante) publicado en el muro');
 }
 
 function renderDailiesList() {
@@ -639,17 +938,18 @@ function renderDailiesList() {
   if (!container) return;
 
   if (state.dailies.length === 0) {
-    container.innerHTML = `<p class="text-xs text-violet-300/60 py-6 text-center">Aún no hay reportes de Daily Day hoy. Comparte tu foco del día para iniciar.</p>`;
+    container.innerHTML = `<p class="text-xs text-violet-300/60 py-6 text-center">Aún no hay reportes de Daily Chat hoy. Registra tu estructura Ayer / Hoy / Bloqueante.</p>`;
     return;
   }
 
   container.innerHTML = state.dailies.map(d => {
     const cleanMood = String(d.mood || 'Enfocado').replace(/[^\w\sáéíóúÁÉÍÓÚñÑ@]/g, '').trim() || 'A tope';
     const moodIcon = cleanMood.toLowerCase().includes('bloqueo') ? 'life-buoy' : (cleanMood.toLowerCase().includes('tope') ? 'flame' : 'zap');
+    const hasBlocker = d.blocker && !['ninguno', 'ninguna', 'ninguno por el momento', 'sin bloqueos'].includes(d.blocker.trim().toLowerCase());
 
     return `
-      <div class="p-4 rounded-2xl glass-panel space-y-2.5">
-        <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="p-4 rounded-2xl glass-panel space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-violet-400/10 pb-2.5">
           <div class="flex items-center gap-2">
             <span class="w-7 h-7 rounded-lg bg-violet-600/30 border border-violet-400/30 text-violet-200 text-xs font-extrabold flex items-center justify-center">
               ${escapeHtml(getInitials(d.author))}
@@ -660,8 +960,17 @@ function renderDailiesList() {
               <span>${escapeHtml(cleanMood)}</span>
             </span>
           </div>
-          <div class="flex items-center gap-2 text-[11px] text-violet-300/60 tabular-nums">
+          <div class="flex items-center gap-1.5 text-[11px] text-violet-300/60 tabular-nums">
             <span>${escapeHtml(d.fecha)} · ${escapeHtml(d.hora)}</span>
+            <button
+              type="button"
+              onclick="copyDailyEntryText('${d.id}')"
+              title="Copiar en formato Daily Chat"
+              class="min-h-[32px] px-2.5 py-1 rounded-lg glass-panel hover:border-violet-400/50 text-violet-200 hover:text-white font-bold flex items-center gap-1 cursor-pointer"
+            >
+              <i data-lucide="copy" class="w-3 h-3" aria-hidden="true"></i>
+              <span>Copiar</span>
+            </button>
             <button
               type="button"
               onclick="deleteDaily('${d.id}')"
@@ -673,22 +982,34 @@ function renderDailiesList() {
           </div>
         </div>
 
-        <p class="text-xs text-violet-100 flex items-start gap-2">
-          <i data-lucide="target" class="w-4 h-4 text-violet-300 shrink-0 mt-0.5" aria-hidden="true"></i>
-          <span><b class="text-violet-300">Foco hoy:</b> ${escapeHtml(d.focus)}</span>
-        </p>
-        ${d.done ? `
-          <p class="text-xs text-violet-200/80 flex items-start gap-2">
-            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" aria-hidden="true"></i>
-            <span><b>Avance reciente:</b> ${escapeHtml(d.done)}</span>
-          </p>
-        ` : ''}
-        ${d.blocker ? `
-          <div class="text-xs text-amber-200 bg-amber-500/15 border border-amber-500/30 px-3 py-2 rounded-xl flex items-start gap-2">
-            <i data-lucide="triangle-alert" class="w-4 h-4 text-amber-300 shrink-0 mt-0.5" aria-hidden="true"></i>
-            <span><b>Bloqueo / Apoyo:</b> ${escapeHtml(d.blocker)}</span>
+        <!-- Estructura Oficial Daily Chat: 1. Ayer / 2. Hoy / 3. Bloqueante -->
+        <div class="space-y-2 text-xs">
+          <div class="flex items-start gap-2.5">
+            <span class="inline-flex items-center gap-1 font-extrabold text-emerald-300 shrink-0 min-w-[92px]">
+              <i data-lucide="check-circle-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span>Ayer:</span>
+            </span>
+            <p class="text-violet-100 leading-relaxed">${escapeHtml(d.done || 'Sin registro previo')}</p>
           </div>
-        ` : ''}
+
+          <div class="flex items-start gap-2.5">
+            <span class="inline-flex items-center gap-1 font-extrabold text-violet-300 shrink-0 min-w-[92px]">
+              <i data-lucide="target" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span>Hoy:</span>
+            </span>
+            <p class="text-white font-semibold leading-relaxed">${escapeHtml(d.focus)}</p>
+          </div>
+
+          <div class="flex items-start gap-2.5 ${hasBlocker ? 'bg-amber-500/15 border border-amber-500/30 p-2.5 rounded-xl text-amber-200' : ''}">
+            <span class="inline-flex items-center gap-1 font-extrabold ${hasBlocker ? 'text-amber-300' : 'text-violet-300/75'} shrink-0 min-w-[92px]">
+              <i data-lucide="triangle-alert" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span>Bloqueante:</span>
+            </span>
+            <p class="${hasBlocker ? 'font-bold text-amber-100' : 'text-violet-300/80'} leading-relaxed">
+              ${escapeHtml(d.blocker || 'Ninguno')}
+            </p>
+          </div>
+        </div>
       </div>
     `;
   }).join('');

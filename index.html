@@ -310,87 +310,242 @@
   <main id="mainContent" class="max-w-7xl mx-auto px-3.5 sm:px-6 pt-5">
 
     <!-- =================================================================== -->
-    <!-- MÓDULO 0: DASHBOARD PRINCIPAL DE NOTAS QUICKSS (TODOS LOS MÓDULOS)  -->
+    <!-- MÓDULO 0: PANEL INICIAL DE ANALÍTICAS PERSONALES + SELECTOR MÓDULOS -->
     <!-- =================================================================== -->
     <div id="module_hub" class="space-y-6 fade-slide-in">
 
-      <!-- Hero / Resumen Operativo Glassmorphic -->
-      <div class="glass-card rounded-3xl p-5 sm:p-7">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div class="space-y-2 max-w-2xl">
-            <div class="inline-flex items-center gap-2 bg-violet-500/15 border border-violet-400/25 px-3 py-1 rounded-full text-xs font-bold text-violet-200">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
-              <span>Centro Operativo en Tiempo Real</span>
+      <!-- PRIMER PANEL AL INICIAR SESIÓN: ANALÍTICAS DE ACTIVIDADES PLANTEADAS -->
+      <section class="glass-card rounded-3xl p-5 sm:p-7 space-y-6" aria-labelledby="personalAnalyticsTitle">
+
+        <!-- Fila 1: Identidad de la Persona Activa + Selector Tailwind (Mis Actividades vs Equipo) -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-violet-400/15">
+          <div class="flex items-start sm:items-center gap-4">
+            <div
+              id="hubUserAvatarBig"
+              class="w-14 h-14 rounded-2xl bg-violet-600 text-white text-lg font-extrabold flex items-center justify-center shadow-lg shadow-violet-600/35 border border-violet-300/30 shrink-0"
+            >
+              AG
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Bienvenido a Notas Quickss, <span id="hubWelcomeName" class="text-violet-300">Equipo</span>
-            </h1>
-            <p class="text-xs sm:text-sm text-violet-200/80 leading-relaxed">
-              Selecciona un módulo para registrar visitas en calle, acuerdos del Daily Day, tareas pendientes o novedades de equipo.
-            </p>
+            <div class="space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 bg-violet-500/20 border border-violet-400/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-violet-200">
+                  <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+                  <span id="hubScopeBadgeText">Analítica Personal de Sesión</span>
+                </span>
+                <span id="hubUserRankPill" class="inline-flex items-center gap-1 bg-violet-600/25 border border-violet-400/35 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-violet-200 tabular-nums">
+                  <i data-lucide="award" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+                  <span>Explorador · 0 XP</span>
+                </span>
+              </div>
+              <h1 id="personalAnalyticsTitle" class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                Rendimiento de <span id="hubWelcomeName" class="text-violet-300">Andrés Gómez</span>
+              </h1>
+              <p id="hubAnalyticsSubtitle" class="text-xs sm:text-sm text-violet-200/75">
+                Así vas hoy en todas tus actividades planteadas. Revisa tu avance y selecciona abajo el módulo que quieres usar.
+              </p>
+            </div>
           </div>
 
-          <!-- KPIs Globales Interactivos (Botones semánticos) -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 shrink-0">
+          <!-- Segmented Control Tailwind: Mis Actividades vs Todo el Equipo -->
+          <div class="flex items-center gap-1.5 glass-panel p-1.5 rounded-2xl self-start lg:self-center shrink-0">
             <button
               type="button"
-              onclick="switchModule('brigadas')"
-              class="glass-panel rounded-2xl p-3 sm:p-4 text-left hover:border-violet-400/50 cursor-pointer transition-colors"
+              id="btnScopePersonal"
+              onclick="setHubAnalyticsScope('personal')"
+              class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow flex items-center gap-1.5 cursor-pointer transition-colors"
             >
-              <div class="flex items-center justify-between text-violet-300 mb-1">
-                <span class="text-[11px] font-bold">Brigadas</span>
-                <i data-lucide="compass" class="w-4 h-4" aria-hidden="true"></i>
-              </div>
-              <p id="hubStatBrigadas" class="text-xl sm:text-2xl font-extrabold text-white tabular-nums">0</p>
+              <i data-lucide="user-check" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span>Mis Actividades</span>
             </button>
-
             <button
               type="button"
-              onclick="switchModule('daily')"
-              class="glass-panel rounded-2xl p-3 sm:p-4 text-left hover:border-violet-400/50 cursor-pointer transition-colors"
+              id="btnScopeTeam"
+              onclick="setHubAnalyticsScope('team')"
+              class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold text-violet-200 hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors"
             >
-              <div class="flex items-center justify-between text-violet-300 mb-1">
-                <span class="text-[11px] font-bold">Daily Hoy</span>
-                <i data-lucide="sun" class="w-4 h-4" aria-hidden="true"></i>
-              </div>
-              <p id="hubStatDaily" class="text-xl sm:text-2xl font-extrabold text-violet-200 tabular-nums">0</p>
-            </button>
-
-            <button
-              type="button"
-              onclick="switchModule('tareas')"
-              class="glass-panel rounded-2xl p-3 sm:p-4 text-left hover:border-violet-400/50 cursor-pointer transition-colors"
-            >
-              <div class="flex items-center justify-between text-amber-300 mb-1">
-                <span class="text-[11px] font-bold">Tareas</span>
-                <i data-lucide="check-square" class="w-4 h-4" aria-hidden="true"></i>
-              </div>
-              <p id="hubStatTareas" class="text-xl sm:text-2xl font-extrabold text-amber-300 tabular-nums">0</p>
-            </button>
-
-            <button
-              type="button"
-              onclick="switchModule('llamados')"
-              class="glass-panel rounded-2xl p-3 sm:p-4 text-left hover:border-violet-400/50 cursor-pointer transition-colors"
-            >
-              <div class="flex items-center justify-between text-rose-300 mb-1">
-                <span class="text-[11px] font-bold">Llamados</span>
-                <i data-lucide="shield-alert" class="w-4 h-4" aria-hidden="true"></i>
-              </div>
-              <p id="hubStatLlamados" class="text-xl sm:text-2xl font-extrabold text-rose-300 tabular-nums">0</p>
+              <i data-lucide="users" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span>Todo el Equipo</span>
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- TARJETAS DE LOS 4 MÓDULOS ACTIVOS -->
+        <!-- Fila 2: Score General de Cumplimiento + 4 Tarjetas de Avance por Actividad -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+
+          <!-- Anillo General de Cumplimiento del Día (4 cols) -->
+          <div class="lg:col-span-4 glass-panel rounded-2xl p-5 flex items-center gap-4 justify-between">
+            <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
+              <svg class="w-24 h-24" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="42" stroke="rgba(139,92,246,0.16)" stroke-width="10" fill="transparent" />
+                <circle
+                  id="hubOverallRadialCircle"
+                  class="radial-ring-circle"
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  stroke="#8b5cf6"
+                  stroke-width="10"
+                  stroke-linecap="round"
+                  fill="transparent"
+                  stroke-dasharray="263.89"
+                  stroke-dashoffset="263.89"
+                />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span id="hubOverallPctText" class="text-xl font-extrabold text-white tabular-nums">0%</span>
+                <span class="text-[10px] font-bold text-violet-300">Global</span>
+              </div>
+            </div>
+
+            <div class="space-y-1.5 flex-1 min-w-0">
+              <span id="hubOverallStatusBadge" class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">
+                Jornada en curso
+              </span>
+              <h2 class="text-sm sm:text-base font-extrabold text-white">Avance Integral de Hoy</h2>
+              <p id="hubOverallSummaryText" class="text-xs text-violet-200/80 leading-relaxed">
+                Ponderación de tu meta de brigada, reporte Daily Chat y tareas completadas.
+              </p>
+            </div>
+          </div>
+
+          <!-- 4 Tarjetas de Progreso de Actividades Planteadas (8 cols) -->
+          <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+            <!-- 1. Avance en Brigadas Comerciales -->
+            <button
+              type="button"
+              onclick="switchModule('brigadas')"
+              class="glass-panel rounded-2xl p-4 text-left hover:border-violet-400/50 cursor-pointer space-y-2.5 transition-colors"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white">
+                  <i data-lucide="compass" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+                  <span>Meta de Brigada</span>
+                </span>
+                <span id="hubStatBrigadas" class="text-sm font-extrabold text-violet-200 tabular-nums">0 / 12</span>
+              </div>
+              <div class="w-full h-2 bg-[#09070f] rounded-full overflow-hidden">
+                <div id="hubBarBrigadas" class="h-full bg-violet-500 rounded-full transition-[width] duration-500" style="width: 0%"></div>
+              </div>
+              <div class="flex items-center justify-between text-[11px] text-violet-300/80 tabular-nums">
+                <span id="hubSubBrigadasHot">0 muy interesados</span>
+                <span id="hubSubBrigadasKit">Kit: Activo</span>
+              </div>
+            </button>
+
+            <!-- 2. Avance en Daily Chat (Ayer / Hoy / Bloqueante) -->
+            <button
+              type="button"
+              onclick="switchModule('daily')"
+              class="glass-panel rounded-2xl p-4 text-left hover:border-violet-400/50 cursor-pointer space-y-2.5 transition-colors"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white">
+                  <i data-lucide="sun" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+                  <span>Daily Chat de Hoy</span>
+                </span>
+                <span id="hubStatDaily" class="text-xs font-extrabold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-200 tabular-nums">Pendiente</span>
+              </div>
+              <div class="w-full h-2 bg-[#09070f] rounded-full overflow-hidden">
+                <div id="hubBarDaily" class="h-full bg-violet-400 rounded-full transition-[width] duration-500" style="width: 0%"></div>
+              </div>
+              <p id="hubSubDailyFocus" class="text-[11px] text-violet-300/80 truncate">
+                Sin enfoque publicado hoy
+              </p>
+            </button>
+
+            <!-- 3. Avance en Tareas Asignadas -->
+            <button
+              type="button"
+              onclick="switchModule('tareas')"
+              class="glass-panel rounded-2xl p-4 text-left hover:border-violet-400/50 cursor-pointer space-y-2.5 transition-colors"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white">
+                  <i data-lucide="check-square" class="w-4 h-4 text-amber-300" aria-hidden="true"></i>
+                  <span>Tareas Planteadas</span>
+                </span>
+                <span id="hubStatTareas" class="text-sm font-extrabold text-amber-300 tabular-nums">0 / 0</span>
+              </div>
+              <div class="w-full h-2 bg-[#09070f] rounded-full overflow-hidden">
+                <div id="hubBarTareas" class="h-full bg-amber-400 rounded-full transition-[width] duration-500" style="width: 0%"></div>
+              </div>
+              <div class="flex items-center justify-between text-[11px] text-violet-300/80 tabular-nums">
+                <span id="hubSubTareasPending">0 pendientes</span>
+                <span id="hubSubTareasHigh" class="text-amber-200 font-semibold">0 urgentes</span>
+              </div>
+            </button>
+
+            <!-- 4. Estado en Bitácora / Llamados y Compromisos -->
+            <button
+              type="button"
+              onclick="switchModule('llamados')"
+              class="glass-panel rounded-2xl p-4 text-left hover:border-violet-400/50 cursor-pointer space-y-2.5 transition-colors"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-white">
+                  <i data-lucide="shield-alert" class="w-4 h-4 text-rose-300" aria-hidden="true"></i>
+                  <span>Bitácora & Acuerdos</span>
+                </span>
+                <span id="hubStatLlamados" class="text-sm font-extrabold text-rose-300 tabular-nums">0</span>
+              </div>
+              <div class="w-full h-2 bg-[#09070f] rounded-full overflow-hidden">
+                <div id="hubBarLlamados" class="h-full bg-emerald-400 rounded-full transition-[width] duration-500" style="width: 100%"></div>
+              </div>
+              <p id="hubSubLlamadosText" class="text-[11px] text-violet-300/80 truncate">
+                Sin llamados activos · Cumplimiento óptimo
+              </p>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Fila 3: Gráfica Comparativa de tus Actividades + Siguientes Pasos Recomendados -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2">
+          <!-- Gráfica de Barras de Cumplimiento por Área (6 cols) -->
+          <div class="lg:col-span-6 glass-panel rounded-2xl p-4 sm:p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
+                  <i data-lucide="trending-up" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+                  <span>Curva de Cumplimiento por Actividad (%)</span>
+                </h3>
+                <p class="text-[11px] text-violet-300/70">Porcentaje de avance en cada frente planteado</p>
+              </div>
+            </div>
+            <div class="h-44 flex items-center justify-center">
+              <canvas id="chartHubPersonal"></canvas>
+            </div>
+          </div>
+
+          <!-- Lista Interactiva: Tus Actividades Planteadas / Pendientes Ahora Mismo (6 cols) -->
+          <div class="lg:col-span-6 glass-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
+                  <i data-lucide="list-checks" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+                  <span>Hoja de Ruta y Pendientes para Hoy</span>
+                </h3>
+                <p class="text-[11px] text-violet-300/70">Toca cualquier actividad para ir directo a completarla</p>
+              </div>
+            </div>
+            <div id="hubPersonalActionList" class="space-y-2"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- SEGUNDO BLOQUE: SELECCIONA EL MÓDULO QUE QUIERES USAR -->
       <section class="space-y-3.5" aria-labelledby="activeModulesHeading">
         <div class="flex items-center justify-between">
-          <h2 id="activeModulesHeading" class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
-            <i data-lucide="layout-grid" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
-            <span>Módulos Operativos</span>
-          </h2>
-          <span class="text-xs text-violet-300/70 font-semibold">4 módulos activos</span>
+          <div>
+            <h2 id="activeModulesHeading" class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+              <i data-lucide="layout-grid" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
+              <span>Selecciona el Módulo que Quieres Usar</span>
+            </h2>
+            <p class="text-xs text-violet-300/75">Entra al apartado que necesites para registrar o gestionar información</p>
+          </div>
+          <span class="text-xs text-violet-300/70 font-semibold hidden sm:inline">4 módulos activos</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1419,62 +1574,87 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- MÓDULO 2: DAILY DAY (SEGUIMIENTO DIARIO & STANDUP DEL EQUIPO)       -->
+    <!-- MÓDULO 2: DAILY DAY / DAILY CHAT (AYER · HOY · BLOQUEANTE)          -->
     <!-- =================================================================== -->
     <div id="module_daily" class="hidden space-y-6 fade-slide-in">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-        <!-- Formulario Rápido de Daily Day -->
+        <!-- Formulario Rápido Estructurado: Ayer / Hoy / Bloqueante -->
         <form id="dailyForm" class="lg:col-span-5 glass-card rounded-3xl p-6 space-y-4">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-2">
             <div>
               <span class="text-[11px] font-bold bg-violet-500/20 text-violet-200 px-2.5 py-0.5 rounded-full">
-                Sincronización Diaria
+                Estructura Daily Chat
               </span>
               <h2 class="text-xl font-extrabold text-white mt-1.5 flex items-center gap-2">
                 <i data-lucide="sun" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
-                <span>Registrar mi Daily de Hoy</span>
+                <span>Anotar mi Daily Day</span>
               </h2>
             </div>
+            <button
+              type="button"
+              onclick="copyDraftDailyChat()"
+              title="Copiar borrador en formato Daily Chat"
+              class="min-h-[38px] px-3 py-1.5 rounded-xl glass-panel hover:border-violet-400/50 text-xs font-extrabold text-violet-200 flex items-center gap-1.5 cursor-pointer"
+            >
+              <i data-lucide="copy" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+              <span>Copiar Chat</span>
+            </button>
           </div>
 
-          <div>
-            <label for="dailyFocusInput" class="block text-xs font-extrabold text-violet-200 mb-1.5">
-              ¿Cuál es tu foco o meta principal de hoy?
+          <!-- 1. AYER -->
+          <div class="space-y-1.5">
+            <label for="dailyDoneInput" class="flex items-center gap-1.5 text-xs font-extrabold text-emerald-300">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-300" aria-hidden="true"></i>
+              <span>Ayer: ¿Qué lograste o cerraste?</span>
+            </label>
+            <textarea
+              id="dailyDoneInput"
+              name="dailyDone"
+              required
+              rows="2"
+              placeholder="Ej: Visité 12 locales en Calle 80, dejé 3 demos agendadas y entregué folletos…"
+              class="w-full px-4 py-3 rounded-2xl text-sm placeholder:text-violet-300/40"
+            ></textarea>
+          </div>
+
+          <!-- 2. HOY -->
+          <div class="space-y-1.5">
+            <label for="dailyFocusInput" class="flex items-center gap-1.5 text-xs font-extrabold text-violet-200">
+              <i data-lucide="target" class="w-4 h-4 text-violet-300" aria-hidden="true"></i>
+              <span>Hoy: ¿Cuál es tu foco o compromiso principal?</span>
             </label>
             <textarea
               id="dailyFocusInput"
               name="dailyFocus"
               required
               rows="2"
-              placeholder="Ej: Cerrar las 3 cotizaciones pendientes de la brigada y avanzar módulo de facturación…"
+              placeholder="Ej: Cerrar las 3 cotizaciones pendientes de la brigada y completar 12 acercamientos…"
               class="w-full px-4 py-3 rounded-2xl text-sm placeholder:text-violet-300/40"
             ></textarea>
           </div>
 
-          <div>
-            <label for="dailyDoneInput" class="block text-xs font-extrabold text-violet-200 mb-1.5">
-              ¿Qué lograste o avanzaste recientemente?
-            </label>
-            <textarea
-              id="dailyDoneInput"
-              name="dailyDone"
-              rows="2"
-              placeholder="Ej: Visité 12 locales en Calle 80, dejé 3 demos agendadas…"
-              class="w-full px-4 py-3 rounded-2xl text-sm placeholder:text-violet-300/40"
-            ></textarea>
-          </div>
-
-          <div>
-            <label for="dailyBlockerInput" class="block text-xs font-extrabold text-violet-200 mb-1.5">
-              ¿Tienes algún bloqueo o necesitas apoyo?
-            </label>
+          <!-- 3. BLOQUEANTE -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="dailyBlockerInput" class="flex items-center gap-1.5 text-xs font-extrabold text-amber-300">
+                <i data-lucide="triangle-alert" class="w-4 h-4 text-amber-300" aria-hidden="true"></i>
+                <span>Bloqueante: ¿Qué te detiene o qué apoyo necesitas?</span>
+              </label>
+              <button
+                type="button"
+                onclick="document.getElementById('dailyBlockerInput').value = 'Ninguno por el momento'"
+                class="text-[11px] font-bold text-violet-300 hover:text-white underline cursor-pointer"
+              >
+                Poner “Ninguno”
+              </button>
+            </div>
             <input
               type="text"
               id="dailyBlockerInput"
               name="dailyBlocker"
               autocomplete="off"
-              placeholder="Ej: Ninguno / Necesito material impreso o apoyo técnico…"
+              placeholder="Ej: Ninguno / Necesito más tarjetas impresas o apoyo técnico…"
               class="w-full px-4 py-3 rounded-2xl text-sm placeholder:text-violet-300/40"
             />
           </div>
@@ -1499,19 +1679,19 @@
 
           <button type="submit" class="btn-purple-primary w-full min-h-[48px] py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 cursor-pointer">
             <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
-            <span>Publicar mi Daily Day</span>
+            <span>Publicar Daily Chat</span>
           </button>
         </form>
 
-        <!-- Muro de Daily Day del Equipo -->
+        <!-- Muro de Daily Chat del Equipo -->
         <div class="lg:col-span-7 glass-card rounded-3xl p-6 space-y-4">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
                 <i data-lucide="layout-list" class="w-5 h-5 text-violet-300" aria-hidden="true"></i>
-                <span>Tablero Daily Day del Equipo</span>
+                <span>Muro Daily Chat del Equipo (Ayer · Hoy · Bloqueante)</span>
               </h3>
-              <p class="text-xs text-violet-300/70">En qué está trabajando cada integrante hoy y qué bloqueos requieren apoyo</p>
+              <p class="text-xs text-violet-300/70">Sincronización estructurada lista para revisar o copiar al chat del equipo</p>
             </div>
           </div>
           <div id="dailyListContainer" class="space-y-3"></div>
