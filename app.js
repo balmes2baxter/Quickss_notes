@@ -226,19 +226,19 @@ function renderSavedUsersOnLogin() {
       <button
         type="button"
         onclick="selectSavedUser('${u.id}')"
-        class="w-full p-3.5 rounded-2xl bg-slate-900/80 border border-slate-700/80 hover:border-indigo-500 hover:bg-indigo-950/30 flex items-center justify-between transition text-left group"
+        class="w-full p-3.5 rounded-2xl bg-[#1b152c] border border-violet-500/25 hover:border-violet-400 hover:bg-[#241b3b] flex items-center justify-between transition text-left group"
       >
         <div class="flex items-center gap-3.5">
-          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-extrabold text-sm flex items-center justify-center shadow">
+          <div class="w-11 h-11 rounded-2xl bg-violet-600 text-white font-extrabold text-sm flex items-center justify-center shadow">
             ${initials}
           </div>
           <div>
-            <p class="font-extrabold text-sm text-white group-hover:text-indigo-300 transition">${escapeHtml(u.nombre)}</p>
-            <p class="text-[11px] text-slate-400">${escapeHtml(u.rol)} · ⚡ ${xp} XP</p>
+            <p class="font-extrabold text-sm text-white group-hover:text-violet-200 transition">${escapeHtml(u.nombre)}</p>
+            <p class="text-[11px] text-violet-300/70">${escapeHtml(u.rol)} · ⚡ ${xp} XP</p>
           </div>
         </div>
         <div class="text-right">
-          <span class="inline-block text-xs font-extrabold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+          <span class="inline-block text-xs font-extrabold text-violet-200 bg-violet-500/20 border border-violet-400/30 px-2.5 py-1 rounded-full">
             Hoy: ${todayVisits.length}/${u.meta || 12} (🔥 ${hotCount})
           </span>
         </div>
@@ -1039,28 +1039,28 @@ function renderLeaderboardAndBadges() {
     const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : '👟'));
 
     return `
-      <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 space-y-2.5">
+      <div class="p-4 rounded-2xl bg-[#1b152c] border border-violet-500/20 space-y-2.5">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-3">
             <span class="text-2xl">${medal}</span>
             <div>
               <div class="flex items-center gap-2">
                 <span class="font-extrabold text-base text-white">${escapeHtml(nombre)}</span>
-                <span class="text-xs font-extrabold ${rank.color}">${rank.title}</span>
+                <span class="text-xs font-extrabold text-violet-300">${rank.title}</span>
               </div>
-              <p class="text-[11px] text-slate-400">⚡ ${xp} XP acumulados · 👑 ${stats.ownerCount} dueños contactados</p>
+              <p class="text-[11px] text-violet-300/70">⚡ ${xp} XP acumulados · 👑 ${stats.ownerCount} dueños contactados</p>
             </div>
           </div>
 
           <div class="flex flex-wrap items-center gap-2 text-xs">
-            <span class="font-extrabold text-white bg-slate-800 px-3 py-1 rounded-full">${stats.total} / ${goal} visitas</span>
-            <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-extrabold">🔥 ${stats.hot} interesados</span>
+            <span class="font-extrabold text-white bg-[#271e40] px-3 py-1 rounded-full">${stats.total} / ${goal} visitas</span>
+            <span class="px-3 py-1 rounded-full bg-violet-500/25 text-violet-200 border border-violet-400/30 font-extrabold">🔥 ${stats.hot} interesados</span>
             <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">🌤️ ${stats.info} solo info</span>
           </div>
         </div>
 
-        <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden p-0.5">
-          <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+        <div class="w-full h-3 bg-[#0e0b16] rounded-full overflow-hidden p-0.5">
+          <div class="h-full bg-violet-500 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
         </div>
       </div>
     `;
@@ -1100,15 +1100,15 @@ function renderLeaderboardAndBadges() {
   ];
 
   badgesContainer.innerHTML = badges.map(b => `
-    <div class="p-4 rounded-2xl border ${b.unlocked ? 'bg-indigo-950/30 border-indigo-500/40' : 'bg-slate-900/40 border-white/5 opacity-50'} space-y-1.5">
+    <div class="p-4 rounded-2xl border ${b.unlocked ? 'bg-[#211838] border-violet-500/40' : 'bg-[#141022] border-white/5 opacity-50'} space-y-1.5">
       <div class="flex items-center justify-between">
         <span class="text-3xl">${b.icon}</span>
-        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${b.unlocked ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'}">
+        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${b.unlocked ? 'bg-violet-500/25 text-violet-200' : 'bg-slate-800 text-slate-400'}">
           ${b.unlocked ? 'Desbloqueada' : 'En curso'}
         </span>
       </div>
       <p class="font-extrabold text-sm text-white">${b.title}</p>
-      <p class="text-xs text-slate-400 leading-relaxed">${b.desc}</p>
+      <p class="text-xs text-violet-200/70 leading-relaxed">${b.desc}</p>
     </div>
   `).join('');
 }
@@ -1170,24 +1170,24 @@ function renderSmartInsights(visits, hot, alreadyHasSystemCount) {
   const withConditions = hot.filter(v => v.condiciones_notas && v.condiciones_notas.trim().length > 3);
 
   box.innerHTML = `
-    <div class="p-4 rounded-2xl bg-slate-900/90 border border-indigo-500/30 space-y-1">
-      <p class="text-indigo-400 font-extrabold uppercase text-[10px] tracking-wider">1. Multiplicador por Hablar con el Dueño</p>
-      <p class="text-slate-200 leading-relaxed">
-        Abordar directamente al <b>Dueño/Decisor</b> convierte al <b class="text-emerald-400">${ownerConv}%</b>, mientras que dejar recado con empleados convierte al <b>${nonOwnerConv}%</b>.
+    <div class="p-4 rounded-2xl bg-[#1d1632] border border-violet-500/30 space-y-1">
+      <p class="text-violet-300 font-extrabold uppercase text-[10px] tracking-wider">1. Multiplicador por Hablar con el Dueño</p>
+      <p class="text-violet-100 leading-relaxed">
+        Abordar directamente al <b>Dueño/Decisor</b> convierte al <b class="text-violet-300">${ownerConv}%</b>, mientras que dejar recado con empleados convierte al <b>${nonOwnerConv}%</b>.
       </p>
     </div>
 
-    <div class="p-4 rounded-2xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
-      <p class="text-emerald-400 font-extrabold uppercase text-[10px] tracking-wider">2. Impacto del Check-in (Carnet + Kit)</p>
-      <p class="text-slate-200 leading-relaxed">
-        Los brigadistas que salieron con <b>Carnet + Tarjetas + Folletos</b> lograron un <b class="text-emerald-400">${fullKitConv}%</b> de clientes interesados en ${fullKitVisits.length} locales.
+    <div class="p-4 rounded-2xl bg-[#1d1632] border border-violet-500/30 space-y-1">
+      <p class="text-violet-300 font-extrabold uppercase text-[10px] tracking-wider">2. Impacto del Check-in (Carnet + Kit)</p>
+      <p class="text-violet-100 leading-relaxed">
+        Los brigadistas que salieron con <b>Carnet + Tarjetas + Folletos</b> lograron un <b class="text-violet-300">${fullKitConv}%</b> de clientes interesados en ${fullKitVisits.length} locales.
       </p>
     </div>
 
-    <div class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/30 space-y-1">
-      <p class="text-amber-400 font-extrabold uppercase text-[10px] tracking-wider">3. Condiciones Específicas vs Competencia</p>
-      <p class="text-slate-200 leading-relaxed">
-        Tenemos <b class="text-emerald-400">${withConditions.length} negocios</b> listos si cumplimos sus condiciones, y <b>${alreadyHasSystemCount}</b> que ya tienen sistema pero quedaron mapeados con dirección e info.
+    <div class="p-4 rounded-2xl bg-[#1d1632] border border-violet-500/30 space-y-1">
+      <p class="text-violet-300 font-extrabold uppercase text-[10px] tracking-wider">3. Condiciones Específicas vs Competencia</p>
+      <p class="text-violet-100 leading-relaxed">
+        Tenemos <b class="text-violet-300">${withConditions.length} negocios</b> listos si cumplimos sus condiciones, y <b>${alreadyHasSystemCount}</b> que ya tienen sistema pero quedaron mapeados con dirección e info.
       </p>
     </div>
   `;
@@ -1198,45 +1198,45 @@ function renderHotLeadsTable(hotLeads) {
   if (!container) return;
 
   if (hotLeads.length === 0) {
-    container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">Aún no hay prospectos marcados como Muy Interesados.</p>`;
+    container.innerHTML = `<p class="text-xs text-violet-300/60 py-6 text-center">Aún no hay prospectos marcados como Muy Interesados.</p>`;
     return;
   }
 
   container.innerHTML = `
     <table class="w-full text-left border-collapse text-xs">
       <thead>
-        <tr class="border-b border-white/10 text-slate-400 uppercase text-[10px]">
+        <tr class="border-b border-violet-500/15 text-violet-300/70 uppercase text-[10px]">
           <th class="py-3 pr-3">Negocio y Dirección</th>
           <th class="py-3 px-3">Condiciones Específicas Solicitadas</th>
           <th class="py-3 px-3">Contacto Directo</th>
           <th class="py-3 pl-3">Brigadista</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-white/5">
+      <tbody class="divide-y divide-violet-500/10">
         ${hotLeads.map(v => {
           const wa = v.contacto_telefono
             ? `https://wa.me/${v.contacto_telefono.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${v.contacto_nombre || ''}, te saludo respecto a nuestra visita hoy a ${v.negocio_nombre}.`)}`
             : null;
           return `
-            <tr class="hover:bg-white/5 transition">
+            <tr class="hover:bg-violet-500/5 transition">
               <td class="py-3.5 pr-3">
                 <p class="font-extrabold text-white text-sm">${escapeHtml(v.negocio_nombre)}</p>
-                <p class="text-[11px] text-indigo-300">📍 ${escapeHtml(v.direccion)}</p>
+                <p class="text-[11px] text-violet-300">📍 ${escapeHtml(v.direccion)}</p>
               </td>
               <td class="py-3.5 px-3">
-                <span class="inline-block font-bold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg mb-1">
+                <span class="inline-block font-bold text-violet-200 bg-violet-500/25 border border-violet-400/30 px-2.5 py-0.5 rounded-lg mb-1">
                   ${escapeHtml(v.motivo_estado || 'Interesado')}
                 </span>
-                <p class="text-slate-200 font-medium">
-                  ${v.condiciones_notas ? `"${escapeHtml(v.condiciones_notas)}"` : '<span class="text-slate-500">Sin condición adicional</span>'}
+                <p class="text-violet-100 font-medium">
+                  ${v.condiciones_notas ? `"${escapeHtml(v.condiciones_notas)}"` : '<span class="text-violet-300/50">Sin condición adicional</span>'}
                 </p>
               </td>
               <td class="py-3.5 px-3">
                 <p class="font-bold text-white">${escapeHtml(v.contacto_nombre || v.interlocutor)}</p>
-                ${wa ? `<a href="${wa}" target="_blank" class="inline-block mt-1 px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-extrabold">💬 ${escapeHtml(v.contacto_telefono)}</a>` : '<span class="text-slate-500">Sin teléfono</span>'}
+                ${wa ? `<a href="${wa}" target="_blank" class="inline-block mt-1 px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-extrabold">💬 ${escapeHtml(v.contacto_telefono)}</a>` : '<span class="text-violet-300/50">Sin teléfono</span>'}
               </td>
-              <td class="py-3.5 pl-3 text-slate-400">
-                <p class="font-bold text-slate-200">${escapeHtml(v.brigadista_nombre)}</p>
+              <td class="py-3.5 pl-3 text-violet-300/70">
+                <p class="font-bold text-violet-100">${escapeHtml(v.brigadista_nombre)}</p>
                 <p class="text-[10px]">${escapeHtml(v.fecha)} · ${escapeHtml(v.hora)}</p>
               </td>
             </tr>
@@ -1255,7 +1255,7 @@ function renderCharts(hotCount, warmCount, coldCount, visits) {
   if (state.charts.outcomes) state.charts.outcomes.destroy();
   if (state.charts.reasons) state.charts.reasons.destroy();
 
-  Chart.defaults.color = '#cbd5e1';
+  Chart.defaults.color = '#ddd6fe';
 
   state.charts.outcomes = new Chart(ctxOutcomes, {
     type: 'doughnut',
@@ -1263,8 +1263,8 @@ function renderCharts(hotCount, warmCount, coldCount, visits) {
       labels: ['🔥 Muy Interesados', '🌤️ Solo Info / Ya tiene sistema', '❄️ No interesados'],
       datasets: [{
         data: [hotCount, warmCount, coldCount],
-        backgroundColor: ['#10b981', '#f59e0b', '#475569'],
-        borderColor: '#0f172a',
+        backgroundColor: ['#8b5cf6', '#f59e0b', '#475569'],
+        borderColor: '#161224',
         borderWidth: 3
       }]
     },
@@ -1272,7 +1272,7 @@ function renderCharts(hotCount, warmCount, coldCount, visits) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 14, color: '#e2e8f0', font: { size: 11, weight: 'bold' } } }
+        legend: { position: 'bottom', labels: { boxWidth: 14, color: '#ede9fe', font: { size: 11, weight: 'bold' } } }
       }
     }
   });
@@ -1291,7 +1291,7 @@ function renderCharts(hotCount, warmCount, coldCount, visits) {
       datasets: [{
         label: 'Negocios',
         data: topReasons.map(r => r[1]),
-        backgroundColor: '#6366f1',
+        backgroundColor: '#7c3aed',
         borderRadius: 8
       }]
     },
@@ -1301,8 +1301,8 @@ function renderCharts(hotCount, warmCount, coldCount, visits) {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { beginAtZero: true, ticks: { precision: 0, color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { ticks: { color: '#e2e8f0', font: { size: 11 } }, grid: { display: false } }
+        x: { beginAtZero: true, ticks: { precision: 0, color: '#c4b5fd' }, grid: { color: 'rgba(139,92,246,0.08)' } },
+        y: { ticks: { color: '#f5f3ff', font: { size: 11 } }, grid: { display: false } }
       }
     }
   });
@@ -1334,12 +1334,12 @@ window.switchTab = function(tab) {
   Object.keys(sections).forEach(k => {
     if (k === tab) {
       sections[k]?.classList.remove('hidden');
-      if (mobBtns[k]) mobBtns[k].className = 'py-2 px-2 rounded-2xl font-extrabold text-[11px] flex flex-col items-center gap-0.5 bg-indigo-600/25 text-indigo-300 border border-indigo-500/30';
-      if (deskBtns[k]) deskBtns[k].className = 'px-4 py-2 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow';
+      if (mobBtns[k]) mobBtns[k].className = 'py-2 px-2 rounded-2xl font-extrabold text-[11px] flex flex-col items-center gap-0.5 bg-violet-600 text-white';
+      if (deskBtns[k]) deskBtns[k].className = 'px-4 py-2 rounded-xl text-xs font-extrabold bg-violet-600 text-white shadow';
     } else {
       sections[k]?.classList.add('hidden');
-      if (mobBtns[k]) mobBtns[k].className = 'py-2 px-2 rounded-2xl font-bold text-[11px] flex flex-col items-center gap-0.5 text-slate-400';
-      if (deskBtns[k]) deskBtns[k].className = 'px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white';
+      if (mobBtns[k]) mobBtns[k].className = 'py-2 px-2 rounded-2xl font-bold text-[11px] flex flex-col items-center gap-0.5 text-violet-300/70';
+      if (deskBtns[k]) deskBtns[k].className = 'px-4 py-2 rounded-xl text-xs font-bold text-violet-300/70 hover:text-white';
     }
   });
 
