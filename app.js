@@ -2683,16 +2683,55 @@ window.loadSampleBrigadaData = function() {
 // ============================================================================
 // 12. MOTOR DE PRODUCCIÓN: AUTOGUARDADO, SUPABASE REALTIME & CONTROLES SOCIOS
 // ============================================================================
-async function syncStateToCloud() {
+function mergeUniqueById(localArr = [], remoteArr = [], keyField = 'id') {
+  const map = new Map();
+  remoteArr.forEach(item => {
+    if (item && item[keyField]) map.set(item[keyField], item);
+  });
+  localArr.forEach(item => {
+    if (item && item[keyField]) map.set(item[keyField], item);
+  });
+  return Array.from(map.values());
+}
+
+async function syncStateToCloud(forceOverwrite = false) {
   if (!state.supabase) return;
   try {
+    let mergedUsers = state.users;
+    let mergedVisits = state.visits;
+    let mergedDailies = state.dailies;
+    let mergedTasks = state.tasks;
+    let mergedWarnings = state.warnings;
+
+    if (!forceOverwrite) {
+      const { data: remote } = await state.supabase
+        .from('quickss_workspace_state')
+        .select('*')
+        .eq('id', CLOUD_WORKSPACE_ID)
+        .maybeSingle();
+
+      if (remote) {
+        mergedUsers = mergeUniqueById(state.users, remote.users || [], 'nombre');
+        mergedVisits = mergeUniqueById(state.visits, remote.visits || [], 'id');
+        mergedDailies = mergeUniqueById(state.dailies, remote.dailies || [], 'id');
+        mergedTasks = mergeUniqueById(state.tasks, remote.tasks || [], 'id');
+        mergedWarnings = mergeUniqueById(state.warnings, remote.warnings || [], 'id');
+
+        state.users = mergedUsers;
+        state.visits = mergedVisits;
+        state.dailies = mergedDailies;
+        state.tasks = mergedTasks;
+        state.warnings = mergedWarnings;
+      }
+    }
+
     const payload = {
       id: CLOUD_WORKSPACE_ID,
-      users: state.users,
-      visits: state.visits,
-      dailies: state.dailies,
-      tasks: state.tasks,
-      warnings: state.warnings,
+      users: mergedUsers,
+      visits: mergedVisits,
+      dailies: mergedDailies,
+      tasks: mergedTasks,
+      warnings: mergedWarnings,
       updated_at: new Date().toISOString()
     };
     await state.supabase
@@ -2718,7 +2757,7 @@ async function pullStateFromCloud() {
       applyRemoteWorkspaceData(data);
     } else {
       // Primera vez en esta tabla: subir el estado actual para inicializar la nube
-      await syncStateToCloud();
+      await syncStateToCloud(true);
     }
   } catch (e) {
     console.warn('Error leyendo estado de Supabase:', e);
@@ -2728,9 +2767,12 @@ async function pullStateFromCloud() {
 function applyRemoteWorkspaceData(data) {
   if (!data) return;
   if (Array.isArray(data.users) && data.users.length > 0) {
-    state.users = data.users;
+    state.users = mergeUniqueById(state.users, data.users, 'nombre');
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
-    const matchCurrent = state.users.find(u => u.id === state.currentUser?.id) || state.users[0];
+    // Preservar el perfil activo de cada socio en su propio dispositivo
+    const matchCurrent = state.users.find(
+      u => u.id === state.currentUser?.id || u.nombre === state.currentUser?.nombre
+    ) || state.users[0];
     state.currentUser = matchCurrent;
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
   }
@@ -2868,6 +2910,7 @@ window.clearAllWorkspaceData = async function() {
   state.dailies = [];
   state.tasks = [];
   state.warnings = [];
+  await syncStateToCloud(true);
   await persistAndSyncState();
   refreshAllUI();
   closeCloudModal();
@@ -2924,10 +2967,12 @@ window.copySupabaseSQLSchema = async function() {
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 ALTER TABLE public.quickss_workspace_state ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Acceso total workspace" ON public.quickss_workspace_state FOR ALL USING (true) WITH CHECK (true);`;
+DROP POLICY IF EXISTS "Acceso total workspace" ON public.quickss_workspace_state;
+CREATE POLICY "Acceso total workspace" ON public.quickss_workspace_state FOR ALL USING (true) WITH CHECK (true);
+ALTER PUBLICATION supabase_realtime ADD TABLE public.quickss_workspace_state;`;
   try {
     await navigator.clipboard.writeText(sql);
-    showToast('SQL copiado: pégalo en el SQL Editor de Supabase y dale Run');
+    showToast('SQL con Realtime copiado: pégalo en el SQL Editor de Supabase y dale Run');
   } catch {
     showToast('Consulta el archivo supabase_schema.sql del proyecto');
   }
