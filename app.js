@@ -2,15 +2,28 @@
 // NOTAS QUICKSS — HUB MULTI-MÓDULO (GLASSMORPHISM-MINIMALISM · ZERO EMOJIS)
 // ============================================================================
 
+// ----------------------------------------------------------------------------
+// ENTORNO: development (localhost / rama development) vs production (main → GitHub Pages)
+// - development: carga datos de demostración (mock) para probar
+// - production: arranca limpio para usuarios reales, con su propio almacenamiento
+// ----------------------------------------------------------------------------
+const DEV_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', ''];
+const APP_ENV = (new URLSearchParams(window.location.search).get('env'))
+  || (DEV_HOSTS.includes(window.location.hostname) ? 'development' : 'production');
+const IS_PROD = APP_ENV === 'production';
+const STORAGE_PREFIX = IS_PROD ? 'quickss_prod_' : 'quickss_';
+const CLOUD_WORKSPACE_ID = IS_PROD ? 'main_workspace' : 'dev_workspace';
+
 const STORAGE_KEYS = {
-  USERS: 'quickss_users_v4',
-  CURRENT_USER: 'quickss_current_user_v4',
-  PRE_CHECKIN: 'quickss_pre_checkin_v4',
-  VISITS: 'quickss_visits_v4',
-  DAILIES: 'quickss_dailies_v4',
-  TASKS: 'quickss_tasks_v4',
-  WARNINGS: 'quickss_warnings_v4',
-  SUPABASE_CFG: 'quickss_supabase_cfg_v4'
+  USERS: `${STORAGE_PREFIX}users_v4`,
+  CURRENT_USER: `${STORAGE_PREFIX}current_user_v4`,
+  PRE_CHECKIN: `${STORAGE_PREFIX}pre_checkin_v4`,
+  VISITS: `${STORAGE_PREFIX}visits_v4`,
+  DAILIES: `${STORAGE_PREFIX}dailies_v4`,
+  TASKS: `${STORAGE_PREFIX}tasks_v4`,
+  WARNINGS: `${STORAGE_PREFIX}warnings_v4`,
+  SUPABASE_CFG: `${STORAGE_PREFIX}supabase_cfg_v4`,
+  CLEAN_MODE: `${STORAGE_PREFIX}clean_mode_v4`
 };
 
 const MODULE_LABELS = {
@@ -114,11 +127,24 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+function applyEnvironmentUI() {
+  if (IS_PROD) {
+    document.querySelectorAll('[data-dev-only]').forEach(el => el.classList.add('hidden'));
+    return;
+  }
+  // Badge visible solo en development para no confundir con producción
+  const badge = document.createElement('div');
+  badge.className = 'fixed top-2 left-1/2 -translate-x-1/2 z-[60] px-2.5 py-0.5 rounded-full bg-amber-500/90 text-[10px] font-extrabold text-black tracking-wide pointer-events-none';
+  badge.textContent = 'DEV · datos de prueba';
+  document.body.appendChild(badge);
+}
+
 // ============================================================================
 // 1. INICIALIZACIÓN DIRECTA AL DASHBOARD PRINCIPAL
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
   loadLocalState();
+  applyEnvironmentUI();
   initSupabaseIfConfigured();
   setupEventListeners();
   updateClockPreview();
@@ -155,7 +181,8 @@ function loadLocalState() {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    const isCleanMode = localStorage.getItem('quickss_clean_mode_v4') === 'true';
+    // En producción nunca se cargan datos mock: siempre arranca limpio
+    const isCleanMode = IS_PROD || localStorage.getItem(STORAGE_KEYS.CLEAN_MODE) === 'true';
     const savedUsers = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     const savedCurrent = JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || 'null');
     const savedPre = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRE_CHECKIN) || 'null');
@@ -164,11 +191,14 @@ function loadLocalState() {
     const savedTasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS) || 'null');
     const savedWarnings = JSON.parse(localStorage.getItem(STORAGE_KEYS.WARNINGS) || 'null');
 
-    state.users = savedUsers.length > 0 ? savedUsers : [
-      { id: 'usr_1', nombre: 'Andrés Gómez', rol: 'Líder / Admin', meta: 12 },
-      { id: 'usr_2', nombre: 'Laura Martínez', rol: 'Brigadista', meta: 12 },
-      { id: 'usr_3', nombre: 'Camila Rojas', rol: 'Brigadista', meta: 12 }
-    ];
+    const defaultUsers = IS_PROD
+      ? [{ id: 'usr_admin', nombre: 'Administrador', rol: 'Líder / Admin', meta: 12 }]
+      : [
+          { id: 'usr_1', nombre: 'Andrés Gómez', rol: 'Líder / Admin', meta: 12 },
+          { id: 'usr_2', nombre: 'Laura Martínez', rol: 'Brigadista', meta: 12 },
+          { id: 'usr_3', nombre: 'Camila Rojas', rol: 'Brigadista', meta: 12 }
+        ];
+    state.users = savedUsers.length > 0 ? savedUsers : defaultUsers;
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
 
     state.currentUser = savedCurrent || state.users[0];
@@ -2592,6 +2622,7 @@ function generateInitialSampleData() {
 }
 
 window.loadSampleBrigadaData = function() {
+  if (IS_PROD) return;
   const today = getTodayISO();
   const extraSamples = [
     {
@@ -2656,7 +2687,7 @@ async function syncStateToCloud() {
   if (!state.supabase) return;
   try {
     const payload = {
-      id: 'main_workspace',
+      id: CLOUD_WORKSPACE_ID,
       users: state.users,
       visits: state.visits,
       dailies: state.dailies,
@@ -2678,7 +2709,7 @@ async function pullStateFromCloud() {
     const { data, error } = await state.supabase
       .from('quickss_workspace_state')
       .select('*')
-      .eq('id', 'main_workspace')
+      .eq('id', CLOUD_WORKSPACE_ID)
       .maybeSingle();
 
     if (error) return;
@@ -2741,7 +2772,7 @@ function initSupabaseIfConfigured() {
         .channel('quickss_realtime_channel')
         .on(
           'postgres_changes',
-          { event: '*', schema: 'public', table: 'quickss_workspace_state', filter: 'id=eq.main_workspace' },
+          { event: '*', schema: 'public', table: 'quickss_workspace_state', filter: `id=eq.${CLOUD_WORKSPACE_ID}` },
           (payload) => {
             if (payload && payload.new) {
               applyRemoteWorkspaceData(payload.new);
@@ -2818,7 +2849,8 @@ window.copyPartnerShareLink = async function() {
 };
 
 window.resetToDemoData = async function() {
-  localStorage.removeItem('quickss_clean_mode_v4');
+  if (IS_PROD) return;
+  localStorage.removeItem(STORAGE_KEYS.CLEAN_MODE);
   state.visits = generateInitialSampleData();
   state.dailies = generateInitialDailies();
   state.tasks = generateInitialTasks();
@@ -2831,7 +2863,7 @@ window.resetToDemoData = async function() {
 };
 
 window.clearAllWorkspaceData = async function() {
-  localStorage.setItem('quickss_clean_mode_v4', 'true');
+  localStorage.setItem(STORAGE_KEYS.CLEAN_MODE, 'true');
   state.visits = [];
   state.dailies = [];
   state.tasks = [];
