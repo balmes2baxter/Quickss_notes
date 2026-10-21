@@ -17,6 +17,8 @@ const CLOUD_WORKSPACE_ID = IS_PROD ? 'main_workspace' : 'dev_workspace';
 const STORAGE_KEYS = {
   USERS: `${STORAGE_PREFIX}users_v4`,
   CURRENT_USER: `${STORAGE_PREFIX}current_user_v4`,
+  ALLOWED_EMAILS: `${STORAGE_PREFIX}allowed_emails_v4`,
+  AUTH_SESSION: `${STORAGE_PREFIX}auth_session_v4`,
   PRE_CHECKIN: `${STORAGE_PREFIX}pre_checkin_v4`,
   VISITS: `${STORAGE_PREFIX}visits_v4`,
   DAILIES: `${STORAGE_PREFIX}dailies_v4`,
@@ -74,6 +76,8 @@ let state = {
   activeModule: 'hub', // 'hub' | 'brigadas' | 'daily' | 'tareas' | 'llamados'
   users: [],
   currentUser: null,
+  allowedEmails: [],
+  authSession: null,
   preCheckin: null,
   preForm: {
     carnet: true,
@@ -140,7 +144,7 @@ function applyEnvironmentUI() {
 }
 
 // ============================================================================
-// 1. INICIALIZACIÓN DIRECTA AL DASHBOARD PRINCIPAL
+// 1. INICIALIZACIÓN CON COMPUERTA DE LOGIN GOOGLE + LISTA BLANCA
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
   loadLocalState();
@@ -149,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   updateClockPreview();
   setInterval(updateClockPreview, 30000);
+  checkAndRenderAuthGate();
   refreshAllUI();
 });
 
@@ -185,6 +190,8 @@ function loadLocalState() {
     const isCleanMode = IS_PROD || localStorage.getItem(STORAGE_KEYS.CLEAN_MODE) === 'true';
     const savedUsers = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     const savedCurrent = JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || 'null');
+    const savedAllowedEmails = JSON.parse(localStorage.getItem(STORAGE_KEYS.ALLOWED_EMAILS) || 'null');
+    const savedAuthSession = JSON.parse(localStorage.getItem(STORAGE_KEYS.AUTH_SESSION) || 'null');
     const savedPre = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRE_CHECKIN) || 'null');
     const savedVisits = JSON.parse(localStorage.getItem(STORAGE_KEYS.VISITS) || 'null');
     const savedDailies = JSON.parse(localStorage.getItem(STORAGE_KEYS.DAILIES) || 'null');
@@ -192,14 +199,38 @@ function loadLocalState() {
     const savedWarnings = JSON.parse(localStorage.getItem(STORAGE_KEYS.WARNINGS) || 'null');
 
     const defaultUsers = IS_PROD
-      ? [{ id: 'usr_admin', nombre: 'Administrador', rol: 'Líder / Admin', meta: 12 }]
+      ? [{ id: 'usr_admin', nombre: 'Administrador', email: '', rol: 'Socio / Admin', meta: 12 }]
       : [
-          { id: 'usr_1', nombre: 'Andrés Gómez', rol: 'Líder / Admin', meta: 12 },
-          { id: 'usr_2', nombre: 'Laura Martínez', rol: 'Brigadista', meta: 12 },
-          { id: 'usr_3', nombre: 'Camila Rojas', rol: 'Brigadista', meta: 12 }
+          { id: 'usr_1', nombre: 'Andrés Gómez', email: 'andres@quickss.com', rol: 'Socio / Admin', meta: 12 },
+          { id: 'usr_2', nombre: 'Laura Martínez', email: 'laura@quickss.com', rol: 'Brigadista', meta: 12 },
+          { id: 'usr_3', nombre: 'Camila Rojas', email: 'camila@quickss.com', rol: 'Brigadista', meta: 12 }
         ];
     state.users = savedUsers.length > 0 ? savedUsers : defaultUsers;
+    // Asegurar que en development los perfiles demo tengan correo asignado
+    if (!IS_PROD) {
+      const demoEmails = {
+        'Andrés Gómez': 'andres@quickss.com',
+        'Laura Martínez': 'laura@quickss.com',
+        'Camila Rojas': 'camila@quickss.com'
+      };
+      state.users = state.users.map(u => ({
+        ...u,
+        email: u.email || demoEmails[u.nombre] || ''
+      }));
+    }
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
+
+    // Lista blanca de correos de Google autorizados del equipo
+    if (Array.isArray(savedAllowedEmails)) {
+      state.allowedEmails = savedAllowedEmails.map(e => String(e).trim().toLowerCase()).filter(Boolean);
+    } else {
+      state.allowedEmails = state.users
+        .map(u => String(u.email || '').trim().toLowerCase())
+        .filter(Boolean);
+      localStorage.setItem(STORAGE_KEYS.ALLOWED_EMAILS, JSON.stringify(state.allowedEmails));
+    }
+
+    state.authSession = savedAuthSession;
 
     state.currentUser = savedCurrent || state.users[0];
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
@@ -241,6 +272,12 @@ function loadLocalState() {
 async function persistAndSyncState() {
   try {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
+    localStorage.setItem(STORAGE_KEYS.ALLOWED_EMAILS, JSON.stringify(state.allowedEmails));
+    if (state.authSession) {
+      localStorage.setItem(STORAGE_KEYS.AUTH_SESSION, JSON.stringify(state.authSession));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.AUTH_SESSION);
+    }
     if (state.currentUser) {
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
     }
@@ -264,6 +301,295 @@ async function persistAndSyncState() {
   } catch (e) {
     console.warn('Error guardando estado:', e);
   }
+}
+
+// ============================================================================
+// 1.B SISTEMA DE AUTENTICACIÓN GOOGLE OAUTH + LISTA BLANCA DE EQUIPO
+// ============================================================================
+function isEmailAuthorized(email) {
+  const clean = String(email || '').trim().toLowerCase();
+  if (!clean) return false;
+  // Si en producción aún no hay ningún correo en la lista blanca, el primer socio que entra se registra como Admin fundador
+  if (state.allowedEmails.length === 0) return true;
+  return state.allowedEmails.includes(clean);
+}
+
+function checkAndRenderAuthGate() {
+  const overlay = document.getElementById('authGateOverlay');
+  if (!overlay) return;
+
+  renderAuthQuickAccounts();
+  renderWhitelistUI();
+
+  if (state.authSession && state.authSession.email && isEmailAuthorized(state.authSession.email)) {
+    overlay.classList.add('hidden');
+  } else {
+    state.authSession = null;
+    localStorage.removeItem(STORAGE_KEYS.AUTH_SESSION);
+    overlay.classList.remove('hidden');
+  }
+  refreshLucideIcons();
+}
+
+function renderAuthQuickAccounts() {
+  const listEl = document.getElementById('authQuickAccountsList');
+  if (!listEl) return;
+
+  // Mostrar tarjetas de acceso rápido con los socios autorizados (o con correo registrado)
+  const accountsWithEmail = state.users.filter(u => u.email);
+  if (accountsWithEmail.length === 0 && state.allowedEmails.length === 0) {
+    listEl.innerHTML = `
+      <div class="p-2.5 rounded-xl bg-violet-500/10 border border-violet-400/20 text-[11px] text-violet-200">
+        Primer ingreso en producción: ingresa tu correo de Google abajo para quedar registrado como Socio Administrador en la Lista Blanca.
+      </div>
+    `;
+    return;
+  }
+
+  const items = state.allowedEmails.map(email => {
+    const matchedUser = state.users.find(u => String(u.email || '').toLowerCase() === email);
+    const displayName = matchedUser ? matchedUser.nombre : email.split('@')[0];
+    const roleLabel = matchedUser?.rol || 'Socio Autorizado';
+    return { email, displayName, roleLabel };
+  });
+
+  listEl.innerHTML = items.map(acc => `
+    <button
+      type="button"
+      onclick="selectQuickGoogleAccount('${escapeHtml(acc.email)}', '${escapeHtml(acc.displayName)}')"
+      class="w-full min-h-[44px] px-3 py-2 rounded-xl glass-panel hover:border-violet-400/50 flex items-center justify-between gap-2.5 text-left cursor-pointer transition-colors"
+    >
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span class="w-7 h-7 rounded-full bg-violet-600/40 border border-violet-300/30 text-white text-[11px] font-extrabold flex items-center justify-center shrink-0">
+          ${escapeHtml(getInitials(acc.displayName))}
+        </span>
+        <div class="min-w-0">
+          <p class="text-xs font-extrabold text-white truncate">${escapeHtml(acc.displayName)}</p>
+          <p class="text-[10px] text-violet-300/75 truncate">${escapeHtml(acc.email)}</p>
+        </div>
+      </div>
+      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 shrink-0">
+        Autorizado
+      </span>
+    </button>
+  `).join('');
+}
+
+window.handleGoogleLoginClick = async function() {
+  const alertBox = document.getElementById('authDeniedAlert');
+  alertBox?.classList.add('hidden');
+
+  const pickerBox = document.getElementById('googleAccountPickerBox');
+  // Si Supabase está conectado y el usuario activó Google OAuth Redirect real, lanzamos signInWithOAuth si pulsa con Shift o si no está abierto el selector
+  if (state.supabase && state.supabase.auth && pickerBox && !pickerBox.classList.contains('hidden')) {
+    try {
+      const redirectUrl = window.location.origin + window.location.pathname;
+      const { error } = await state.supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: { prompt: 'select_account' }
+        }
+      });
+      if (!error) return;
+    } catch (err) {
+      console.warn('OAuth redirect fallback a verificador de Lista Blanca:', err);
+    }
+  }
+
+  // Mostrar el selector de cuentas Google + validador de Lista Blanca
+  if (pickerBox) {
+    pickerBox.classList.remove('hidden');
+    renderAuthQuickAccounts();
+    refreshLucideIcons();
+    setTimeout(() => {
+      document.getElementById('authGoogleEmailInput')?.focus();
+    }, 100);
+  }
+};
+
+window.selectQuickGoogleAccount = function(email, name) {
+  loginWithAuthorizedGoogleAccount(email, name);
+};
+
+window.handleVerifyGoogleEmailForm = function(e) {
+  e.preventDefault();
+  const emailInput = document.getElementById('authGoogleEmailInput');
+  const nameInput = document.getElementById('authGoogleNameInput');
+  const email = (emailInput?.value || '').trim().toLowerCase();
+  const customName = (nameInput?.value || '').trim();
+  if (!email) return;
+
+  loginWithAuthorizedGoogleAccount(email, customName);
+};
+
+function loginWithAuthorizedGoogleAccount(rawEmail, customName = '') {
+  const email = String(rawEmail || '').trim().toLowerCase();
+  const alertBox = document.getElementById('authDeniedAlert');
+  const alertMsg = document.getElementById('authDeniedMessage');
+
+  if (!email || !email.includes('@')) {
+    if (alertBox && alertMsg) {
+      alertMsg.textContent = 'Ingresa un correo electrónico válido de Google.';
+      alertBox.classList.remove('hidden');
+    }
+    return;
+  }
+
+  // Si es el primer ingreso en producción (lista blanca vacía), el primer socio se registra como Admin fundador
+  if (state.allowedEmails.length === 0) {
+    state.allowedEmails.push(email);
+  }
+
+  // Validar estrictamente contra la Lista Blanca del equipo
+  if (!state.allowedEmails.includes(email)) {
+    if (alertBox && alertMsg) {
+      alertMsg.textContent = `El correo "${email}" no está en la Lista Blanca de socios autorizados de Notas Quickss. Solicita al administrador que lo agregue.`;
+      alertBox.classList.remove('hidden');
+    }
+    if (state.supabase?.auth) {
+      state.supabase.auth.signOut().catch(() => {});
+    }
+    showToast('Acceso bloqueado: correo no autorizado');
+    return;
+  }
+
+  alertBox?.classList.add('hidden');
+
+  // Buscar o vincular el perfil del socio correspondiente a este correo
+  let userProfile = state.users.find(u => String(u.email || '').toLowerCase() === email);
+
+  if (!userProfile) {
+    // Si en producción solo existía el perfil genérico 'Administrador' sin correo, lo actualizamos con los datos reales del socio fundador
+    const genericAdmin = state.users.find(u => u.id === 'usr_admin' && !u.email);
+    const derivedName = customName || email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+    if (genericAdmin) {
+      genericAdmin.nombre = customName || genericAdmin.nombre;
+      genericAdmin.email = email;
+      userProfile = genericAdmin;
+    } else {
+      userProfile = {
+        id: 'usr_' + Date.now(),
+        nombre: derivedName,
+        email,
+        rol: 'Socio / Equipo',
+        meta: 12
+      };
+      state.users.push(userProfile);
+    }
+  } else if (customName && userProfile.nombre === 'Administrador') {
+    userProfile.nombre = customName;
+  }
+
+  state.currentUser = userProfile;
+  state.taskAssignee = userProfile.nombre;
+  state.authSession = {
+    email,
+    nombre: userProfile.nombre,
+    userId: userProfile.id,
+    loginAt: new Date().toISOString()
+  };
+
+  persistAndSyncState();
+  checkAndRenderAuthGate();
+  refreshAllUI();
+  showToast(`Bienvenido, ${userProfile.nombre}`);
+}
+
+window.handleSignOut = async function() {
+  state.authSession = null;
+  localStorage.removeItem(STORAGE_KEYS.AUTH_SESSION);
+  if (state.supabase?.auth) {
+    try {
+      await state.supabase.auth.signOut();
+    } catch {}
+  }
+  closeAllCustomDropdowns();
+  closeAppDrawer();
+  checkAndRenderAuthGate();
+  showToast('Sesión cerrada correctamente');
+};
+
+window.handleAddWhitelistEmail = function(e) {
+  e.preventDefault();
+  const input = document.getElementById('whitelistEmailInput');
+  const email = (input?.value || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) return;
+
+  if (!state.allowedEmails.includes(email)) {
+    state.allowedEmails.push(email);
+  }
+
+  // Si aún no tiene perfil creado en el equipo, creamos uno base para que aparezca de inmediato
+  const existsInUsers = state.users.some(u => String(u.email || '').toLowerCase() === email);
+  if (!existsInUsers) {
+    const suggestedName = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    state.users.push({
+      id: 'usr_' + Date.now(),
+      nombre: suggestedName,
+      email,
+      rol: 'Socio Autorizado',
+      meta: 12
+    });
+  }
+
+  if (input) input.value = '';
+  persistAndSyncState();
+  renderWhitelistUI();
+  renderAuthQuickAccounts();
+  refreshAllUI();
+  showToast(`Correo autorizado en Lista Blanca: ${email}`);
+};
+
+window.removeWhitelistEmail = function(emailToRemove) {
+  const clean = String(emailToRemove || '').trim().toLowerCase();
+  if (state.allowedEmails.length <= 1) {
+    showToast('Debe quedar al menos 1 correo administrador en la Lista Blanca');
+    return;
+  }
+  state.allowedEmails = state.allowedEmails.filter(e => e !== clean);
+  persistAndSyncState();
+  renderWhitelistUI();
+  renderAuthQuickAccounts();
+  showToast(`Correo removido de la Lista Blanca: ${clean}`);
+};
+
+function renderWhitelistUI() {
+  const container = document.getElementById('whitelistEmailsContainer');
+  const badge = document.getElementById('whitelistCountBadge');
+  if (badge) {
+    badge.textContent = `${state.allowedEmails.length} autorizado${state.allowedEmails.length === 1 ? '' : 's'}`;
+  }
+  if (!container) return;
+
+  if (state.allowedEmails.length === 0) {
+    container.innerHTML = `<p class="text-[11px] text-violet-300/60 py-1">Aún no hay correos restringidos. Agrega los correos @gmail.com de tus socios.</p>`;
+    return;
+  }
+
+  container.innerHTML = state.allowedEmails.map(email => {
+    const matchedUser = state.users.find(u => String(u.email || '').toLowerCase() === email);
+    const labelName = matchedUser ? matchedUser.nombre : 'Socio';
+    return `
+      <div class="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-[#130e22] border border-violet-400/20 text-xs">
+        <div class="flex items-center gap-2 min-w-0">
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400 shrink-0" aria-hidden="true"></i>
+          <span class="font-extrabold text-white truncate">${escapeHtml(email)}</span>
+          <span class="text-[10px] text-violet-300/70 truncate">· ${escapeHtml(labelName)}</span>
+        </div>
+        <button
+          type="button"
+          onclick="removeWhitelistEmail('${escapeHtml(email)}')"
+          class="min-h-[26px] min-w-[26px] rounded-lg hover:bg-rose-500/20 text-violet-300 hover:text-rose-300 flex items-center justify-center cursor-pointer shrink-0"
+          title="Quitar acceso a este correo"
+        >
+          <i data-lucide="x" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        </button>
+      </div>
+    `;
+  }).join('');
+  refreshLucideIcons();
 }
 
 function setupEventListeners() {
@@ -501,13 +827,24 @@ window.handleQuickUserChange = function(userId) {
 window.handleCreateTeamMember = function(e) {
   e.preventDefault();
   const input = document.getElementById('newMemberNameInput');
+  const emailInput = document.getElementById('newMemberEmailInput');
   const nombre = (input?.value || '').trim();
+  const email = (emailInput?.value || '').trim().toLowerCase();
   if (!nombre) return;
 
-  let existing = state.users.find(u => u.nombre.toLowerCase() === nombre.toLowerCase());
+  let existing = state.users.find(
+    u => u.nombre.toLowerCase() === nombre.toLowerCase() || (email && String(u.email || '').toLowerCase() === email)
+  );
   if (!existing) {
-    existing = { id: 'usr_' + Date.now(), nombre, rol: 'Brigadista', meta: 12 };
+    existing = { id: 'usr_' + Date.now(), nombre, email, rol: 'Socio / Brigadista', meta: 12 };
     state.users.push(existing);
+  } else {
+    existing.nombre = nombre;
+    if (email) existing.email = email;
+  }
+
+  if (email && !state.allowedEmails.includes(email)) {
+    state.allowedEmails.push(email);
   }
 
   state.currentUser = existing;
@@ -515,8 +852,11 @@ window.handleCreateTeamMember = function(e) {
   persistAndSyncState();
 
   if (input) input.value = '';
+  if (emailInput) emailInput.value = '';
+  renderWhitelistUI();
+  renderAuthQuickAccounts();
   refreshAllUI();
-  showToast(`Integrante guardado: ${existing.nombre}`);
+  showToast(`Socio autorizado: ${existing.nombre}${email ? ` (${email})` : ''}`);
 };
 
 window.selectTaskAssignee = function(nombre) {
@@ -2722,6 +3062,13 @@ async function syncStateToCloud(forceOverwrite = false) {
         state.dailies = mergedDailies;
         state.tasks = mergedTasks;
         state.warnings = mergedWarnings;
+
+        const mergedEmails = Array.from(new Set([
+          ...state.allowedEmails,
+          ...state.users.map(u => String(u.email || '').trim().toLowerCase()).filter(Boolean)
+        ]));
+        state.allowedEmails = mergedEmails;
+        localStorage.setItem(STORAGE_KEYS.ALLOWED_EMAILS, JSON.stringify(state.allowedEmails));
       }
     }
 
@@ -2769,9 +3116,15 @@ function applyRemoteWorkspaceData(data) {
   if (Array.isArray(data.users) && data.users.length > 0) {
     state.users = mergeUniqueById(state.users, data.users, 'nombre');
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
+    // Sincronizar correos autorizados de la Lista Blanca desde los perfiles del equipo en la nube
+    const cloudEmails = state.users.map(u => String(u.email || '').trim().toLowerCase()).filter(Boolean);
+    if (cloudEmails.length > 0) {
+      state.allowedEmails = Array.from(new Set([...state.allowedEmails, ...cloudEmails]));
+      localStorage.setItem(STORAGE_KEYS.ALLOWED_EMAILS, JSON.stringify(state.allowedEmails));
+    }
     // Preservar el perfil activo de cada socio en su propio dispositivo
     const matchCurrent = state.users.find(
-      u => u.id === state.currentUser?.id || u.nombre === state.currentUser?.nombre
+      u => u.id === state.currentUser?.id || u.nombre === state.currentUser?.nombre || (state.authSession?.email && String(u.email || '').toLowerCase() === state.authSession.email)
     ) || state.users[0];
     state.currentUser = matchCurrent;
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
@@ -2792,6 +3145,9 @@ function applyRemoteWorkspaceData(data) {
     state.warnings = data.warnings;
     localStorage.setItem(STORAGE_KEYS.WARNINGS, JSON.stringify(state.warnings));
   }
+  renderWhitelistUI();
+  renderAuthQuickAccounts();
+  checkAndRenderAuthGate();
   refreshAllUI();
 }
 
@@ -2808,6 +3164,17 @@ function initSupabaseIfConfigured() {
       if (sub) sub.textContent = 'Conectado a Supabase en tiempo real + Autoguardado Local';
 
       pullStateFromCloud();
+
+      // Listener de Supabase Auth (Google OAuth 2.0 Redirect) con validación en Lista Blanca
+      if (state.supabase.auth) {
+        state.supabase.auth.onAuthStateChange((event, session) => {
+          if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user?.email) {
+            const oauthEmail = session.user.email.toLowerCase();
+            const oauthName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || '';
+            loginWithAuthorizedGoogleAccount(oauthEmail, oauthName);
+          }
+        });
+      }
 
       // Suscripción en tiempo real para que tus socios vean cambios al instante
       state.supabase
@@ -2838,6 +3205,7 @@ function openCloudModal() {
   const keyEl = document.getElementById('supaKeyInput');
   if (urlEl) urlEl.value = cfg?.url || '';
   if (keyEl) keyEl.value = cfg?.key || '';
+  renderWhitelistUI();
   document.getElementById('cloudModal')?.classList.remove('hidden');
   refreshLucideIcons();
 }

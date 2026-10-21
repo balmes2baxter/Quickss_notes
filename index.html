@@ -28,6 +28,128 @@
   </a>
 
   <!-- ===================================================================== -->
+  <!-- PANTALLA DE LOGIN ELEGANTE CON GOOGLE + LISTA BLANCA DE EQUIPO        -->
+  <!-- ===================================================================== -->
+  <div
+    id="authGateOverlay"
+    class="fixed inset-0 z-[70] bg-[#09070f]/95 backdrop-blur-2xl flex items-center justify-center p-4 overflow-y-auto"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="authGateTitle"
+  >
+    <div class="w-full max-w-md glass-card rounded-3xl p-6 sm:p-8 space-y-6 border border-violet-400/25 shadow-2xl">
+
+      <!-- Identidad de Marca Minimalista -->
+      <div class="flex flex-col items-center text-center space-y-3">
+        <div class="w-14 h-14 rounded-2xl bg-violet-600 text-white flex items-center justify-center shadow-lg shadow-violet-600/35 border border-violet-300/30">
+          <i data-lucide="layers" class="w-7 h-7" aria-hidden="true"></i>
+        </div>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-violet-500/20 text-violet-200 border border-violet-400/30">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+          <span>Acceso Exclusivo · Lista Blanca</span>
+        </span>
+        <div class="space-y-1">
+          <h1 id="authGateTitle" class="text-2xl font-extrabold text-white tracking-tight">
+            Notas Quickss
+          </h1>
+          <p class="text-xs text-violet-300/80">
+            Ingresa con tu cuenta de Google autorizada del equipo
+          </p>
+        </div>
+      </div>
+
+      <!-- Alerta de Correo No Autorizado (Se muestra si un externo intenta entrar) -->
+      <div
+        id="authDeniedAlert"
+        class="hidden rounded-2xl bg-rose-500/15 border border-rose-400/40 p-3.5 text-xs text-rose-200 space-y-1"
+        role="alert"
+      >
+        <div class="flex items-center gap-2 font-extrabold text-rose-300">
+          <i data-lucide="shield-alert" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
+          <span>Acceso Restringido</span>
+        </div>
+        <p id="authDeniedMessage" class="text-[11px] text-rose-100/90 leading-relaxed">
+          Este correo no figura en la lista de socios autorizados.
+        </p>
+      </div>
+
+      <!-- Botón Oficial de Login con Google -->
+      <div class="space-y-3">
+        <button
+          type="button"
+          id="btnGoogleSignIn"
+          onclick="handleGoogleLoginClick()"
+          class="w-full min-h-[48px] px-5 py-3 rounded-2xl bg-white hover:bg-violet-50 text-[#09070f] font-extrabold text-xs sm:text-sm flex items-center justify-center gap-3 shadow-lg cursor-pointer transition-colors"
+        >
+          <!-- Icono SVG Oficial de Google -->
+          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/>
+          </svg>
+          <span id="btnGoogleSignInText">Continuar con Google</span>
+        </button>
+
+        <!-- Panel Desplegable de Verificación de Correo Google (Activo si OAuth Redirect aún no está configurado o para validar Lista Blanca) -->
+        <div id="googleAccountPickerBox" class="hidden glass-panel rounded-2xl p-4 space-y-3 border border-violet-400/30">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-white flex items-center gap-1.5">
+              <i data-lucide="mail-check" class="w-3.5 h-3.5 text-violet-300" aria-hidden="true"></i>
+              <span>Selecciona o verifica tu cuenta Google</span>
+            </span>
+          </div>
+
+          <!-- Cuentas Autorizadas Rápidas -->
+          <div id="authQuickAccountsList" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+
+          <!-- Ingreso de Correo Google para Validar contra Lista Blanca -->
+          <form onsubmit="handleVerifyGoogleEmailForm(event)" class="space-y-2 pt-2 border-t border-violet-400/15">
+            <input
+              type="email"
+              id="authGoogleEmailInput"
+              required
+              autocomplete="email"
+              placeholder="tu-correo@gmail.com"
+              class="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold placeholder:text-violet-300/45"
+            />
+            <input
+              type="text"
+              id="authGoogleNameInput"
+              autocomplete="name"
+              placeholder="Tu nombre (opcional si ya estás en lista)"
+              class="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold placeholder:text-violet-300/45"
+            />
+            <button
+              type="submit"
+              class="w-full min-h-[40px] px-4 py-2 rounded-xl btn-purple-primary text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <i data-lucide="log-in" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span>Verificar Correo Autorizado y Entrar</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Pie de Seguridad y Configuración OAuth -->
+      <div class="pt-3 border-t border-violet-400/15 flex items-center justify-between text-[11px] text-violet-300/70">
+        <span class="inline-flex items-center gap-1.5">
+          <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-400" aria-hidden="true"></i>
+          <span>Solo socios en lista blanca</span>
+        </span>
+        <button
+          type="button"
+          onclick="openCloudModal()"
+          class="font-extrabold text-violet-300 hover:text-white flex items-center gap-1 cursor-pointer"
+        >
+          <i data-lucide="settings" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          <span>Configurar OAuth</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
   <!-- TOP HEADER: BIENVENIDA PERSONALIZADA + SELECTOR TAILWIND + BURGER     -->
   <!-- ===================================================================== -->
   <header class="sticky top-0 z-30 bg-[#09070f]/80 backdrop-blur-2xl border-b border-violet-400/15">
@@ -73,7 +195,7 @@
             aria-haspopup="true"
             class="min-h-[44px] px-3 py-2 rounded-2xl glass-panel hover:border-violet-400/40 flex items-center gap-2 text-xs font-bold text-white cursor-pointer"
           >
-            <span id="headerUserInitials" class="w-6 h-6 rounded-lg bg-violet-600 text-white text-[11px] font-extrabold flex items-center justify-center shrink-0">
+            <span id="headerUserInitials" class="w-6 h-6 rounded-lg bg-violet-600 text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 overflow-hidden">
               AG
             </span>
             <span id="headerUserName" class="hidden sm:inline max-w-[130px] truncate">Andrés Gómez</span>
@@ -87,17 +209,27 @@
             role="menu"
           >
             <div class="px-2.5 py-1.5 border-b border-violet-400/15 flex items-center justify-between">
-              <span class="text-[11px] font-bold text-violet-300">Responsable activo</span>
+              <span class="text-[11px] font-bold text-violet-300">Sesión Google activa</span>
               <button
                 type="button"
                 onclick="openDrawerAndFocusNewUser()"
                 class="text-[11px] font-extrabold text-violet-300 hover:text-white flex items-center gap-1 cursor-pointer"
               >
                 <i data-lucide="user-plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
-                <span>Nuevo</span>
+                <span>Autorizar</span>
               </button>
             </div>
             <div id="headerUserMenuItems" class="space-y-1 max-h-60 overflow-y-auto"></div>
+            <div class="pt-1.5 border-t border-violet-400/15">
+              <button
+                type="button"
+                onclick="handleSignOut()"
+                class="w-full min-h-[38px] px-3 py-2 rounded-xl text-xs font-bold text-rose-300 hover:bg-rose-500/15 flex items-center gap-2 cursor-pointer transition-colors"
+              >
+                <i data-lucide="log-out" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -245,31 +377,41 @@
         </nav>
       </div>
 
-      <!-- Cambiar de Integrante o Agregar Nuevo (Sin prompt nativo) -->
+      <!-- Cambiar de Integrante o Autorizar Nuevo Correo Google -->
       <div class="space-y-3 pt-2 border-t border-violet-400/15">
-        <p class="text-xs font-bold text-violet-300/80 px-1">Cambiar Responsable Activo</p>
+        <p class="text-xs font-bold text-violet-300/80 px-1">Integrantes & Correos Autorizados</p>
         <div id="drawerUsersList" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
 
-        <!-- Formulario Inline Tailwind para Agregar Persona al Equipo -->
-        <form id="drawerNewMemberForm" onsubmit="handleCreateTeamMember(event)" class="glass-panel rounded-2xl p-3 space-y-2.5">
+        <!-- Formulario Inline Tailwind para Autorizar Persona + Correo Google -->
+        <form id="drawerNewMemberForm" onsubmit="handleCreateTeamMember(event)" class="glass-panel rounded-2xl p-3 space-y-2">
           <label for="newMemberNameInput" class="block text-xs font-bold text-violet-200">
-            Agregar integrante al equipo
+            Autorizar socio (Lista Blanca Google)
           </label>
+          <input
+            type="text"
+            id="newMemberNameInput"
+            name="memberName"
+            required
+            autocomplete="off"
+            placeholder="Nombre y apellido…"
+            class="w-full px-3 py-2 rounded-xl text-xs font-semibold placeholder:text-violet-300/40"
+          />
           <div class="flex gap-2">
             <input
-              type="text"
-              id="newMemberNameInput"
-              name="memberName"
+              type="email"
+              id="newMemberEmailInput"
+              name="memberEmail"
+              required
               autocomplete="off"
-              placeholder="Nombre y apellido…"
-              class="flex-1 px-3 py-2.5 rounded-xl text-xs font-semibold placeholder:text-violet-300/40"
+              placeholder="correo-socio@gmail.com"
+              class="flex-1 px-3 py-2 rounded-xl text-xs font-semibold placeholder:text-violet-300/40"
             />
             <button
               type="submit"
-              class="min-h-[40px] px-3.5 py-2 rounded-xl btn-purple-primary text-xs font-extrabold flex items-center gap-1.5 shrink-0 cursor-pointer"
+              class="min-h-[38px] px-3.5 py-2 rounded-xl btn-purple-primary text-xs font-extrabold flex items-center gap-1.5 shrink-0 cursor-pointer"
             >
-              <i data-lucide="plus" class="w-4 h-4" aria-hidden="true"></i>
-              <span>Crear</span>
+              <i data-lucide="user-check" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span>Autorizar</span>
             </button>
           </div>
         </form>
@@ -296,6 +438,14 @@
             <span>Exportar CSV</span>
           </button>
         </div>
+        <button
+          type="button"
+          onclick="closeAppDrawer(); handleSignOut();"
+          class="w-full min-h-[42px] px-3 py-2 rounded-xl glass-panel hover:border-rose-400/40 text-xs font-bold text-rose-300 hover:text-rose-200 flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <i data-lucide="log-out" class="w-4 h-4" aria-hidden="true"></i>
+          <span>Cerrar sesión de Google</span>
+        </button>
       </div>
     </div>
 
@@ -1957,7 +2107,7 @@
   <!-- ===================================================================== -->
   <!-- MODAL DE PRODUCCIÓN, GUARDADO DE DATOS Y SINCRONIZACIÓN NUBE          -->
   <!-- ===================================================================== -->
-  <div id="cloudModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cloudModalTitle">
+  <div id="cloudModal" class="hidden fixed inset-0 z-[80] bg-black/75 backdrop-blur-md flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cloudModalTitle">
     <div class="glass-popover w-full max-w-lg rounded-3xl p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-violet-400/15 pb-3">
         <div class="flex items-center gap-2.5">
@@ -1966,7 +2116,7 @@
           </div>
           <div>
             <h3 id="cloudModalTitle" class="text-base font-extrabold text-white">
-              Datos y Producción
+              Datos, Google OAuth y Lista Blanca
             </h3>
             <p id="cloudModalStatusSubtitle" class="text-[11px] text-emerald-300 font-semibold">
               Autoguardado instantáneo activo en todos los módulos
@@ -1981,6 +2131,35 @@
         >
           <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
         </button>
+      </div>
+
+      <!-- 0. Lista Blanca de Correos Google Autorizados (Solo el Equipo) -->
+      <div class="glass-panel rounded-2xl p-3.5 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold text-white flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400" aria-hidden="true"></i>
+            <span>Lista Blanca de Correos Google Autorizados</span>
+          </span>
+          <span id="whitelistCountBadge" class="text-[10px] font-bold bg-violet-500/20 text-violet-200 border border-violet-400/30 px-2 py-0.5 rounded-full tabular-nums">0 correos</span>
+        </div>
+        <div id="whitelistEmailsContainer" class="space-y-1.5 max-h-36 overflow-y-auto"></div>
+        <form onsubmit="handleAddWhitelistEmail(event)" class="flex gap-2 pt-1">
+          <input
+            type="email"
+            id="whitelistNewEmailInput"
+            required
+            autocomplete="off"
+            placeholder="nuevo-socio@gmail.com"
+            class="flex-1 px-3 py-2 rounded-xl text-xs font-semibold placeholder:text-violet-300/45"
+          />
+          <button
+            type="submit"
+            class="min-h-[38px] px-3.5 py-2 rounded-xl btn-purple-primary text-xs font-extrabold flex items-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
+            <span>Permitir</span>
+          </button>
+        </form>
       </div>
 
       <!-- 1. Compartir Link de Producción con Socios -->
