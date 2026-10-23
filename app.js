@@ -359,24 +359,33 @@ window.handleGoogleLoginClick = async function() {
   alertBox?.classList.add('hidden');
 
   const pickerBox = document.getElementById('googleAccountPickerBox');
-  // Si Supabase está conectado y el usuario activó Google OAuth Redirect real, lanzamos signInWithOAuth si pulsa con Shift o si no está abierto el selector
-  if (state.supabase && state.supabase.auth && pickerBox && !pickerBox.classList.contains('hidden')) {
+  const btnText = document.getElementById('btnGoogleSignInText');
+
+  // 1. Si Supabase ya está conectado, lanzar de inmediato la ventana emergente oficial de Google (accounts.google.com)
+  if (state.supabase && state.supabase.auth) {
     try {
+      if (btnText) btnText.textContent = 'Conectando con Google…';
       const redirectUrl = window.location.origin + window.location.pathname;
-      const { error } = await state.supabase.auth.signInWithOAuth({
+      const { data, error } = await state.supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          queryParams: { prompt: 'select_account' }
+          queryParams: {
+            prompt: 'select_account',
+            access_type: 'offline'
+          }
         }
       });
-      if (!error) return;
+      if (error) throw error;
+      return;
     } catch (err) {
-      console.warn('OAuth redirect fallback a verificador de Lista Blanca:', err);
+      console.warn('OAuth directo de Supabase no configurado o falló:', err);
+      if (btnText) btnText.textContent = 'Continuar con Google';
+      showToast('Configura las llaves de Google en Supabase para abrir la ventana oficial.');
     }
   }
 
-  // Mostrar el selector de cuentas Google + validador de Lista Blanca
+  // 2. Si aún no han pegado las llaves de Google en Supabase, mostramos la opción para verificar o configurar
   if (pickerBox) {
     pickerBox.classList.remove('hidden');
     renderAuthQuickAccounts();
