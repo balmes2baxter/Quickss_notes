@@ -187,7 +187,7 @@ function loadLocalState() {
     }
 
     // En producción nunca se cargan datos mock: siempre arranca limpio
-    const isCleanMode = IS_PROD || localStorage.getItem(STORAGE_KEYS.CLEAN_MODE) === 'true';
+    const isCleanMode = true; // Tanto en producción como en desarrollo arranca 100% limpio
     const savedUsers = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     const savedCurrent = JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || 'null');
     const savedAllowedEmails = JSON.parse(localStorage.getItem(STORAGE_KEYS.ALLOWED_EMAILS) || 'null');
@@ -198,26 +198,8 @@ function loadLocalState() {
     const savedTasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS) || 'null');
     const savedWarnings = JSON.parse(localStorage.getItem(STORAGE_KEYS.WARNINGS) || 'null');
 
-    const defaultUsers = IS_PROD
-      ? []
-      : [
-          { id: 'usr_1', nombre: 'Andrés Gómez', email: 'andres@quickss.com', rol: 'Socio / Admin', meta: 12 },
-          { id: 'usr_2', nombre: 'Laura Martínez', email: 'laura@quickss.com', rol: 'Brigadista', meta: 12 },
-          { id: 'usr_3', nombre: 'Camila Rojas', email: 'camila@quickss.com', rol: 'Brigadista', meta: 12 }
-        ];
-    state.users = savedUsers.length > 0 ? savedUsers : defaultUsers;
-    // Asegurar que en development los perfiles demo tengan correo asignado
-    if (!IS_PROD) {
-      const demoEmails = {
-        'Andrés Gómez': 'andres@quickss.com',
-        'Laura Martínez': 'laura@quickss.com',
-        'Camila Rojas': 'camila@quickss.com'
-      };
-      state.users = state.users.map(u => ({
-        ...u,
-        email: u.email || demoEmails[u.nombre] || ''
-      }));
-    }
+    // Sin usuarios mock en ningún entorno: los usuarios reales se registran al entrar
+    state.users = savedUsers;
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
 
     // Lista blanca de correos de Google autorizados del equipo
@@ -250,24 +232,16 @@ function loadLocalState() {
       state.preCheckin = null;
     }
 
-    state.visits = Array.isArray(savedVisits)
-      ? (savedVisits.length > 0 || isCleanMode ? savedVisits : generateInitialSampleData())
-      : (isCleanMode ? [] : generateInitialSampleData());
+    state.visits = Array.isArray(savedVisits) ? savedVisits : [];
     localStorage.setItem(STORAGE_KEYS.VISITS, JSON.stringify(state.visits));
 
-    state.dailies = Array.isArray(savedDailies)
-      ? (savedDailies.length > 0 || isCleanMode ? savedDailies : generateInitialDailies())
-      : (isCleanMode ? [] : generateInitialDailies());
+    state.dailies = Array.isArray(savedDailies) ? savedDailies : [];
     localStorage.setItem(STORAGE_KEYS.DAILIES, JSON.stringify(state.dailies));
 
-    state.tasks = Array.isArray(savedTasks)
-      ? (savedTasks.length > 0 || isCleanMode ? savedTasks : generateInitialTasks())
-      : (isCleanMode ? [] : generateInitialTasks());
+    state.tasks = Array.isArray(savedTasks) ? savedTasks : [];
     localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(state.tasks));
 
-    state.warnings = Array.isArray(savedWarnings)
-      ? (savedWarnings.length > 0 || isCleanMode ? savedWarnings : generateInitialWarnings())
-      : (isCleanMode ? [] : generateInitialWarnings());
+    state.warnings = Array.isArray(savedWarnings) ? savedWarnings : [];
     localStorage.setItem(STORAGE_KEYS.WARNINGS, JSON.stringify(state.warnings));
   } catch (e) {
     console.error('Error cargando estado:', e);
