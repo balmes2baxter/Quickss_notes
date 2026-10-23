@@ -199,7 +199,7 @@ function loadLocalState() {
     const savedWarnings = JSON.parse(localStorage.getItem(STORAGE_KEYS.WARNINGS) || 'null');
 
     const defaultUsers = IS_PROD
-      ? [{ id: 'usr_admin', nombre: 'Administrador', email: '', rol: 'Socio / Admin', meta: 12 }]
+      ? []
       : [
           { id: 'usr_1', nombre: 'Andrés Gómez', email: 'andres@quickss.com', rol: 'Socio / Admin', meta: 12 },
           { id: 'usr_2', nombre: 'Laura Martínez', email: 'laura@quickss.com', rol: 'Brigadista', meta: 12 },
@@ -232,14 +232,19 @@ function loadLocalState() {
 
     state.authSession = savedAuthSession;
 
-    state.currentUser = savedCurrent || state.users[0];
-    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
-
-    state.taskAssignee = state.currentUser.nombre;
-    state.warnMember = state.users[1]?.nombre || state.currentUser.nombre;
+    state.currentUser = savedCurrent || state.users[0] || null;
+    if (state.currentUser) {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
+      state.taskAssignee = state.currentUser.nombre;
+      state.warnMember = state.users[1]?.nombre || state.currentUser.nombre;
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+      state.taskAssignee = '';
+      state.warnMember = '';
+    }
 
     const today = getTodayISO();
-    if (savedPre && savedPre.fecha === today && savedPre.brigadista_id === state.currentUser.id) {
+    if (savedPre && savedPre.fecha === today && savedPre.brigadista_id === state.currentUser?.id) {
       state.preCheckin = savedPre;
     } else {
       state.preCheckin = null;
@@ -251,17 +256,17 @@ function loadLocalState() {
     localStorage.setItem(STORAGE_KEYS.VISITS, JSON.stringify(state.visits));
 
     state.dailies = Array.isArray(savedDailies)
-      ? savedDailies
+      ? (savedDailies.length > 0 || isCleanMode ? savedDailies : generateInitialDailies())
       : (isCleanMode ? [] : generateInitialDailies());
     localStorage.setItem(STORAGE_KEYS.DAILIES, JSON.stringify(state.dailies));
 
     state.tasks = Array.isArray(savedTasks)
-      ? savedTasks
+      ? (savedTasks.length > 0 || isCleanMode ? savedTasks : generateInitialTasks())
       : (isCleanMode ? [] : generateInitialTasks());
     localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(state.tasks));
 
     state.warnings = Array.isArray(savedWarnings)
-      ? savedWarnings
+      ? (savedWarnings.length > 0 || isCleanMode ? savedWarnings : generateInitialWarnings())
       : (isCleanMode ? [] : generateInitialWarnings());
     localStorage.setItem(STORAGE_KEYS.WARNINGS, JSON.stringify(state.warnings));
   } catch (e) {
@@ -460,25 +465,16 @@ function loginWithAuthorizedGoogleAccount(rawEmail, customName = '') {
   let userProfile = state.users.find(u => String(u.email || '').toLowerCase() === email);
 
   if (!userProfile) {
-    // Si en producción solo existía el perfil genérico 'Administrador' sin correo, lo actualizamos con los datos reales del socio fundador
-    const genericAdmin = state.users.find(u => u.id === 'usr_admin' && !u.email);
     const derivedName = customName || email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-    if (genericAdmin) {
-      genericAdmin.nombre = customName || genericAdmin.nombre;
-      genericAdmin.email = email;
-      userProfile = genericAdmin;
-    } else {
-      userProfile = {
-        id: 'usr_' + Date.now(),
-        nombre: derivedName,
-        email,
-        rol: 'Socio / Equipo',
-        meta: 12
-      };
-      state.users.push(userProfile);
-    }
-  } else if (customName && userProfile.nombre === 'Administrador') {
+    userProfile = {
+      id: 'usr_' + Date.now(),
+      nombre: derivedName,
+      email,
+      rol: state.users.length === 0 ? 'Socio / Admin' : 'Socio / Brigadista',
+      meta: 12
+    };
+    state.users.push(userProfile);
+  } else if (customName && (!userProfile.nombre || userProfile.nombre === 'Administrador')) {
     userProfile.nombre = customName;
   }
 
